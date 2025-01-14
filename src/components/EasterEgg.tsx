@@ -17,22 +17,18 @@ export function EasterEgg({ onSecret }: EasterEggProps) {
 
       if (newBuffer.toUpperCase() === keyword) {
         onSecret()
-        toast.success('Enjoy the color.', {
+        toast.success("You've unlocked $500 off your next project!", {
           description: (
-            <span>
-              And don't forget to check out{' '}
-              <a 
-                href="https://www.flickman.media" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="font-medium underline hover:text-primary"
-              >
-                Flickman Media
-              </a>{' '}
-              for all your media needs.
-            </span>
+            <a 
+              href="https://www.flickman.media" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="font-medium text-purple-500 underline hover:text-purple-600"
+            >
+              Claim your offer here
+            </a>
           ),
-          duration: 5000,
+          duration: 8000,
         })
         setBuffer('')
       }
