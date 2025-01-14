@@ -21,12 +21,12 @@ export default function Home() {
       <div className="w-full max-w-[1200px] px-4 md:px-6 mx-auto flex flex-col items-center">
         <div className="relative h-20 md:h-48 mb-12 md:mb-16 w-full flex justify-center">
           <img 
-            src="/src/assets/fm-logo.png" 
+            src="/fm-logo.png" 
             alt="Flickman Media Logo" 
             className="h-20 md:h-48 animate-fade-in absolute" 
           />
           <img 
-            src="/src/assets/turbo.png" 
+            src="/turbo.png" 
             alt="Turbo" 
             className="h-20 md:h-48 absolute animate-slide-in" 
           />
