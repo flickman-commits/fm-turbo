@@ -3,6 +3,7 @@ import { TaskResult } from '@/types/tasks'
 import { RainbowButton } from '@/components/ui/rainbow-button'
 import { NotionButton } from '@/components/ui/notion-button'
 import { toast } from '@/components/ui/rainbow-toast'
+import ReactMarkdown from 'react-markdown'
 
 interface ResultDisplayProps {
   result: TaskResult
@@ -12,19 +13,9 @@ interface ResultDisplayProps {
 export function ResultDisplay({ result, onClose }: ResultDisplayProps) {
   const [isCopied, setIsCopied] = useState(false)
 
-  const cleanContent = (content: string) => {
-    return content
-      .replace(/```markdown\n/g, '') // Remove markdown code block start
-      .replace(/```\n/g, '') // Remove markdown code block end
-      .replace(/^#{1,6}\s/gm, '') // Remove heading markers
-      .replace(/\*\*/g, '') // Remove bold markers
-      .replace(/\[|\]/g, '') // Remove square brackets
-      .trim()
-  }
-
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(cleanContent(result.content))
+      await navigator.clipboard.writeText(result.content)
       setIsCopied(true)
       toast.success('Content copied to clipboard!')
       setTimeout(() => setIsCopied(false), 2000)
@@ -34,34 +25,26 @@ export function ResultDisplay({ result, onClose }: ResultDisplayProps) {
     }
   }
 
-  const handleEmailCompose = () => {
-    try {
-      const cleanedContent = cleanContent(result.content)
-      const lines = cleanedContent.split('\n')
-      const subjectLine = lines.find(line => line.startsWith('Subject:'))?.replace('Subject:', '').trim() || ''
-      
-      // Remove the subject line and any empty lines at the start
-      const bodyContent = lines
-        .slice(lines.findIndex(line => line.startsWith('Subject:')) + 1)
-        .join('\n')
-        .trim()
-
-      // Construct mailto URL with subject and body
-      const mailtoUrl = `mailto:?subject=${encodeURIComponent(subjectLine)}&body=${encodeURIComponent(bodyContent)}`
-      
-      // Open default email client
-      window.location.href = mailtoUrl
-      toast.success('Opening email composer...')
-    } catch (error) {
-      console.error('Failed to compose email:', error)
-      toast.error('Failed to open email composer')
-    }
-  }
-
   const handleNotionDuplicate = async () => {
     try {
-      await navigator.clipboard.writeText(cleanContent(result.content))
+      // Convert markdown to Notion-compatible format
+      // Notion accepts markdown but we ensure proper formatting
+      const formattedContent = result.content
+        // Remove markdown header symbols as Notion will handle the formatting
+        .replace(/^#{1,6}\s/gm, '')
+        // Ensure list items have space after bullet
+        .replace(/^([*-])([^ ])/gm, '$1 $2')
+        // Add extra newline before lists for better spacing
+        .replace(/\n([*-] )/g, '\n\n$1')
+        // Ensure proper spacing for code blocks
+        .replace(/```(\w+)?\n/g, '\n```$1\n')
+
+      // Copy the formatted content
+      await navigator.clipboard.writeText(formattedContent)
+      
+      // Open Notion in a new tab
       window.open('https://notion.new', '_blank')?.focus()
+      
       toast.success('Content copied! Opening Notion... (Press Cmd/Ctrl+V to paste)')
     } catch (error) {
       console.error('Failed to prepare content for Notion:', error)
@@ -86,27 +69,19 @@ export function ResultDisplay({ result, onClose }: ResultDisplayProps) {
             </button>
           </div>
           <div className="p-4 md:p-6 overflow-y-auto max-h-[60vh] md:max-h-[70vh]">
-            <div className="prose prose-sm max-w-none whitespace-pre-wrap break-words">
-              {cleanContent(result.content)}
+            <div className="prose prose-sm max-w-none bg-white text-foreground prose-headings:font-semibold prose-h1:text-2xl prose-h2:text-xl prose-p:text-foreground prose-p:mb-4 prose-ul:list-disc prose-ul:pl-6 prose-li:mb-1 prose-pre:bg-gray-50 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto prose-code:text-foreground prose-code:bg-transparent">
+              <ReactMarkdown>
+                {result.content}
+              </ReactMarkdown>
             </div>
           </div>
           <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-2 p-4 md:p-6 border-t">
-            {result.taskType === 'outreach' ? (
-              <button
-                onClick={handleEmailCompose}
-                className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-medium bg-white text-black border border-gray-200 hover:bg-gray-50 transition-colors w-full sm:w-auto justify-center"
-              >
-                <span>Compose in</span>
-                <img src="/gmail-icon.png" alt="Gmail" className="h-4 w-auto" />
-              </button>
-            ) : (
-              <NotionButton
-                onClick={handleNotionDuplicate}
-                className="w-full sm:w-auto justify-center"
-              >
-                Duplicate to
-              </NotionButton>
-            )}
+            <NotionButton
+              onClick={handleNotionDuplicate}
+              className="w-full sm:w-auto justify-center"
+            >
+              Duplicate to
+            </NotionButton>
             <RainbowButton 
               onClick={handleCopy} 
               disabled={isCopied}

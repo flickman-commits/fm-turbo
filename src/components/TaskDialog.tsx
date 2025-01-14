@@ -159,14 +159,14 @@ Format it as a proper business email with a clear subject line, greeting, body p
           <button
             type="button"
             onClick={onClose}
-            className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50"
             disabled={isLoading}
           >
             Cancel
           </button>
           <RainbowButton
             type="submit"
-            className="w-full sm:w-auto justify-center"
+            className="w-full sm:w-auto h-10 px-6 text-sm font-medium disabled:opacity-50 justify-center"
             disabled={isLoading}
           >
             {isLoading ? 'Generating...' : 'Generate'}
