@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { TaskType, TaskConfig, TaskResult } from '@/types/tasks'
+import { TaskType } from '@/types/tasks'
 import { taskConfigs } from '@/config/tasks'
 import { DottedDialog } from '@/components/ui/dotted-dialog-wrapper'
 import { Label } from '@/components/ui/label'
@@ -7,6 +7,15 @@ import { RainbowButton } from '@/components/ui/rainbow-button'
 import { toast } from '@/components/ui/rainbow-toast'
 import { createChatCompletion } from '@/services/openai'
 import OpenAI from 'openai'
+
+type TaskConfig = typeof taskConfigs[TaskType]
+
+interface TaskResult {
+  content: string;
+  error?: string;
+  timestamp: number;
+  taskType: TaskType;
+}
 
 const testData: Record<TaskType, Record<string, string>> = {
   proposal: {
@@ -100,7 +109,7 @@ Format it as a proper business email with a clear subject line, greeting, body p
 
       onComplete({
         content: response.content || '',
-        timestamp: new Date(),
+        timestamp: new Date().getTime(),
         taskType,
       })
       
