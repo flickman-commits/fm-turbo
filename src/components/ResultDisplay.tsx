@@ -54,9 +54,9 @@ export function ResultDisplay({ result, onClose }: ResultDisplayProps) {
 
   return (
     <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-background border rounded-lg shadow-lg max-w-2xl w-full max-h-[80vh] flex flex-col p-6">
+      <div className="bg-white border rounded-lg shadow-lg max-w-2xl w-full max-h-[80vh] flex flex-col p-6">
         <div className="flex justify-between items-center shrink-0">
-          <h3 className="text-lg font-semibold">Generated Content</h3>
+          <h3 className="text-lg font-semibold text-foreground">Your Outreach Message</h3>
           <button
             onClick={onClose}
             className="text-muted-foreground hover:text-foreground"
@@ -64,7 +64,7 @@ export function ResultDisplay({ result, onClose }: ResultDisplayProps) {
             Close
           </button>
         </div>
-        <div className="bg-muted/50 rounded-md p-4 mt-4 relative flex-grow overflow-auto prose prose-sm dark:prose-invert max-w-none">
+        <div className="bg-white rounded-md p-4 mt-4 relative flex-grow overflow-auto prose prose-sm max-w-none">
           <ReactMarkdown>{result.content}</ReactMarkdown>
         </div>
         <div className="flex justify-end mt-4 shrink-0 space-x-2">
