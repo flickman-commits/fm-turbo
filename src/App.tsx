@@ -1,35 +1,49 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from 'sonner';
+import { SplashCursor } from '@/components/ui/splash-cursor';
+import { EasterEgg } from '@/components/EasterEgg';
+import { FloatingButton } from '@/components/ui/floating-button';
+import Home from '@/pages/Home';
+import { useState } from 'react';
 
-function App() {
-  const [count, setCount] = useState(0)
+// Create a client
+const queryClient = new QueryClient();
+
+export default function App() {
+  const [showSplash, setShowSplash] = useState(false);
+  const [easterEggUnlocked, setEasterEggUnlocked] = useState(false);
+
+  const handleSecret = () => {
+    setShowSplash(true);
+    setEasterEggUnlocked(true);
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
-
-export default App
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home />} />
+        </Routes>
+        <Toaster 
+          position="top-center"
+          toastOptions={{
+            style: {
+              background: 'hsl(var(--background))',
+              color: 'hsl(var(--foreground))',
+              border: 'none',
+            },
+          }}
+        />
+        {showSplash && <SplashCursor />}
+        <FloatingButton 
+          show={easterEggUnlocked} 
+          onClick={() => setShowSplash(false)}
+        >
+          Get rid of cursor splash
+        </FloatingButton>
+        <EasterEgg onSecret={handleSecret} />
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+} 
