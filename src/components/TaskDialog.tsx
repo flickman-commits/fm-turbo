@@ -8,8 +8,6 @@ import { toast } from '@/components/ui/rainbow-toast'
 import { createChatCompletion } from '@/services/openai'
 import OpenAI from 'openai'
 
-type TaskConfig = typeof taskConfigs[TaskType]
-
 interface TaskResult {
   content: string;
   error?: string;

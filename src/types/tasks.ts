@@ -18,6 +18,7 @@ export interface TaskConfig {
 
 export interface TaskResult {
   content: string;
-  timestamp: Date;
+  error?: string;
+  timestamp: number;
   taskType: TaskType;
 } 
