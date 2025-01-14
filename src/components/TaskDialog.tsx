@@ -130,19 +130,21 @@ Format it as a proper business email with a clear subject line, greeting, body p
       title={config.title}
       description={config.description}
     >
-      <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+      <form onSubmit={handleSubmit} className="space-y-4 mt-4">
         <div className="flex justify-end">
           <button
             type="button"
             onClick={handleFillTestData}
-            className="text-sm text-muted-foreground hover:text-foreground underline"
+            className="text-sm text-muted-foreground hover:text-foreground hover:bg-gray-100 px-2 py-1 rounded-md transition-colors"
           >
             Fill Test Data
           </button>
         </div>
         {config.fields.map((field) => (
           <div key={field.id} className="space-y-2">
-            <Label htmlFor={field.id}>{field.label}</Label>
+            <Label htmlFor={field.id} className="text-sm font-medium">
+              {field.label}
+            </Label>
             <input
               id={field.id}
               type={field.type}
@@ -153,18 +155,18 @@ Format it as a proper business email with a clear subject line, greeting, body p
             />
           </div>
         ))}
-        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-2 mt-6">
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-2 pt-4 mt-6 border-t">
           <button
             type="button"
             onClick={onClose}
-            className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+            className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-colors disabled:opacity-50"
             disabled={isLoading}
           >
             Cancel
           </button>
           <RainbowButton
             type="submit"
-            className="w-full sm:w-auto h-10 px-4 py-2 text-sm font-medium disabled:opacity-50"
+            className="w-full sm:w-auto justify-center"
             disabled={isLoading}
           >
             {isLoading ? 'Generating...' : 'Generate'}
