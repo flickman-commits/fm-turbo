@@ -31,11 +31,14 @@ const testData: Record<TaskType, Record<string, string>> = {
     duration: '4 hours',
     keyMoments: 'Opening keynote, product demo, panel discussion, networking reception'
   },
-  followUp: {
-    eventType: 'Corporate Gala',
-    clientName: 'Global Innovations Ltd',
-    eventDate: '2024-04-10',
-    highlights: 'Record attendance, successful fundraising, positive feedback from VIP guests'
+  budget: {
+    eventType: 'Corporate Brand Video',
+    productionDays: '3',
+    crewSize: '8',
+    equipmentNeeds: 'RED Camera Package, Lighting Kit, Audio Package, Gimbal, Drone',
+    editingHours: '40',
+    profitMargin: '25',
+    additionalCosts: 'Travel for crew, Equipment insurance, Location permits, Catering'
   }
 }
 
@@ -143,18 +146,18 @@ Format it as a proper business email with a clear subject line, greeting, body p
             />
           </div>
         ))}
-        <div className="flex justify-end space-x-2">
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-2 mt-6">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700"
+            className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
             disabled={isLoading}
           >
             Cancel
           </button>
           <RainbowButton
             type="submit"
-            className="px-4 py-2 text-sm font-medium disabled:opacity-50"
+            className="w-full sm:w-auto h-10 px-4 py-2 text-sm font-medium disabled:opacity-50"
             disabled={isLoading}
           >
             {isLoading ? 'Generating...' : 'Generate'}

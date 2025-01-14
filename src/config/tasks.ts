@@ -48,14 +48,17 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
       { id: 'keyMoments', label: 'Key Moments', type: 'textarea', placeholder: 'List key moments or milestones' }
     ]
   },
-  followUp: {
-    title: 'Generate Follow-up Sequence',
-    description: 'Create a series of follow-up messages for post-event communication.',
+  budget: {
+    title: 'Production Budget',
+    description: 'Calculate production costs including crew, equipment, editing, and desired profit margin.',
     fields: [
-      { id: 'eventType', label: 'Event Type', type: 'text', placeholder: 'Type of event' },
-      { id: 'clientName', label: 'Client Name', type: 'text', placeholder: 'Enter client name' },
-      { id: 'eventDate', label: 'Event Date', type: 'date', placeholder: 'Select event date' },
-      { id: 'highlights', label: 'Event Highlights', type: 'textarea', placeholder: 'Enter key highlights from the event' }
+      { id: 'eventType', label: 'Event Type', type: 'text', placeholder: 'Type of production' },
+      { id: 'productionDays', label: 'Production Days', type: 'number', placeholder: 'Number of filming/production days' },
+      { id: 'crewSize', label: 'Crew Size', type: 'number', placeholder: 'Number of crew members needed' },
+      { id: 'equipmentNeeds', label: 'Equipment Needs', type: 'textarea', placeholder: 'List required equipment (cameras, lights, audio, etc.)' },
+      { id: 'editingHours', label: 'Editing Hours', type: 'number', placeholder: 'Estimated post-production hours' },
+      { id: 'profitMargin', label: 'Desired Profit Margin (%)', type: 'number', placeholder: 'Enter target profit percentage' },
+      { id: 'additionalCosts', label: 'Additional Costs', type: 'textarea', placeholder: 'Travel, accommodation, rentals, etc.' }
     ]
   }
 } 

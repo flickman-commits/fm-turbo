@@ -27,15 +27,27 @@ export function ResultDisplay({ result, onClose }: ResultDisplayProps) {
 
   const handleNotionDuplicate = async () => {
     try {
-      // First copy the content to clipboard
-      await navigator.clipboard.writeText(result.content)
+      // Convert markdown to Notion-compatible format
+      // Notion accepts markdown but we ensure proper formatting
+      const formattedContent = result.content
+        // Remove markdown header symbols as Notion will handle the formatting
+        .replace(/^#{1,6}\s/gm, '')
+        // Ensure list items have space after bullet
+        .replace(/^([*-])([^ ])/gm, '$1 $2')
+        // Add extra newline before lists for better spacing
+        .replace(/\n([*-] )/g, '\n\n$1')
+        // Ensure proper spacing for code blocks
+        .replace(/```(\w+)?\n/g, '\n```$1\n')
+
+      // Copy the formatted content
+      await navigator.clipboard.writeText(formattedContent)
       
       // Open Notion in a new tab
-      window.open('https://notion.new', '_blank')
+      window.open('https://notion.new', '_blank')?.focus()
       
-      toast.success('Content copied! Opening Notion...')
+      toast.success('Content copied! Opening Notion... (Press Cmd/Ctrl+V to paste)')
     } catch (error) {
-      console.error('Failed to copy for Notion:', error)
+      console.error('Failed to prepare content for Notion:', error)
       toast.error('Failed to prepare content for Notion')
     }
   }
