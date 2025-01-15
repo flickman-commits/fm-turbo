@@ -63,10 +63,6 @@ export function ResultDisplay({ result, onClose, formData }: ResultDisplayProps)
 
   const handleNotionDuplicate = async () => {
     try {
-      // Format the content for Notion
-      const title = `${result.taskType === 'runOfShow' ? 'Run of Show' : 
-        result.taskType.charAt(0).toUpperCase() + result.taskType.slice(1)}`
-      
       // First copy content to clipboard and wait for it to complete
       await navigator.clipboard.writeText(result.content)
       
