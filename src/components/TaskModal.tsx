@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { TaskType, TaskResult } from '@/types/tasks'
 import { taskConfigs } from '@/config/tasks'
 import { systemPrompts, getUserPrompt } from '@/config/prompts'
@@ -110,6 +110,8 @@ export function TaskModal({
   const [formData, setFormData] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<TaskResult | null>(null)
+  const [fileName, setFileName] = useState<string>('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   if (!taskType) return null
   const config = taskConfigs[taskType]
@@ -118,8 +120,31 @@ export function TaskModal({
     return config.fields.every(field => formData[field.id]?.trim())
   }
 
-  const handleFillTestData = () => {
-    setFormData(testData[taskType])
+  const handleFillTestData = async () => {
+    if (taskType === 'timelineFromTranscript') {
+      try {
+        const response = await fetch('/sana-labs-transcript.txt')
+        const transcriptContent = await response.text()
+        setFormData({
+          ...testData[taskType],
+          transcriptFile: transcriptContent
+        })
+        setFileName('sana-labs-transcript.txt')
+        // Update the file input's files if possible
+        if (fileInputRef.current) {
+          const dataTransfer = new DataTransfer()
+          const file = new File([transcriptContent], 'sana-labs-transcript.txt', { type: 'text/plain' })
+          dataTransfer.items.add(file)
+          fileInputRef.current.files = dataTransfer.files
+        }
+      } catch (error) {
+        console.error('Failed to load transcript file:', error)
+        toast.error('Failed to load transcript file')
+        setFormData(testData[taskType])
+      }
+    } else {
+      setFormData(testData[taskType])
+    }
     toast.success('Test data filled')
   }
 
@@ -198,22 +223,33 @@ export function TaskModal({
                       onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
                     />
                   ) : field.type === 'file' ? (
-                    <input
-                      id={field.id}
-                      type="file"
-                      accept=".txt"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0]
-                        if (file) {
-                          const reader = new FileReader()
-                          reader.onload = (event) => {
-                            setFormData(prev => ({ ...prev, [field.id]: event.target?.result as string }))
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={fileInputRef}
+                        id={field.id}
+                        type="file"
+                        accept=".txt"
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            setFileName(file.name)
+                            const reader = new FileReader()
+                            reader.onload = (event) => {
+                              setFormData(prev => ({ ...prev, [field.id]: event.target?.result as string }))
+                            }
+                            reader.readAsText(file)
+                          } else {
+                            setFileName('')
                           }
-                          reader.readAsText(file)
-                        }
-                      }}
-                    />
+                        }}
+                      />
+                      {fileName && (
+                        <span className="text-sm text-muted-foreground">
+                          {fileName}
+                        </span>
+                      )}
+                    </div>
                   ) : (
                     <input
                       id={field.id}
