@@ -33,7 +33,7 @@ export default function Home() {
   }
 
   return (
-    <main className="h-screen flex flex-col items-center justify-center fixed inset-0 bg-background translate-y-12">
+    <main className="h-screen flex flex-col items-center justify-center fixed inset-0 bg-background md:translate-y-12 -translate-y-[5%]">
       <div className="w-full max-w-[1200px] px-4 md:px-6 mx-auto flex flex-col items-center">
         <div className="flex flex-col items-center space-y-2">
           <h2 className="text-3xl md:text-4xl font-semibold text-center tracking-tight whitespace-nowrap animate-fade-in animation-delay-200">
@@ -84,12 +84,12 @@ export default function Home() {
           <img 
             src="/fm-logo.png" 
             alt="Flickman Media Logo" 
-            className="h-16 md:h-36 animate-fade-in absolute" 
+            className="h-16 md:h-20 animate-fade-in absolute" 
           />
           <img 
             src="/turbo.png" 
             alt="Turbo" 
-            className="h-16 md:h-36 absolute animate-slide-in" 
+            className="h-16 md:h-20 absolute animate-slide-in" 
           />
         </div>
       </div>
