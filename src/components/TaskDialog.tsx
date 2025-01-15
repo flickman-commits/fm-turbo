@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { RainbowButton } from '@/components/ui/rainbow-button'
 import { toast } from '@/components/ui/rainbow-toast'
 import { createChatCompletion } from '@/services/openai'
+import { ResultDisplay } from '@/components/ResultDisplay'
 import OpenAI from 'openai'
 
 interface TaskResult {
@@ -17,13 +18,45 @@ interface TaskResult {
 }
 
 const testData: Record<TaskType, Record<string, string>> = {
+  contractorBrief: {
+    contractorName: 'Nick',
+    contractorEmail: 'nick@example.com',
+    client: 'Evergreen Wealth',
+    startDate: '2024-12-07',
+    endDate: '2024-12-08',
+    location: 'Miami, FL',
+    pointOfContact: 'Matt Hickman',
+    contactEmail: 'matt@flickmanmedia.com',
+    contactPhone: '5039156104',
+    schedule: `Saturday, December 7th (Shoot):
+7:30 AM - Leave Crew Hotel & Uber to Studio
+7:50 AM - Arrive at Studio
+8:00 AM - We are let in to studio
+9:30 AM-11 AM - First shot
+11-1:30 PM - Film Tax Strategies
+1:30 PM Lunch on location (PA to order on Uber Eats)
+3:00 PM - 6:00 PM Shoot Miami cityscape location
+7:00 PM Crew dinner. Make game plan for tomorrow — get some outdoor shots, more run and gun, delivering lines, run and gun
+
+Sunday, December 8th - Miami, FL (Shoot):
+6:56 AM - Sunrise
+6:45 AM - Meet for Breakfast & Coffee
+7:00 AM - Leave for Jack Daniel's HQ
+7:30 AM - 9:30 AM Shoot for social on Day 2 — Shoot horizontal and cut vertical
+1:30 PM Lunch on location or in Lynchburg
+3:30 PM - 6:30 PM Shoot Miami cityscape location
+7:00 PM Crew dinner
+5:30 PM Sunset`,
+    role: `Director of Photography (DP): You will be responsible for overseeing all the visual elements of the shoot. This includes setting up and operating camera equipment, framing and composing shots, selecting appropriate lenses, and managing lighting setups to achieve the desired aesthetic. You will work closely with the Matt and crew to ensure the visual style aligns with the creative vision of the project.`,
+    dailyRate: '1500',
+    numberOfDays: '2'
+  },
   proposal: {
-    eventType: 'Corporate Conference',
+    projectType: 'Corporate Brand Video',
     clientName: 'TechCorp Inc.',
-    eventDate: '2024-06-15',
-    attendees: '250',
+    deliveryDate: '2024-06-15',
     budget: '$50,000',
-    requirements: 'Full AV setup, stage design, and hybrid streaming capabilities'
+    requirements: 'Full video production setup, professional crew, and high-end equipment for corporate brand video'
   },
   outreach: {
     recipientName: 'Linnea Schuessler',
@@ -59,6 +92,7 @@ interface TaskDialogProps {
 export function TaskDialog({ taskType, onClose, onComplete }: TaskDialogProps) {
   const [formData, setFormData] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
+  const [result, setResult] = useState<TaskResult | null>(null)
 
   if (!taskType) return null
   const config = taskConfigs[taskType]
@@ -165,6 +199,13 @@ export function TaskDialog({ taskType, onClose, onComplete }: TaskDialogProps) {
           </RainbowButton>
         </div>
       </form>
+      {result && (
+        <ResultDisplay
+          result={result}
+          onClose={() => setResult(null)}
+          formData={formData}
+        />
+      )}
     </DottedDialog>
   )
 } 

@@ -63,6 +63,13 @@ export default function Home() {
           >
             Production Budget
           </RainbowButton>
+          <RainbowButton 
+            onClick={() => handleTaskSelect('contractorBrief')}
+            style={{ '--speed': '2.9s' } as React.CSSProperties}
+            className="h-12 md:h-14 text-base md:text-lg animate-fade-in-up animation-delay-700"
+          >
+            Contractor Brief Email
+          </RainbowButton>
         </div>
       </div>
 

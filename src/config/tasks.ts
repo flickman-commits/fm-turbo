@@ -19,8 +19,8 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
     description: 'Generate a detailed contractor brief email with project details, schedule, and compensation information.',
     fields: [
       { id: 'contractorName', label: 'Contractor Name', type: 'text', placeholder: 'Enter contractor name' },
-      { id: 'clientName', label: 'Client Name', type: 'text', placeholder: 'Enter client name' },
-      { id: 'clientCompany', label: 'Client Company', type: 'text', placeholder: 'Enter client company' },
+      { id: 'contractorEmail', label: 'Contractor Email', type: 'text', placeholder: 'Enter contractor email' },
+      { id: 'client', label: 'Client', type: 'text', placeholder: 'Enter client name' },
       { id: 'startDate', label: 'Start Date', type: 'date', placeholder: 'Select start date' },
       { id: 'endDate', label: 'End Date', type: 'date', placeholder: 'Select end date' },
       { id: 'location', label: 'Location', type: 'text', placeholder: 'Enter location' },
@@ -34,13 +34,12 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
     ]
   },
   proposal: {
-    title: 'Create Event Proposal',
-    description: 'Generate a detailed event proposal with timeline, requirements, and budget breakdown.',
+    title: 'Create Video Content Proposal',
+    description: 'Generate a detailed video content proposal with timeline, requirements, and budget breakdown.',
     fields: [
-      { id: 'eventType', label: 'Event Type', type: 'text', placeholder: 'Corporate Conference, Wedding, etc.' },
+      { id: 'projectType', label: 'Project Type', type: 'text', placeholder: 'Corporate Video, Brand Story, etc.' },
       { id: 'clientName', label: 'Client Name', type: 'text', placeholder: 'Enter client name' },
-      { id: 'eventDate', label: 'Event Date', type: 'date', placeholder: 'Select event date' },
-      { id: 'attendees', label: 'Expected Attendees', type: 'number', placeholder: 'Enter number of attendees' },
+      { id: 'deliveryDate', label: 'Delivery Date', type: 'date', placeholder: 'Select delivery date' },
       { id: 'budget', label: 'Budget', type: 'text', placeholder: 'Enter budget range' },
       { id: 'requirements', label: 'Special Requirements', type: 'textarea', placeholder: 'Enter any special requirements or notes' }
     ]
