@@ -19,9 +19,9 @@ export default function App() {
   return (
     <div className="min-h-screen bg-background">
       <Toaster 
-        position={isMobile ? "top-center" : "bottom-center"}
-        closeButton
-        visibleToasts={1}
+        position="bottom-center"
+        className="max-md:!bottom-auto max-md:!top-0"
+        closeButton={false}
       />
       <Home />
       <EasterEgg onSecret={() => {}} />

@@ -1,20 +1,22 @@
 import { useState, useEffect } from 'react'
 import { TaskType, TaskResult } from '@/types/tasks'
+import { taskConfigs } from '@/config/tasks'
+import { TaskModal } from '@/components/TaskModal'
+import { ResultModal } from '@/components/ResultModal'
 import { RainbowButton } from '@/components/ui/rainbow-button'
-import { TaskDialog } from '@/components/TaskDialog'
-import { ResultDisplay } from '@/components/ResultDisplay'
 
 const COLORS = [
-  'text-purple-500',
-  'text-blue-500',
-  'text-green-500',
-  'text-yellow-500',
-  'text-red-500',
+  'text-[#FF1CF7]',
+  'text-[#00FF00]',
+  'text-[#00FFE0]',
+  'text-[#FF8E00]',
+  'text-[#00FF85]'
 ]
 
 export default function Home() {
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null)
   const [result, setResult] = useState<TaskResult | null>(null)
+  const [formData, setFormData] = useState<Record<string, string>>({})
   const [colorIndex, setColorIndex] = useState(0)
 
   useEffect(() => {
@@ -28,8 +30,9 @@ export default function Home() {
     setSelectedTask(task)
   }
 
-  const handleTaskComplete = (result: TaskResult) => {
+  const handleTaskComplete = (result: TaskResult, data: Record<string, string>) => {
     setResult(result)
+    setFormData(data)
   }
 
   return (
@@ -95,17 +98,21 @@ export default function Home() {
       </div>
 
       {selectedTask && (
-        <TaskDialog
+        <TaskModal
           taskType={selectedTask}
           onClose={() => setSelectedTask(null)}
-          onComplete={handleTaskComplete}
+          onComplete={(result, data) => {
+            setResult(result)
+            setFormData(data)
+          }}
         />
       )}
 
       {result && (
-        <ResultDisplay
+        <ResultModal
           result={result}
           onClose={() => setResult(null)}
+          formData={formData}
         />
       )}
     </main>

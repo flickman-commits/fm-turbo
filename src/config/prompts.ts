@@ -33,7 +33,7 @@ Next Steps:
 - Send over a W9 just so we have it for tax purposes
 Let me know if you have any questions. Looking forward to working with you!`,
   
-  outreach: `You are the owner of a video production company reaching out to new potential clients of Flickman Media. Create a clean, casual email format using markdown. Use '##' for sections and avoid using asterisks (*) for formatting. Keep the formatting minimal and business-appropriate.`,
+  outreach: `You are the owner of a video production company reaching out to new potential clients of Flickman Media. Create a professional outreach email that follows our standard markdown formatting. The email should be clean, casual, and business-appropriate. Do not include a subject line in the email body. Do not include any signature, sign-off, or name at the end - the email should end with your final message sentence.`,
   
   proposal: `You are an expert video production assistant helping to generate professional content for Flickman Media. Create a detailed video content proposal that includes clear sections for project overview, production approach, technical requirements, timeline, and budget breakdown. Format your response in clean, well-structured markdown with appropriate headers and lists.`,
   
@@ -81,14 +81,14 @@ Let me know if you have any questions. Looking forward to working with you!`
       return `Please create an outreach email with the following details:
               
 Recipient: ${formData.recipientName}
-Subject: ${formData.subject}
+Subject Line Context: ${formData.subject}
 Company: ${formData.company}
 Role: ${formData.role}
 Key Points: ${formData.keyPoints}
 
-Remember to not be too salsely - we are just looking to start a conversation. Talk like you would when you talk to an old friend, keep it casual
+Remember to not be too salesy - we are just looking to start a conversation. Talk like you would when you talk to an old friend, keep it casual.
 
-Format it with a clear subject line, an greeting that says "We haven't met yet but I wanted to introduce myself." Then get into our value proposition, and a clear call to action that should either ask them to hop on a call or ask if there's any interest in discussing further. The email should be no more than 2 paragraphs. Keep it short and sweet. Use markdown for basic structure but keep the formatting clean and minimal.`
+Format the email starting with "We haven't met yet but I wanted to introduce myself." Then get into our value proposition, and a clear call to action that should either ask them to hop on a call or ask if there's any interest in discussing further. The email should be no more than 2 paragraphs. Keep it short and sweet. Do not include any signature, name, or sign-off at the end - the email should end with your final message sentence. Use markdown for basic structure but keep the formatting clean and minimal.`
 
     case 'proposal':
       return `Please create a detailed video content proposal with the following details:

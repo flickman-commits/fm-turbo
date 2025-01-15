@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { TaskType } from '@/types/tasks'
+import { TaskType, TaskResult } from '@/types/tasks'
 import { taskConfigs } from '@/config/tasks'
 import { systemPrompts, getUserPrompt } from '@/config/prompts'
 import { DottedDialog } from '@/components/ui/dotted-dialog-wrapper'
@@ -7,15 +7,8 @@ import { Label } from '@/components/ui/label'
 import { RainbowButton } from '@/components/ui/rainbow-button'
 import { toast } from '@/components/ui/rainbow-toast'
 import { createChatCompletion } from '@/services/openai'
-import { ResultDisplay } from '@/components/ResultDisplay'
+import { ResultModal } from './ResultModal'
 import OpenAI from 'openai'
-
-interface TaskResult {
-  content: string;
-  error?: string;
-  timestamp: number;
-  taskType: TaskType;
-}
 
 const testData: Record<TaskType, Record<string, string>> = {
   contractorBrief: {
@@ -83,19 +76,25 @@ Sunday, December 8th - Miami, FL (Shoot):
   }
 }
 
-interface TaskDialogProps {
-  taskType: TaskType | null
+export function TaskModal({
+  taskType,
+  onClose,
+  onComplete,
+}: {
+  taskType: TaskType
   onClose: () => void
-  onComplete: (result: TaskResult) => void
-}
-
-export function TaskDialog({ taskType, onClose, onComplete }: TaskDialogProps) {
+  onComplete: (result: TaskResult, formData: Record<string, string>) => void
+}) {
   const [formData, setFormData] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<TaskResult | null>(null)
 
   if (!taskType) return null
   const config = taskConfigs[taskType]
+
+  const isFormValid = () => {
+    return config.fields.every(field => formData[field.id]?.trim())
+  }
 
   const handleFillTestData = () => {
     setFormData(testData[taskType])
@@ -127,9 +126,8 @@ export function TaskDialog({ taskType, onClose, onComplete }: TaskDialogProps) {
 
       onComplete({
         content: response.content || '',
-        timestamp: new Date().getTime(),
         taskType,
-      })
+      }, formData)
       
       toast.dismiss(loadingToast)
       toast.success('Content generated successfully!')
@@ -193,14 +191,14 @@ export function TaskDialog({ taskType, onClose, onComplete }: TaskDialogProps) {
           <RainbowButton
             type="submit"
             className="w-full sm:w-auto justify-center"
-            disabled={isLoading}
+            disabled={isLoading || !isFormValid()}
           >
             {isLoading ? 'Generating...' : 'Generate'}
           </RainbowButton>
         </div>
       </form>
       {result && (
-        <ResultDisplay
+        <ResultModal
           result={result}
           onClose={() => setResult(null)}
           formData={formData}

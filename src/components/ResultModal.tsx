@@ -6,13 +6,13 @@ import { NotionButton } from '@/components/ui/notion-button'
 import { toast } from '@/components/ui/rainbow-toast'
 import ReactMarkdown from 'react-markdown'
 
-interface ResultDisplayProps {
+interface ResultModalProps {
   result: TaskResult
   onClose: () => void
   formData?: Record<string, string>
 }
 
-export function ResultDisplay({ result, onClose, formData }: ResultDisplayProps) {
+export function ResultModal({ result, onClose, formData }: ResultModalProps) {
   const [isCopied, setIsCopied] = useState(false)
 
   const handleCopy = async () => {
@@ -43,6 +43,8 @@ export function ResultDisplay({ result, onClose, formData }: ResultDisplayProps)
         .replace(/^- (.*?)$/gm, '  • $1')
         // Ensure consistent line breaks
         .replace(/\n{3,}/g, '\n\n')
+        // Remove any potential subject line from the content for outreach messages
+        .replace(/^Subject:.*\n/m, '')
 
       let subject = ''
       if (result.taskType === 'contractorBrief' && formData?.contractorEmail) {
@@ -54,7 +56,7 @@ export function ResultDisplay({ result, onClose, formData }: ResultDisplayProps)
       } else if (result.taskType === 'budget') {
         subject = `Production Budget - ${formData?.eventType || ''}`
       } else if (result.taskType === 'outreach') {
-        subject = formData?.subject || 'Outreach Message'
+        subject = formData?.subject || ''
       } else {
         subject = `${result.taskType.charAt(0).toUpperCase() + result.taskType.slice(1)}`
       }
@@ -120,9 +122,25 @@ export function ResultDisplay({ result, onClose, formData }: ResultDisplayProps)
           </div>
           <div className="p-4 md:p-6 overflow-y-auto max-h-[60vh] md:max-h-[70vh]">
             <div className="prose prose-sm max-w-none bg-white text-foreground prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-p:text-foreground prose-p:mb-4 prose-ul:list-disc prose-ul:pl-6 prose-li:mb-1 prose-pre:bg-gray-50 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto prose-code:text-foreground prose-code:bg-transparent prose-strong:font-bold">
-              <ReactMarkdown>
-                {result.content}
-              </ReactMarkdown>
+              {result.taskType === 'outreach' && formData?.subject ? (
+                <>
+                  <div className="mb-6">
+                    <strong>Subject Line:</strong> {formData.subject}
+                  </div>
+                  <div>
+                    <strong>Body:</strong>
+                    <div className="mt-2">
+                      <ReactMarkdown>
+                        {result.content}
+                      </ReactMarkdown>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <ReactMarkdown>
+                  {result.content}
+                </ReactMarkdown>
+              )}
             </div>
           </div>
           <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-2 p-4 md:p-6 border-t">
