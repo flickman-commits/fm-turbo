@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { TaskType, TaskResult } from '@/types/tasks'
-import { taskConfigs } from '@/config/tasks'
 import { TaskModal } from '@/components/TaskModal'
 import { ResultModal } from '@/components/ResultModal'
 import { RainbowButton } from '@/components/ui/rainbow-button'
@@ -28,11 +27,6 @@ export default function Home() {
 
   const handleTaskSelect = (task: TaskType) => {
     setSelectedTask(task)
-  }
-
-  const handleTaskComplete = (result: TaskResult, data: Record<string, string>) => {
-    setResult(result)
-    setFormData(data)
   }
 
   return (
