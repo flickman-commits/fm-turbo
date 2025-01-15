@@ -3,7 +3,7 @@ import { TaskType } from '@/types/tasks'
 export interface FormField {
   id: string
   label: string
-  type: 'text' | 'textarea' | 'date' | 'number'
+  type: 'text' | 'textarea' | 'date' | 'number' | 'file'
   placeholder: string
 }
 
@@ -77,6 +77,18 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
       { id: 'editingHours', label: 'Editing Hours', type: 'number', placeholder: 'Estimated post-production hours' },
       { id: 'profitMargin', label: 'Desired Profit Margin (%)', type: 'number', placeholder: 'Enter target profit percentage' },
       { id: 'additionalCosts', label: 'Additional Costs', type: 'textarea', placeholder: 'Travel, accommodation, rentals, etc.' }
+    ]
+  },
+  timelineFromTranscript: {
+    title: 'Your Timeline from Transcript',
+    description: 'Create the most effective timeline based off your transcript and project goals.',
+    fields: [
+      { id: 'transcriptFile', label: 'Transcript File', type: 'file', placeholder: 'Upload your transcript file (txt)' },
+      { id: 'clientName', label: 'Client Name', type: 'text', placeholder: 'Enter client name' },
+      { id: 'purpose', label: 'Purpose of Video', type: 'textarea', placeholder: 'What is the main purpose or goal of this video?' },
+      { id: 'length', label: 'Length of Video', type: 'text', placeholder: 'Desired final video length' },
+      { id: 'tone', label: 'Tone of Video', type: 'text', placeholder: 'Desired tone or style of the video' },
+      { id: 'additionalNotes', label: 'Additional Notes', type: 'textarea', placeholder: 'Please provide as much detail as possible about what you want to achieve with this video, including any specific moments or themes you want to highlight' }
     ]
   }
 } 

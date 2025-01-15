@@ -108,10 +108,13 @@ export function ResultModal({ result, onClose, formData }: ResultModalProps) {
     <DottedDialog 
       open={true} 
       onOpenChange={onClose}
-      title={`Your ${result.taskType === 'runOfShow' ? 'Run of Show' : 
-        result.taskType === 'contractorBrief' ? 'Contractor Brief' :
-        result.taskType.charAt(0).toUpperCase() + result.taskType.slice(1)}`}
-      description="View and share your generated content"
+      title={`${result.taskType === 'runOfShow' ? 'Your Run of Show' : 
+        result.taskType === 'contractorBrief' ? 'Your Contractor Brief' :
+        result.taskType === 'timelineFromTranscript' ? 'Your Timeline from Transcript' :
+        'Your ' + result.taskType.charAt(0).toUpperCase() + result.taskType.slice(1)}`}
+      description={result.taskType === 'timelineFromTranscript' ? 
+        "Based off your transcript, here's the most effective timeline we can create." :
+        "View and share your generated content"}
     >
       <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="p-4 md:p-6">
