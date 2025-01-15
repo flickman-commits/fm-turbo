@@ -44,17 +44,27 @@ export function ResultDisplay({ result, onClose, formData }: ResultDisplayProps)
         // Ensure consistent line breaks
         .replace(/\n{3,}/g, '\n\n')
 
+      let subject = ''
       if (result.taskType === 'contractorBrief' && formData?.contractorEmail) {
-        const subject = `Project Brief - ${formData.client}`
-        const mailtoUrl = `mailto:${formData.contractorEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(formattedContent)}`
-        window.location.href = mailtoUrl
-        toast.success('Opening email composer...')
+        subject = `Project Brief - ${formData.client}`
+      } else if (result.taskType === 'runOfShow') {
+        subject = `Run of Show - ${formData?.eventName || ''}`
+      } else if (result.taskType === 'proposal') {
+        subject = `Video Content Proposal - ${formData?.clientName || ''}`
+      } else if (result.taskType === 'budget') {
+        subject = `Production Budget - ${formData?.eventType || ''}`
+      } else if (result.taskType === 'outreach') {
+        subject = formData?.subject || 'Outreach Message'
       } else {
-        const subject = `${result.taskType.charAt(0).toUpperCase() + result.taskType.slice(1)}`
-        const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(formattedContent)}`
-        window.location.href = mailtoUrl
-        toast.success('Opening email composer...')
+        subject = `${result.taskType.charAt(0).toUpperCase() + result.taskType.slice(1)}`
       }
+
+      const mailtoUrl = result.taskType === 'contractorBrief' && formData?.contractorEmail
+        ? `mailto:${formData.contractorEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(formattedContent)}`
+        : `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(formattedContent)}`
+
+      window.location.href = mailtoUrl
+      toast.success('Opening email composer...')
     } catch (error) {
       console.error('Failed to prepare email:', error)
       toast.error('Failed to prepare email')

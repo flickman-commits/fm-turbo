@@ -1,12 +1,28 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { TaskType, TaskResult } from '@/types/tasks'
 import { RainbowButton } from '@/components/ui/rainbow-button'
 import { TaskDialog } from '@/components/TaskDialog'
 import { ResultDisplay } from '@/components/ResultDisplay'
 
+const COLORS = [
+  'text-purple-500',
+  'text-blue-500',
+  'text-green-500',
+  'text-yellow-500',
+  'text-red-500',
+]
+
 export default function Home() {
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null)
   const [result, setResult] = useState<TaskResult | null>(null)
+  const [colorIndex, setColorIndex] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setColorIndex(prev => (prev + 1) % COLORS.length)
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [])
 
   const handleTaskSelect = (task: TaskType) => {
     setSelectedTask(task)
@@ -17,30 +33,23 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center pt-24 md:pt-32 pb-12 md:pb-24 bg-background">
+    <main className="h-screen flex flex-col items-center justify-center fixed inset-0 bg-background translate-y-12">
       <div className="w-full max-w-[1200px] px-4 md:px-6 mx-auto flex flex-col items-center">
-        <div className="relative h-20 md:h-48 mb-12 md:mb-16 w-full flex justify-center">
-          <img 
-            src="/fm-logo.png" 
-            alt="Flickman Media Logo" 
-            className="h-20 md:h-48 animate-fade-in absolute" 
-          />
-          <img 
-            src="/turbo.png" 
-            alt="Turbo" 
-            className="h-20 md:h-48 absolute animate-slide-in" 
-          />
+        <div className="flex flex-col items-center space-y-2">
+          <h2 className="text-3xl md:text-4xl font-semibold text-center tracking-tight whitespace-nowrap animate-fade-in animation-delay-200">
+            What would you like to
+          </h2>
+          <div className={`text-6xl md:text-7xl font-semibold text-center tracking-tight whitespace-nowrap transition-all duration-300 ${COLORS[colorIndex]}`}>
+            CREATE
+          </div>
         </div>
-        <h2 className="text-3xl md:text-4xl font-medium text-center mb-6 md:mb-8 max-w-[800px] px-4 animate-fade-in animation-delay-200">
-          What would you like to create?
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 w-full max-w-3xl px-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 w-full max-w-3xl px-4 mb-12 mt-8">
           <RainbowButton 
             onClick={() => handleTaskSelect('proposal')}
             style={{ '--speed': '2.3s' } as React.CSSProperties}
             className="h-12 md:h-14 text-base md:text-lg animate-fade-in-up animation-delay-300"
           >
-            Proposal
+            Content Proposal
           </RainbowButton>
           <RainbowButton 
             onClick={() => handleTaskSelect('outreach')}
@@ -70,6 +79,18 @@ export default function Home() {
           >
             Contractor Brief Email
           </RainbowButton>
+        </div>
+        <div className="relative h-16 md:h-36 w-full flex justify-center">
+          <img 
+            src="/fm-logo.png" 
+            alt="Flickman Media Logo" 
+            className="h-16 md:h-36 animate-fade-in absolute" 
+          />
+          <img 
+            src="/turbo.png" 
+            alt="Turbo" 
+            className="h-16 md:h-36 absolute animate-slide-in" 
+          />
         </div>
       </div>
 

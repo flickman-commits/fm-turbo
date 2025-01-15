@@ -15,7 +15,7 @@ export interface TaskConfig {
 
 export const taskConfigs: Record<TaskType, TaskConfig> = {
   contractorBrief: {
-    title: 'Contractor Brief Email',
+    title: 'Create Contractor Brief Email',
     description: 'Generate a detailed contractor brief email with project details, schedule, and compensation information.',
     fields: [
       { id: 'contractorName', label: 'Contractor Name', type: 'text', placeholder: 'Enter contractor name' },
@@ -45,7 +45,7 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
     ]
   },
   outreach: {
-    title: 'Generate Outreach Message',
+    title: 'Create Outreach Message',
     description: 'Create a personalized outreach message for potential clients or partners.',
     fields: [
       { id: 'recipientName', label: 'Recipient Name', type: 'text', placeholder: 'Enter recipient name' },
@@ -67,7 +67,7 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
     ]
   },
   budget: {
-    title: 'Production Budget',
+    title: 'Create Production Budget',
     description: 'Calculate production costs including crew, equipment, editing, and desired profit margin.',
     fields: [
       { id: 'eventType', label: 'Event Type', type: 'text', placeholder: 'Type of production' },
