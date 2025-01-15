@@ -14,6 +14,25 @@ export interface TaskConfig {
 }
 
 export const taskConfigs: Record<TaskType, TaskConfig> = {
+  contractorBrief: {
+    title: 'Contractor Brief Email',
+    description: 'Generate a detailed contractor brief email with project details, schedule, and compensation information.',
+    fields: [
+      { id: 'contractorName', label: 'Contractor Name', type: 'text', placeholder: 'Enter contractor name' },
+      { id: 'clientName', label: 'Client Name', type: 'text', placeholder: 'Enter client name' },
+      { id: 'clientCompany', label: 'Client Company', type: 'text', placeholder: 'Enter client company' },
+      { id: 'startDate', label: 'Start Date', type: 'date', placeholder: 'Select start date' },
+      { id: 'endDate', label: 'End Date', type: 'date', placeholder: 'Select end date' },
+      { id: 'location', label: 'Location', type: 'text', placeholder: 'Enter location' },
+      { id: 'pointOfContact', label: 'Point of Contact', type: 'text', placeholder: 'Enter point of contact name' },
+      { id: 'contactEmail', label: 'Contact Email', type: 'text', placeholder: 'Enter contact email' },
+      { id: 'contactPhone', label: 'Contact Phone', type: 'text', placeholder: 'Enter contact phone' },
+      { id: 'schedule', label: 'Daily Schedule', type: 'textarea', placeholder: 'Enter detailed daily schedule' },
+      { id: 'role', label: 'Contractor Role', type: 'textarea', placeholder: 'Enter detailed role description' },
+      { id: 'dailyRate', label: 'Daily Rate', type: 'number', placeholder: 'Enter daily rate' },
+      { id: 'numberOfDays', label: 'Number of Days', type: 'number', placeholder: 'Enter number of days' }
+    ]
+  },
   proposal: {
     title: 'Create Event Proposal',
     description: 'Generate a detailed event proposal with timeline, requirements, and budget breakdown.',

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { TaskType } from '@/types/tasks'
 import { taskConfigs } from '@/config/tasks'
+import { systemPrompts, getUserPrompt } from '@/config/prompts'
 import { DottedDialog } from '@/components/ui/dotted-dialog-wrapper'
 import { Label } from '@/components/ui/label'
 import { RainbowButton } from '@/components/ui/rainbow-button'
@@ -25,11 +26,11 @@ const testData: Record<TaskType, Record<string, string>> = {
     requirements: 'Full AV setup, stage design, and hybrid streaming capabilities'
   },
   outreach: {
-    recipientName: 'Sarah Johnson',
-    subject: 'Creative Production Partnership',
-    company: 'InnovateMedia',
-    role: 'Creative Director',
-    keyPoints: 'Award-winning production team, past work with Fortune 500 companies, specialized in hybrid events'
+    recipientName: 'Linnea Schuessler',
+    subject: 'Video Production Partnership for Huel',
+    company: 'Huel',
+    role: 'Creative Strategist',
+    keyPoints: 'Experienced in brand storytelling, product launches, and social media content creation. Specialized in food & beverage industry video production.'
   },
   runOfShow: {
     eventName: 'Product Launch Summit',
@@ -73,29 +74,14 @@ export function TaskDialog({ taskType, onClose, onComplete }: TaskDialogProps) {
     const loadingToast = toast.loading('Generating content...')
 
     try {
-      // Create a prompt that includes the form data
       const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
         {
           role: "system",
-          content: taskType === 'outreach' 
-            ? "You are an expert event production assistant helping to generate professional content for Flickman Media. For outreach messages, create a clean, professional email format using markdown. Use '##' for sections and avoid using asterisks (*) for formatting. Keep the formatting minimal and business-appropriate."
-            : "You are an expert event production assistant helping to generate professional content for Flickman Media. Always format your responses in clean, well-structured markdown with appropriate headers, lists, and emphasis where needed."
+          content: systemPrompts[taskType]
         },
         {
           role: "user",
-          content: taskType === 'outreach'
-            ? `Please create a professional outreach email with the following details:
-              
-Recipient: ${formData.recipientName}
-Subject: ${formData.subject}
-Company: ${formData.company}
-Role: ${formData.role}
-Key Points: ${formData.keyPoints}
-
-Format it as a proper business email with a clear subject line, greeting, body paragraphs highlighting our value proposition, and a clear call to action. Use markdown for basic structure but keep the formatting clean and minimal.`
-            : `Please create a detailed ${taskType} with the following details:\n${Object.entries(formData)
-                .map(([key, value]) => `${key}: ${value}`)
-                .join('\n')}\n\nPlease format the response in markdown with appropriate sections, bullet points, and formatting.`
+          content: getUserPrompt(taskType, formData)
         }
       ]
 
@@ -130,8 +116,8 @@ Format it as a proper business email with a clear subject line, greeting, body p
       title={config.title}
       description={config.description}
     >
-      <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-        <div className="flex justify-end">
+      <form onSubmit={handleSubmit} className="flex flex-col h-full">
+        <div className="flex justify-end p-4 md:p-6 pb-0">
           <button
             type="button"
             onClick={handleFillTestData}
@@ -140,33 +126,39 @@ Format it as a proper business email with a clear subject line, greeting, body p
             Fill Test Data
           </button>
         </div>
-        {config.fields.map((field) => (
-          <div key={field.id} className="space-y-2">
-            <Label htmlFor={field.id} className="text-sm font-medium">
-              {field.label}
-            </Label>
-            <input
-              id={field.id}
-              type={field.type}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              placeholder={field.placeholder}
-              value={formData[field.id] || ''}
-              onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
-            />
+        
+        <div className="flex-1 overflow-y-auto p-4 md:p-6">
+          <div className="space-y-4">
+            {config.fields.map((field) => (
+              <div key={field.id} className="space-y-2">
+                <Label htmlFor={field.id} className="text-sm font-medium">
+                  {field.label}
+                </Label>
+                <input
+                  id={field.id}
+                  type={field.type}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder={field.placeholder}
+                  value={formData[field.id] || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
+                />
+              </div>
+            ))}
           </div>
-        ))}
-        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-2 pt-4 mt-6 border-t">
+        </div>
+
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-2 p-4 md:p-6 pt-4 border-t flex-shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-colors disabled:opacity-50"
             disabled={isLoading}
           >
             Cancel
           </button>
           <RainbowButton
             type="submit"
-            className="w-full sm:w-auto h-10 px-6 text-sm font-medium disabled:opacity-50 justify-center"
+            className="w-full sm:w-auto justify-center"
             disabled={isLoading}
           >
             {isLoading ? 'Generating...' : 'Generate'}

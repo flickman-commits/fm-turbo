@@ -1,4 +1,4 @@
-export type TaskType = 'proposal' | 'outreach' | 'runOfShow' | 'budget';
+export type TaskType = 'proposal' | 'outreach' | 'runOfShow' | 'budget' | 'contractorBrief';
 
 export interface FormField {
   id: string;
