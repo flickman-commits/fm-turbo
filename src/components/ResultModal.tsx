@@ -115,7 +115,7 @@ export function ResultModal({ result, onClose, formData }: ResultModalProps) {
     >
       <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="p-4 md:p-6">
-          <div className="prose prose-sm max-w-none bg-white text-foreground prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-p:text-foreground prose-p:mb-4 prose-ul:list-disc prose-ul:pl-6 prose-li:mb-1 prose-pre:bg-gray-50 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto prose-code:text-foreground prose-code:bg-transparent prose-strong:font-bold">
+          <div className="prose prose-sm max-w-none bg-[#E0CFC0] text-[#3D0C11] prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-p:text-[#3D0C11] prose-p:mb-4 prose-ul:list-disc prose-ul:pl-6 prose-li:mb-1 prose-pre:bg-[#3D0C11]/5 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto prose-code:text-[#3D0C11] prose-code:bg-transparent prose-strong:font-bold">
             {result.taskType === 'outreach' && formData?.subject ? (
               <>
                 <div className="mb-6">
@@ -138,35 +138,41 @@ export function ResultModal({ result, onClose, formData }: ResultModalProps) {
           </div>
         </div>
       </div>
-      <div className="flex-shrink-0 flex flex-col sm:flex-row justify-end gap-3 sm:gap-2 p-4 md:p-6 border-t">
+      <div className="flex-shrink-0 flex flex-col sm:flex-row justify-end gap-3 sm:gap-2 p-4 md:p-6 border-t border-[#3D0C11]">
         {actions.map((action) => {
           switch (action.type) {
             case 'gmail':
               return (
-                <GmailButton 
+                <button
                   key="gmail"
-                  onClick={() => handleAction('gmail')} 
-                />
+                  onClick={() => handleAction('gmail')}
+                  className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-base font-medium text-[#3D0C11] bg-[#E0CFC0] hover:bg-[#3D0C11]/10 border-2 border-[#3D0C11] rounded-full transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    Compose in <img src="/gmail-icon.png" alt="Gmail" className="h-4 w-auto relative top-[1px]" />
+                  </span>
+                </button>
               )
             case 'notion':
               return (
-                <NotionButton
+                <button
                   key="notion"
                   onClick={() => handleAction('notion')}
+                  className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-base font-medium text-[#3D0C11] bg-[#E0CFC0] hover:bg-[#3D0C11]/10 border-2 border-[#3D0C11] rounded-full transition-colors"
                 >
                   {action.label}
-                </NotionButton>
+                </button>
               )
             case 'copy':
               return (
-                <RainbowButton
+                <button
                   key="copy"
                   onClick={() => handleAction('copy')}
                   disabled={isCopied}
-                  className="w-full sm:w-auto justify-center"
+                  className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-base font-medium text-[#E0CFC0] bg-[#3D0C11] hover:bg-[#3D0C11]/90 rounded-full transition-colors disabled:opacity-50"
                 >
                   {isCopied ? 'Copied!' : action.label}
-                </RainbowButton>
+                </button>
               )
             default:
               return null

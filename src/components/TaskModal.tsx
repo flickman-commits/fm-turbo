@@ -187,11 +187,11 @@ export function TaskModal({
       description={config.description}
     >
       <div className="flex flex-col h-full overflow-hidden">
-        <div className="flex-shrink-0 flex justify-end p-4 md:p-6 pb-4 border-b">
+        <div className="flex-shrink-0 flex justify-end p-4 md:p-6 pb-4 border-b border-[#3D0C11]">
           <button
             type="button"
             onClick={handleFillTestData}
-            className="text-sm text-muted-foreground hover:text-foreground hover:bg-gray-100 px-2 py-1 rounded-md transition-colors"
+            className="text-sm text-[#3D0C11]/80 hover:text-[#3D0C11] hover:bg-[#3D0C11]/10 px-2 py-1 rounded-md transition-colors"
           >
             Fill Test Data
           </button>
@@ -203,13 +203,13 @@ export function TaskModal({
               <div className="space-y-4">
                 {config.fields.map((field) => (
                   <div key={field.id} className="space-y-2">
-                    <Label htmlFor={field.id} className="text-sm font-medium">
+                    <Label htmlFor={field.id} className="text-sm font-medium text-[#3D0C11]">
                       {field.label}
                     </Label>
                     {field.type === 'textarea' ? (
                       <textarea
                         id={field.id}
-                        className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex min-h-[100px] w-full rounded-md border border-[#3D0C11] bg-[#E0CFC0] px-3 py-2 text-sm text-[#3D0C11] placeholder:text-[#3D0C11]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D0C11] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         placeholder={field.placeholder}
                         value={formData[field.id] || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
@@ -220,7 +220,7 @@ export function TaskModal({
                           id={field.id}
                           type="file"
                           accept=".txt"
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="flex h-10 w-full rounded-md border border-[#3D0C11] bg-[#E0CFC0] px-3 py-2 text-sm text-[#3D0C11] placeholder:text-[#3D0C11]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D0C11] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                           onChange={(e) => {
                             const file = e.target.files?.[0]
                             if (file) {
@@ -236,7 +236,7 @@ export function TaskModal({
                           }}
                         />
                         {selectedFileName && (
-                          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-sm text-gray-500">
+                          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-sm text-[#3D0C11]/70">
                             {selectedFileName}
                           </div>
                         )}
@@ -245,7 +245,7 @@ export function TaskModal({
                       <input
                         id={field.id}
                         type={field.type}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex h-10 w-full rounded-md border border-[#3D0C11] bg-[#E0CFC0] px-3 py-2 text-sm text-[#3D0C11] placeholder:text-[#3D0C11]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D0C11] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         placeholder={field.placeholder}
                         value={formData[field.id] || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
@@ -257,23 +257,23 @@ export function TaskModal({
             </div>
           </div>
 
-          <div className="flex-shrink-0 border-t bg-white p-4 md:p-6 mt-auto">
+          <div className="flex-shrink-0 border-t border-[#3D0C11] bg-[#E0CFC0] p-4 md:p-6 mt-auto">
             <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-2">
               <button
                 type="button"
                 onClick={onClose}
-                className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-[#3D0C11] hover:text-[#3D0C11] bg-[#E0CFC0] border border-[#3D0C11] rounded-full hover:bg-[#3D0C11]/10 transition-colors disabled:opacity-50"
                 disabled={isLoading}
               >
                 Cancel
               </button>
-              <RainbowButton
+              <button
                 type="submit"
-                className="w-full sm:w-auto justify-center"
+                className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-[#E0CFC0] bg-[#3D0C11] rounded-full hover:bg-[#3D0C11]/90 transition-colors disabled:opacity-50 disabled:hover:bg-[#3D0C11]"
                 disabled={isLoading || !isFormValid()}
               >
                 {isLoading ? 'Generating...' : 'Generate'}
-              </RainbowButton>
+              </button>
             </div>
           </div>
         </form>
