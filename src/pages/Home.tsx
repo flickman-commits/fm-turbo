@@ -22,7 +22,7 @@ export default function Home() {
   ]
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center px-4 py-12 bg-[#E0CFC0]">
+    <main className="min-h-screen flex flex-col items-center justify-between px-4 py-12 bg-[#E0CFC0]">
       <div className="w-full max-w-3xl mx-auto">
         <h1 className="text-4xl md:text-5xl font-bold mb-12 text-[#3D0C11] tracking-tight">
           WHAT WOULD YOU LIKE TO CREATE?
@@ -47,14 +47,24 @@ export default function Home() {
             </div>
           ))}
         </div>
+      </div>
 
-        <div className="relative h-16 md:h-36 w-full flex justify-center mt-12">
-          <img 
-            src="/fm-logo.png" 
-            alt="Flickman Media Logo" 
-            className="h-16 md:h-20 [filter:brightness(0)_saturate(100%)_invert(9%)_sepia(29%)_saturate(2614%)_hue-rotate(314deg)_brightness(94%)_contrast(97%)]" 
-          />
-        </div>
+      <div className="w-full max-w-3xl mx-auto flex flex-row items-center mt-12">
+        <span className="text-sm font-medium text-[#3D0C11] tracking-tight">A TOOL BY</span>
+        <img 
+          src="/fm-logo.png" 
+          alt="Flickman Media Logo" 
+          className="h-9 md:h-11 -ml-0.5 translate-y-[2px] [filter:brightness(0)_saturate(100%)_invert(9%)_sepia(29%)_saturate(2614%)_hue-rotate(314deg)_brightness(94%)_contrast(97%)]" 
+        />
+        <span className="text-sm font-medium text-[#3D0C11] tracking-tight translate-y-[2px] -ml-[8px]">.</span>
+        <a 
+          href="https://www.flickman.media/" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-sm font-bold text-[#3D0C11] tracking-tight ml-2 hover:text-[#3D0C11]/80 transition-colors"
+        >
+          <span className="underline">WORK WITH US</span>.
+        </a>
       </div>
 
       {selectedTask && (

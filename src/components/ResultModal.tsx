@@ -1,8 +1,5 @@
 import { useState } from 'react'
 import { TaskResult, taskActionConfigs, TaskAction } from '@/types/tasks'
-import { RainbowButton } from '@/components/ui/rainbow-button'
-import { GmailButton } from '@/components/ui/gmail-button'
-import { NotionButton } from '@/components/ui/notion-button'
 import { toast } from '@/components/ui/rainbow-toast'
 import ReactMarkdown from 'react-markdown'
 import { DottedDialog } from '@/components/ui/dotted-dialog-wrapper'
