@@ -12,13 +12,13 @@ export default function Home() {
     setSelectedTask(task)
   }
 
-  const tasks: { type: TaskType; label: string }[] = [
+  const tasks: { type: TaskType; label: string; beta?: boolean }[] = [
     { type: 'proposal', label: 'CONTENT PROPOSAL' },
     { type: 'outreach', label: 'OUTREACH MESSAGE' },
     { type: 'runOfShow', label: 'RUN OF SHOW' },
     { type: 'budget', label: 'PRODUCTION BUDGET' },
     { type: 'contractorBrief', label: 'CONTRACTOR BRIEF' },
-    { type: 'timelineFromTranscript', label: 'TIMELINE FROM TRANSCRIPT' }
+    { type: 'timelineFromTranscript', label: 'TIMELINE FROM TRANSCRIPT', beta: true }
   ]
 
   return (
@@ -35,9 +35,16 @@ export default function Home() {
               className="flex items-center justify-between border-b border-[#3D0C11] pb-4 group cursor-pointer"
               onClick={() => handleTaskSelect(task.type)}
             >
-              <h2 className="text-xl md:text-2xl font-semibold text-[#3D0C11] tracking-tight">
-                {task.label}
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl md:text-2xl font-semibold text-[#3D0C11] tracking-tight">
+                  {task.label}
+                </h2>
+                {task.beta && (
+                  <span className="px-1.5 py-0.5 text-xs font-medium bg-[#3D0C11] text-[#E0CFC0] rounded">
+                    BETA
+                  </span>
+                )}
+              </div>
               <button
                 className="text-3xl text-[#3D0C11] hover:scale-110 transition-transform"
                 aria-label={`Open ${task.label}`}
