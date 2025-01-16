@@ -33,7 +33,7 @@ Next Steps:
 - Send over a W9 just so we have it for tax purposes
 Let me know if you have any questions. Looking forward to working with you!`,
   
-  outreach: `You are the owner of a video production company reaching out to new potential clients of Flickman Media. Create a professional outreach email that follows our standard markdown formatting. The email should be clean, casual, and business-appropriate. Do not include a subject line in the email body. Do not include any signature, sign-off, or name at the end - the email should end with your final message sentence.`,
+  outreach: `You are the owner of a video production company based in NYC reaching out to a new potential client of Flickman Media. You write emails to potential new clients that you've never met all the time and are very good at it. Your tone is likable, warm and intriguing. People like to answer your emails because you have intrigued them with your words.`,
   
   proposal: `You are an expert video production assistant helping to generate professional content for Flickman Media. Create a detailed video content proposal that includes clear sections for project overview, production approach, technical requirements, timeline, and budget breakdown. Format your response in clean, well-structured markdown with appropriate headers and lists.`,
   
@@ -85,17 +85,53 @@ Rate: $${formData.dailyRate}/day x ${formData.numberOfDays} days = $${Number(for
 Let me know if you have any questions. Looking forward to working with you!`
 
     case 'outreach':
-      return `Please create an outreach email with the following details:
-              
+      return `Write a concise, friendly, casual, and purposeful email that is just supposed to get the other party to respond -- not necessarily close a deal. Do not include a subject line in the email body. Do not include any signature, sign-off, or name at the end - the email should end with your final message sentence.
+
+Your email should use the following details:
+
 Recipient: ${formData.recipientName}
-Subject Line Context: ${formData.subject}
+Subject: ${formData.subject}
 Company: ${formData.company}
 Role: ${formData.role}
 Key Points: ${formData.keyPoints}
 
-Remember to not be too salesy - we are just looking to start a conversation. Talk like you would when you talk to an old friend, keep it casual.
+Don't write anything too salesy - we are just looking to start a conversation. Talk like you to an old friend, keep it casual.
 
-Format the email starting with "We haven't met yet but I wanted to introduce myself." Then get into our value proposition, and a clear call to action that should either ask them to hop on a call or ask if there's any interest in discussing further. The email should be no more than 2 paragraphs. Keep it short and sweet. Do not include any signature, name, or sign-off at the end - the email should end with your final message sentence. Use markdown for basic structure but keep the formatting clean and minimal.`
+The structure should be like this:
+
+"Hey ***first name***"
+<insert reason for reaching out - this should mention>
+<Get into our value proposition - what we can do for them>
+<close with some sort of question intended to get them to answer the email -- things like "curious if you are doing anything on paid social. how are you approaching that?>
+
+The email should be no more than 100 words. Keep it short and sweet. In each email please mis spell 2 words, but only slightly. Also, don't make the formatting perfect, let some things that are capitalized normally not be capitalized, however don't make any grammatical or capitalization errors with our company name "Flickman Media" or their company name. Do not include any signature, name, or sign-off at the end - the email should end with your final message sentence. Use markdown for basic structure but keep the formatting clean and minimal.
+
+Here are 3 good outreach messages for you to emulate -- specifically notice how they use some sort of personal anecdote to start the message and how they all end with a question -- mimic these when you're writing your outreach message:
+
+Hey ____,
+
+I walk by your guys Madison Ave location almost every day — it's always packed in there. Every time I'm walking by I always think about the creative we could do for you guys.
+
+My name is Matt, I run a video production company here in New York and I've got a couple ideas I'd love to send your way. Are you the right person to send to?
+
+Thanks,
+Matt
+
+Hey ___,
+
+I've been getting targeting with your guys ads for a week, and as a creative, I felt I needed to share my 2 cents. I love the concept behind them but think we can execute differently to really make them come alive. I've got 3 ideas specifically, that I can share in a Loom video. Are you the right person to send to?
+
+Thanks,
+Matt
+
+Hey ____,
+
+My girlfriend won't stop talking about your brand — I gave her my word that I'd try to pitch you guys… so here I am.
+
+I've got 14 ideas on what we'd do to help with your creative. Any chance I can tell you my favorite 3 over coffee or a Zoom?
+
+Thanks,
+Matt`
 
     case 'proposal':
       return `Please create a detailed video content proposal with the following details:
