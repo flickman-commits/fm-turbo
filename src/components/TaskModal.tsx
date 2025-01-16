@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { TaskType, TaskResult } from '@/types/tasks'
 import { taskConfigs } from '@/config/tasks'
 import { systemPrompts, getUserPrompt } from '@/config/prompts'
@@ -73,28 +73,6 @@ Sunday, December 8th - Miami, FL (Shoot):
     editingHours: '40',
     profitMargin: '25',
     additionalCosts: 'Travel for crew, Equipment insurance, Location permits, Catering'
-  },
-  timelineFromTranscript: {
-    clientName: 'The Malin',
-    purpose: 'Build brand awareness for Sana Labs as an innovative AI company and highlight the synergy between Sana Labs and The Malin through their shared appreciation for design.',
-    length: '2-3 minutes',
-    tone: 'Inspiring',
-    additionalNotes: `I'm going to give you a transcript from some interviews we recorded - we recorded 4 different employees who work at Sana Labs, which is a company that creates two main AI products -
-
-The four employees names are Timmy (his interview starts at 0 seconds), Velm (his interview starts at 7:14), Lisa (her interview starts at 17:54) and Nick (his interview starts at 30:45)
-
-Each of them has a different perspective on working at Sana labs
-
-The purpose of this video is to highlight that Sana Labs is an exciting new company that is doing big things in the world of AI, we also want to highlight how design-forward Sana Labs is and tie their scandanavian roots and love of design with their decision to work at the Malin (because the Malin is very design forward as well)
-
-The general structure of the video is going to be as follows:
-- Explaining what Sana Labs is and what they do
-- talk about the excitement in AI, what they are excited about
-- talk about how Sana labs is a very design forward company
-- talk about why Sana labs chose to work at the Malin (using the design forward approach of the malin and sana labs as the segway into that section)
-
-We shouldn't cut between speakers too often, the minimum would be 10 seconds of a speaker before showing the next`,
-    transcriptFile: '/sana-labs-transcript.txt'
   }
 }
 
@@ -110,8 +88,7 @@ export function TaskModal({
   const [formData, setFormData] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<TaskResult | null>(null)
-  const [fileName, setFileName] = useState<string>('')
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [selectedFileName, setSelectedFileName] = useState('')
 
   if (!taskType) return null
   const config = taskConfigs[taskType]
@@ -120,31 +97,8 @@ export function TaskModal({
     return config.fields.every(field => formData[field.id]?.trim())
   }
 
-  const handleFillTestData = async () => {
-    if (taskType === 'timelineFromTranscript') {
-      try {
-        const response = await fetch('/sana-labs-transcript.txt')
-        const transcriptContent = await response.text()
-        setFormData({
-          ...testData[taskType],
-          transcriptFile: transcriptContent
-        })
-        setFileName('sana-labs-transcript.txt')
-        // Update the file input's files if possible
-        if (fileInputRef.current) {
-          const dataTransfer = new DataTransfer()
-          const file = new File([transcriptContent], 'sana-labs-transcript.txt', { type: 'text/plain' })
-          dataTransfer.items.add(file)
-          fileInputRef.current.files = dataTransfer.files
-        }
-      } catch (error) {
-        console.error('Failed to load transcript file:', error)
-        toast.error('Failed to load transcript file')
-        setFormData(testData[taskType])
-      }
-    } else {
-      setFormData(testData[taskType])
-    }
+  const handleFillTestData = () => {
+    setFormData(testData[taskType])
     toast.success('Test data filled')
   }
 
@@ -195,8 +149,8 @@ export function TaskModal({
       title={config.title}
       description={config.description}
     >
-      <form onSubmit={handleSubmit} className="flex flex-col h-full">
-        <div className="flex-shrink-0 flex justify-end p-4 md:p-6 pb-0">
+      <div className="flex flex-col h-full overflow-hidden">
+        <div className="flex-shrink-0 flex justify-end p-4 md:p-6 pb-4 border-b">
           <button
             type="button"
             onClick={handleFillTestData}
@@ -205,87 +159,88 @@ export function TaskModal({
             Fill Test Data
           </button>
         </div>
-        
-        <div className="flex-1 overflow-y-auto min-h-0">
-          <div className="p-4 md:p-6 pt-0">
-            <div className="space-y-4">
-              {config.fields.map((field) => (
-                <div key={field.id} className="space-y-2">
-                  <Label htmlFor={field.id} className="text-sm font-medium">
-                    {field.label}
-                  </Label>
-                  {field.type === 'textarea' ? (
-                    <textarea
-                      id={field.id}
-                      className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      placeholder={field.placeholder}
-                      value={formData[field.id] || ''}
-                      onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
-                    />
-                  ) : field.type === 'file' ? (
-                    <div className="flex items-center gap-2">
-                      <input
-                        ref={fileInputRef}
+
+        <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1">
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4 md:p-6">
+              <div className="space-y-4">
+                {config.fields.map((field) => (
+                  <div key={field.id} className="space-y-2">
+                    <Label htmlFor={field.id} className="text-sm font-medium">
+                      {field.label}
+                    </Label>
+                    {field.type === 'textarea' ? (
+                      <textarea
                         id={field.id}
-                        type="file"
-                        accept=".txt"
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0]
-                          if (file) {
-                            setFileName(file.name)
-                            const reader = new FileReader()
-                            reader.onload = (event) => {
-                              setFormData(prev => ({ ...prev, [field.id]: event.target?.result as string }))
-                            }
-                            reader.readAsText(file)
-                          } else {
-                            setFileName('')
-                          }
-                        }}
+                        className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        placeholder={field.placeholder}
+                        value={formData[field.id] || ''}
+                        onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
                       />
-                      {fileName && (
-                        <span className="text-sm text-muted-foreground">
-                          {fileName}
-                        </span>
-                      )}
-                    </div>
-                  ) : (
-                    <input
-                      id={field.id}
-                      type={field.type}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      placeholder={field.placeholder}
-                      value={formData[field.id] || ''}
-                      onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
-                    />
-                  )}
-                </div>
-              ))}
+                    ) : field.type === 'file' ? (
+                      <div className="relative">
+                        <input
+                          id={field.id}
+                          type="file"
+                          accept=".txt"
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (file) {
+                              setSelectedFileName(file.name)
+                              const reader = new FileReader()
+                              reader.onload = (event) => {
+                                setFormData(prev => ({ ...prev, [field.id]: event.target?.result as string }))
+                              }
+                              reader.readAsText(file)
+                            } else {
+                              setSelectedFileName('')
+                            }
+                          }}
+                        />
+                        {selectedFileName && (
+                          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-sm text-gray-500">
+                            {selectedFileName}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <input
+                        id={field.id}
+                        type={field.type}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        placeholder={field.placeholder}
+                        value={formData[field.id] || ''}
+                        onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex-shrink-0 border-t bg-white p-4 md:p-6">
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-colors disabled:opacity-50"
-              disabled={isLoading}
-            >
-              Cancel
-            </button>
-            <RainbowButton
-              type="submit"
-              className="w-full sm:w-auto justify-center"
-              disabled={isLoading || !isFormValid()}
-            >
-              {isLoading ? 'Generating...' : 'Generate'}
-            </RainbowButton>
+          <div className="flex-shrink-0 border-t bg-white p-4 md:p-6 mt-auto">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-colors disabled:opacity-50"
+                disabled={isLoading}
+              >
+                Cancel
+              </button>
+              <RainbowButton
+                type="submit"
+                className="w-full sm:w-auto justify-center"
+                disabled={isLoading || !isFormValid()}
+              >
+                {isLoading ? 'Generating...' : 'Generate'}
+              </RainbowButton>
+            </div>
           </div>
-        </div>
-      </form>
+        </form>
+      </div>
       {result && (
         <ResultModal
           result={result}

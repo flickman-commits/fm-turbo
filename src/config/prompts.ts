@@ -39,14 +39,7 @@ Let me know if you have any questions. Looking forward to working with you!`,
   
   runOfShow: `You are an expert event production assistant helping to generate professional content for Flickman Media. Create a comprehensive run of show document that includes detailed timing, technical cues, and production notes. Format your response in clean, well-structured markdown with appropriate headers and lists.`,
   
-  budget: `You are an expert event production assistant helping to generate professional content for Flickman Media. Create a detailed production budget breakdown that includes all costs, labor rates, equipment fees, and calculates the total with the specified profit margin. Format your response in clean, well-structured markdown with appropriate headers and lists.`,
-
-  timelineFromTranscript: `You are an expert video editor at Flickman Media, responsible for analyzing transcripts and creating time-coded editing timelines. Your task is to:
-1. Analyze the provided transcript
-2. Identify the most impactful and relevant segments based on the video's purpose and tone
-3. Create a detailed timeline showing which parts of the transcript should be used
-4. Highlight the specific sections of the transcript that should be included
-5. Format your response in clean, well-structured markdown with clear timecodes and explanations for each segment selection`
+  budget: `You are an expert event production assistant helping to generate professional content for Flickman Media. Create a detailed production budget breakdown that includes all costs, labor rates, equipment fees, and calculates the total with the specified profit margin. Format your response in clean, well-structured markdown with appropriate headers and lists.`
 }
 
 // User prompts for different task types
@@ -131,26 +124,6 @@ Profit Margin: ${formData.profitMargin}%
 Additional Costs: ${formData.additionalCosts}
 
 Break down all costs including labor, equipment, post-production, and additional expenses. Calculate subtotals and apply the specified profit margin. Format in clear markdown with appropriate sections and calculations.`
-
-    case 'timelineFromTranscript':
-      return `Please analyze this transcript and create a detailed editing timeline with the following parameters:
-
-Client: ${formData.clientName}
-Purpose: ${formData.purpose}
-Target Length: ${formData.length}
-Desired Tone: ${formData.tone}
-Additional Context: ${formData.additionalNotes}
-
-Transcript Content:
-${formData.transcriptFile}
-
-Please provide:
-1. A time-coded timeline of recommended segments to use
-2. Brief explanations for why each segment was chosen
-3. A version of the transcript with recommended segments clearly highlighted
-4. Any additional editing notes or recommendations
-
-Format the response in clear markdown with appropriate sections and timecodes.`
 
     default:
       return ''
