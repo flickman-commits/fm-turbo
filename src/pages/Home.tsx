@@ -76,6 +76,13 @@ export default function Home() {
           >
             Contractor Brief Email
           </RainbowButton>
+          <RainbowButton 
+            onClick={() => handleTaskSelect('timelineFromTranscript')}
+            style={{ '--speed': '3.3s' } as React.CSSProperties}
+            className="h-12 md:h-14 text-base md:text-lg animate-fade-in-up animation-delay-800"
+          >
+            Timeline from Transcript
+          </RainbowButton>
         </div>
         <div className="relative h-16 md:h-36 w-full flex justify-center">
           <img 

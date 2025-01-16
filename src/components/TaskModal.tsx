@@ -73,6 +73,27 @@ Sunday, December 8th - Miami, FL (Shoot):
     editingHours: '40',
     profitMargin: '25',
     additionalCosts: 'Travel for crew, Equipment insurance, Location permits, Catering'
+  },
+  timelineFromTranscript: {
+    clientName: 'The Malin',
+    purpose: 'Build brand awareness for Sana Labs as an innovative AI company and highlight the synergy between Sana Labs and The Malin through their shared appreciation for design.',
+    length: '2-3 minutes',
+    tone: 'Inspiring',
+    additionalNotes: `I'm going to give you a transcript from some interviews we recorded - we recorded 4 different employees who work at Sana Labs, which is a company that creates two main AI products -
+
+The four employees names are Timmy (his interview starts at 0 seconds), Velm (his interview starts at 7:14), Lisa (her interview starts at 17:54) and Nick (his interview starts at 30:45)
+
+Each of them has a different perspective on working at Sana labs
+
+The purpose of this video is to highlight that Sana Labs is an exciting new company that is doing big things in the world of AI, we also want to highlight how design-forward Sana Labs is and tie their scandanavian roots and love of design with their decision to work at the Malin (because the Malin is very design forward as well)
+
+The general structure of the video is going to be as follows:
+- Explaining what Sana Labs is and what they do
+- talk about the excitement in AI, what they are excited about
+- talk about how Sana labs is a very design forward company
+- talk about why Sana labs chose to work at the Malin (using the design forward approach of the malin and sana labs as the segway into that section)
+
+We shouldn't cut between speakers too often, the minimum would be 10 seconds of a speaker before showing the next`
   }
 }
 
@@ -97,8 +118,24 @@ export function TaskModal({
     return config.fields.every(field => formData[field.id]?.trim())
   }
 
-  const handleFillTestData = () => {
-    setFormData(testData[taskType])
+  const handleFillTestData = async () => {
+    if (taskType === 'timelineFromTranscript') {
+      try {
+        const response = await fetch('/sana-labs-transcript.txt')
+        const transcriptContent = await response.text()
+        setFormData({
+          ...testData[taskType],
+          transcriptFile: transcriptContent
+        })
+        setSelectedFileName('sana-labs-transcript.txt')
+      } catch (error) {
+        console.error('Failed to load transcript file:', error)
+        toast.error('Failed to load transcript file')
+        setFormData(testData[taskType])
+      }
+    } else {
+      setFormData(testData[taskType])
+    }
     toast.success('Test data filled')
   }
 
