@@ -57,13 +57,14 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
   },
   runOfShow: {
     title: 'Create Run of Show',
-    description: 'Generate a detailed run of show timeline with setup, execution, and strike plans.',
+    description: 'Generate a detailed run of show timeline for a video production shoot with location details, crew call times, and color-coded schedule.',
     fields: [
-      { id: 'eventName', label: 'Event Name', type: 'text', placeholder: 'Enter event name' },
-      { id: 'eventDate', label: 'Event Date', type: 'date', placeholder: 'Select event date' },
-      { id: 'venue', label: 'Venue', type: 'text', placeholder: 'Enter venue name and details' },
-      { id: 'duration', label: 'Duration', type: 'text', placeholder: 'Enter event duration' },
-      { id: 'keyMoments', label: 'Key Moments', type: 'textarea', placeholder: 'List key moments or milestones' }
+      { id: 'location', label: 'Location Name', type: 'text', placeholder: 'e.g. The Malin' },
+      { id: 'address', label: 'Full Address', type: 'text', placeholder: 'Enter complete address for Google Maps link' },
+      { id: 'shootDate', label: 'Shoot Date', type: 'date', placeholder: 'Select shoot date' },
+      { id: 'crewMembers', label: 'Crew Members', type: 'textarea', placeholder: 'List all crew members and their roles' },
+      { id: 'callTimes', label: 'Call Times', type: 'textarea', placeholder: 'Enter call/wrap times for each crew member' },
+      { id: 'schedule', label: 'Detailed Schedule', type: 'textarea', placeholder: 'Enter detailed schedule including setup, scenes to shoot, and wrap' }
     ]
   },
   budget: {

@@ -1,4 +1,17 @@
 import { TaskType } from '@/types/tasks'
+import { WeatherData } from '@/services/location'
+
+interface FormData {
+  [key: string]: string | WeatherData | undefined;
+  weather?: WeatherData;
+  googleMapsLink?: string;
+  location?: string;
+  address?: string;
+  shootDate?: string;
+  crewMembers?: string;
+  callTimes?: string;
+  schedule?: string;
+}
 
 // System prompts for different task types
 export const systemPrompts: Record<TaskType, string> = {
@@ -37,7 +50,7 @@ Let me know if you have any questions. Looking forward to working with you!`,
   
   proposal: `You are an expert video production assistant helping to generate professional content for Flickman Media. Create a detailed video content proposal that includes clear sections for project overview, production approach, technical requirements, timeline, and budget breakdown. Format your response in clean, well-structured markdown with appropriate headers and lists.`,
   
-  runOfShow: `You are an expert event production assistant helping to generate professional content for Flickman Media. Create a comprehensive run of show document that includes detailed timing, technical cues, and production notes. Format your response in clean, well-structured markdown with appropriate headers and lists.`,
+  runOfShow: `You are a senior producer at Flickman Media who's in charge of creating the run of show for an upcoming video shoot. You are very thorough and detailed, you are also very concise.`,
   
   budget: `You are an expert event production assistant helping to generate professional content for Flickman Media. Create a detailed production budget breakdown that includes all costs, labor rates, equipment fees, and calculates the total with the specified profit margin. Format your response in clean, well-structured markdown with appropriate headers and lists.`,
   
@@ -50,7 +63,7 @@ Let me know if you have any questions. Looking forward to working with you!`,
 }
 
 // User prompts for different task types
-export const getUserPrompt = (taskType: TaskType, formData: Record<string, string>): string => {
+export const getUserPrompt = (taskType: TaskType, formData: FormData): string => {
   switch (taskType) {
     case 'contractorBrief':
       return `Create a contractor brief email following this exact format and style:
@@ -145,15 +158,56 @@ Special Requirements: ${formData.requirements}
 Include sections for project overview, production approach, technical requirements, timeline, and budget breakdown. Format the response in clear markdown with appropriate sections and bullet points.`
 
     case 'runOfShow':
-      return `Please create a detailed run of show document with the following details:
+      const getWeatherEmoji = (condition: string) => {
+        const conditions = condition?.toLowerCase() || '';
+        if (conditions.includes('snow')) return '🌨️';
+        if (conditions.includes('rain')) return '🌧️';
+        if (conditions.includes('cloud')) return '☁️';
+        if (conditions.includes('clear')) return '☀️';
+        if (conditions.includes('sun')) return '☀️';
+        if (conditions.includes('thunder')) return '⛈️';
+        if (conditions.includes('fog')) return '🌫️';
+        if (conditions.includes('mist')) return '🌫️';
+        return '🌤️'; // default to partly cloudy
+      };
 
-Event Name: ${formData.eventName}
-Event Date: ${formData.eventDate}
-Venue: ${formData.venue}
-Duration: ${formData.duration}
-Key Moments: ${formData.keyMoments}
+      return `Create a detailed run of show document for a video shoot with the following information:
 
-Create a minute-by-minute timeline that includes all technical cues, stage movements, and production notes. Format in clear markdown with appropriate sections and timing details.`
+Location: ${formData.location}
+Address: ${formData.address}
+Date: ${formData.shootDate}
+Weather: ${formData.weather ? `${getWeatherEmoji(formData.weather.conditions)} **${formData.weather.high}°F** | ${formData.weather.low}°F` : 'N/A'}
+Sunrise: ${formData.weather?.sunrise || 'N/A'}
+Sunset: ${formData.weather?.sunset || 'N/A'}
+Crew: ${formData.crewMembers}
+Call Times: ${formData.callTimes}
+Schedule: ${formData.schedule}
+
+Please format the run of show with these sections:
+
+1. LOCATIONS
+**Location:** ${formData.location}
+**Address:** ${formData.address}
+[View in Google Maps](${formData.googleMapsLink || ''})
+**Weather Conditions:** ${formData.weather ? `${getWeatherEmoji(formData.weather.conditions)} **${formData.weather.high}°F** | ${formData.weather.low}°F` : 'N/A'}
+
+2. COLOR KEY
+- **Yellow:** Prepping to film
+- **Green:** Filming
+- **Orange:** Sunrise time (${formData.weather?.sunrise || 'N/A'})
+- **Blue:** Sunset time (${formData.weather?.sunset || 'N/A'})
+
+3. CALL/WRAP TIMES
+- List each crew member with their call and wrap times
+
+4. SCHEDULE
+| Time | Activity |
+|-----------------|----------------------------------|
+| ${formData.weather?.sunrise || 'N/A'} | **Orange:** Sunrise |
+[Schedule details here]
+| ${formData.weather?.sunset || 'N/A'} | **Blue:** Sunset |
+
+Format the schedule as a table with two columns (Time and Activity). Include sunrise and sunset times in the schedule marked with their respective colors. Color code activities based on the color key above.`
 
     case 'budget':
       return `Please create a detailed production budget with the following details:

@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { TaskResult, taskActionConfigs, TaskAction } from '@/types/tasks'
 import { toast } from '@/components/ui/rainbow-toast'
 import ReactMarkdown from 'react-markdown'
+import type { Components } from 'react-markdown'
 import { DottedDialog } from '@/components/ui/dotted-dialog-wrapper'
+import { NotionButton } from '@/components/ui/notion-button'
 
 interface ResultModalProps {
   result: TaskResult
@@ -101,6 +103,57 @@ export function ResultModal({ result, onClose, formData }: ResultModalProps) {
 
   const actions = taskActionConfigs[result.taskType] || []
 
+  const markdownComponents: Components = {
+    h1: (props) => <h1 className="text-2xl font-bold mb-4" {...props} />,
+    h2: (props) => <h2 className="text-xl font-bold mb-3" {...props} />,
+    p: ({ children, ...props }) => {
+      if (typeof children === 'string') {
+        // Handle weather conditions with emoji and temperature formatting
+        if (children.includes('Weather Conditions:')) {
+          const formattedContent = children
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\|(.*?)°F/g, '<span class="text-[#3D0C11]">|$1°F</span>');
+          return <p className="mb-2" dangerouslySetInnerHTML={{ __html: formattedContent }} />;
+        }
+        // Handle other special formatting
+        if (children.includes('**') || children.includes('Yellow') || children.includes('Green') || children.includes('Orange') || children.includes('Blue')) {
+          const formattedContent = children
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/Yellow/g, '<span class="text-yellow-600">Yellow</span>')
+            .replace(/Green/g, '<span class="text-green-600">Green</span>')
+            .replace(/Orange/g, '<span class="text-orange-600">Orange</span>')
+            .replace(/Blue/g, '<span class="text-blue-600">Blue</span>');
+          return <p className="mb-2" dangerouslySetInnerHTML={{ __html: formattedContent }} />;
+        }
+      }
+      return <p className="mb-2" {...props}>{children}</p>;
+    },
+    ul: (props) => <ul className="list-disc pl-6 mb-4" {...props} />,
+    li: ({ children, ...props }) => {
+      if (typeof children === 'string' && (children.includes('**') || children.includes('Yellow') || children.includes('Green') || children.includes('Orange') || children.includes('Blue'))) {
+        const formattedContent = children
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/Yellow/g, '<span class="text-yellow-600">Yellow</span>')
+          .replace(/Green/g, '<span class="text-green-600">Green</span>')
+          .replace(/Orange/g, '<span class="text-orange-600">Orange</span>')
+          .replace(/Blue/g, '<span class="text-blue-600">Blue</span>');
+        return <li className="mb-1" dangerouslySetInnerHTML={{ __html: formattedContent }} />;
+      }
+      return <li className="mb-1" {...props}>{children}</li>;
+    },
+    strong: (props) => <strong className="font-bold text-[#3D0C11]" {...props} />,
+    em: (props) => <em className="italic text-[#3D0C11]" {...props} />,
+    code: (props) => <code className="font-mono text-[#3D0C11]" {...props} />,
+    a: (props) => (
+      <a
+        className="text-[#3D0C11] underline hover:text-[#3D0C11]/80 transition-colors"
+        target="_blank"
+        rel="noopener noreferrer"
+        {...props}
+      />
+    ),
+  };
+
   return (
     <DottedDialog 
       open={true} 
@@ -121,14 +174,14 @@ export function ResultModal({ result, onClose, formData }: ResultModalProps) {
                 <div>
                   <strong>Body:</strong>
                   <div className="mt-2">
-                    <ReactMarkdown>
+                    <ReactMarkdown components={markdownComponents}>
                       {result.content}
                     </ReactMarkdown>
                   </div>
                 </div>
               </>
             ) : (
-              <ReactMarkdown>
+              <ReactMarkdown components={markdownComponents}>
                 {result.content}
               </ReactMarkdown>
             )}
@@ -152,13 +205,11 @@ export function ResultModal({ result, onClose, formData }: ResultModalProps) {
               )
             case 'notion':
               return (
-                <button
+                <NotionButton
                   key="notion"
                   onClick={() => handleAction('notion')}
-                  className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-base font-medium text-[#3D0C11] bg-[#E0CFC0] hover:bg-[#3D0C11]/10 border-2 border-[#3D0C11] rounded-full transition-colors"
-                >
-                  {action.label}
-                </button>
+                  className="text-[#3D0C11] bg-[#E0CFC0] hover:bg-[#3D0C11]/10 border-2 border-[#3D0C11]"
+                />
               )
             case 'copy':
               return (

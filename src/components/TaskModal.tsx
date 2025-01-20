@@ -6,8 +6,14 @@ import { DottedDialog } from '@/components/ui/dotted-dialog-wrapper'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/components/ui/rainbow-toast'
 import { createChatCompletion } from '@/services/openai'
+import { getGoogleMapsLink, getWeatherData, WeatherData } from '@/services/location'
 import { ResultModal } from './ResultModal'
 import OpenAI from 'openai'
+
+interface FormData extends Record<string, string | WeatherData> {
+  weather?: WeatherData;
+  googleMapsLink?: string;
+}
 
 const testData: Record<TaskType, Record<string, string>> = {
   contractorBrief: {
@@ -58,11 +64,23 @@ Sunday, December 8th - Miami, FL (Shoot):
     keyPoints: 'Experienced in brand storytelling, product launches, and social media content creation. Specialized in food & beverage industry video production.'
   },
   runOfShow: {
-    eventName: 'Product Launch Summit',
-    eventDate: '2024-05-20',
-    venue: 'Metropolitan Convention Center',
-    duration: '4 hours',
-    keyMoments: 'Opening keynote, product demo, panel discussion, networking reception'
+    location: 'The Malin',
+    address: '387 Park Ave South, 5th Floor, New York, NY 10016',
+    shootDate: '2023-12-16',
+    crewMembers: `Flickman, Nick Brady, Natalia Ohanesian, Lilah Beldner, Holly & Brian`,
+    callTimes: `7:45 AM (call) / 5:00 PM (wrap)`,
+    schedule: `7:15 AM - Sunrise
+7:45 AM - Arrive on site
+8:00 - 9:00 AM - Go up to Malin, build out cameras, Nick to start setting up interview setup, Flickman to shoot b-roll on gimbal during this time
+9:00 - 10:00 AM - Sana Labs is having real meeting in board room — we will shoot this on gimbal (can shoot on both cams if Nick is done setting up lighting equipment)
+10:00 - 11:00 AM - Clean the Sana Labs office, set up decor, start getting office b-roll if it's clean, detail shots
+11:00 AM - 12:00 PM - Real meeting in Sana Labs office (shoot this on gimbal)
+12:00 - 1:00 PM - Choreographed / specialty shots in Sana Labs office
+1:00 - 2:00 PM - Lunch break
+2:00 - 3:30 PM - Shoot interviews
+3:30 - 5:00 PM - Additional b-roll and breakdown gear
+5:00 PM - Wrap shoot
+4:30 PM - Sunset`
   },
   budget: {
     eventType: 'Corporate Brand Video',
@@ -103,9 +121,9 @@ export function TaskModal({
 }: {
   taskType: TaskType
   onClose: () => void
-  onComplete: (result: TaskResult, formData: Record<string, string>) => void
+  onComplete: (result: TaskResult, formData: FormData) => void
 }) {
-  const [formData, setFormData] = useState<Record<string, string>>({})
+  const [formData, setFormData] = useState<FormData>({})
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<TaskResult | null>(null)
   const [selectedFileName, setSelectedFileName] = useState('')
@@ -144,6 +162,36 @@ export function TaskModal({
     const loadingToast = toast.loading('Generating content...')
 
     try {
+      if (taskType === 'runOfShow' && formData.address && formData.shootDate) {
+        try {
+          // Get Google Maps link
+          formData.googleMapsLink = await getGoogleMapsLink(formData.address);
+
+          // Try to get weather data, but use fallbacks if it fails
+          try {
+            console.log('Fetching weather data for:', formData.address);
+            const weatherData = await getWeatherData(formData.address, formData.shootDate);
+            formData.weather = weatherData;
+          } catch (weatherError) {
+            console.error('Weather data error:', weatherError);
+            toast.error('Using default sunrise/sunset times');
+            // Use the values from our test data as fallbacks
+            formData.weather = {
+              sunrise: '7:15 AM',
+              sunset: '4:30 PM',
+              temperature: 45,
+              conditions: 'partly cloudy',
+              high: 50,
+              low: 40
+            };
+          }
+        } catch (error) {
+          console.error('Error with location services:', error);
+          // If Google Maps link fails, use a basic fallback
+          formData.googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.address)}`;
+        }
+      }
+
       const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
         {
           role: "system",
