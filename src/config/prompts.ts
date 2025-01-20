@@ -108,16 +108,16 @@ Company: ${formData.company}
 Role: ${formData.role}
 Key Points: ${formData.keyPoints}
 
-Don't write anything too salesy - we are just looking to start a conversation. Talk like you to an old friend, keep it casual.
+Don't write anything too salesy - we are just looking to start a conversation. Write as if you are speaking to an old friend, keep it casual.
 
 The structure should be like this:
 
 "Hey ***first name***"
-<insert reason for reaching out - this should mention>
+<insert reason for reaching out - this should mention something in the key points section>
 <Get into our value proposition - what we can do for them>
 <close with some sort of question intended to get them to answer the email -- things like "curious if you are doing anything on paid social. how are you approaching that?>
 
-The email should be no more than 100 words. Keep it short and sweet. In each email please mis spell 2 words, but only slightly. Also, don't make the formatting perfect, let some things that are capitalized normally not be capitalized, however don't make any grammatical or capitalization errors with our company name "Flickman Media" or their company name. Do not include any signature, name, or sign-off at the end - the email should end with your final message sentence. Use markdown for basic structure but keep the formatting clean and minimal.
+The email should be no more than 100 words. Keep it short and sweet. In each email please misspell 2 words, but only slightly. Also, don't make the formatting perfect, let some things that are capitalized normally not be capitalized, however don't make any grammatical or capitalization errors with our company name "Flickman Media" or their company name. Do not include any signature, name, or sign-off at the end - the email should end with your final message sentence. Use markdown for basic structure but keep the formatting clean and minimal.
 
 Here are 3 good outreach messages for you to emulate -- specifically notice how they use some sort of personal anecdote to start the message and how they all end with a question -- mimic these when you're writing your outreach message:
 
