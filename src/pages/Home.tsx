@@ -2,14 +2,20 @@ import { useState } from 'react'
 import { TaskType, TaskResult } from '@/types/tasks'
 import { TaskModal } from '@/components/TaskModal'
 import { ResultModal } from '@/components/ResultModal'
+import { FormDataWithWeather } from '@/types/forms'
 
 export default function Home() {
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null)
   const [result, setResult] = useState<TaskResult | null>(null)
-  const [formData, setFormData] = useState<Record<string, string>>({})
+  const [formData, setFormData] = useState<FormDataWithWeather>({})
 
   const handleTaskSelect = (task: TaskType) => {
     setSelectedTask(task)
+  }
+
+  const handleTaskComplete = (taskResult: TaskResult, formData: FormDataWithWeather) => {
+    setResult(taskResult)
+    setFormData(formData)
   }
 
   const tasks: { type: TaskType; label: string; beta?: boolean }[] = [
@@ -85,10 +91,7 @@ export default function Home() {
         <TaskModal
           taskType={selectedTask}
           onClose={() => setSelectedTask(null)}
-          onComplete={(result, data) => {
-            setResult(result)
-            setFormData(data)
-          }}
+          onComplete={handleTaskComplete}
         />
       )}
 

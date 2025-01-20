@@ -5,24 +5,7 @@ import ReactMarkdown from 'react-markdown'
 import type { Components } from 'react-markdown'
 import { DottedDialog } from '@/components/ui/dotted-dialog-wrapper'
 import { NotionButton } from '@/components/ui/notion-button'
-import { WeatherData } from '@/services/location'
-
-type FormDataValue = string | WeatherData | undefined;
-
-interface FormDataBase {
-  [key: string]: FormDataValue;
-  location?: string;
-  address?: string;
-  shootDate?: string;
-  crewMembers?: string;
-  callTimes?: string;
-  schedule?: string;
-  googleMapsLink?: string;
-}
-
-interface FormDataWithWeather extends FormDataBase {
-  weather?: WeatherData;
-}
+import { FormDataWithWeather } from '@/types/forms'
 
 interface ResultModalProps {
   result: TaskResult;

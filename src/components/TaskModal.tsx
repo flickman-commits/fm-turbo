@@ -6,67 +6,12 @@ import { DottedDialog } from '@/components/ui/dotted-dialog-wrapper'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/components/ui/rainbow-toast'
 import { createChatCompletion } from '@/services/openai'
-import { getGoogleMapsLink, getWeatherData, WeatherData } from '@/services/location'
+import { getGoogleMapsLink, getWeatherData } from '@/services/location'
 import { ResultModal } from './ResultModal'
 import OpenAI from 'openai'
+import { FormDataWithWeather } from '@/types/forms'
 
-type FormDataValue = string | WeatherData | undefined;
-
-interface FormDataBase {
-  [key: string]: FormDataValue;
-  location?: string;
-  address?: string;
-  shootDate?: string;
-  crewMembers?: string;
-  callTimes?: string;
-  schedule?: string;
-  googleMapsLink?: string;
-  weather?: WeatherData;
-  contractorName?: string;
-  contractorEmail?: string;
-  client?: string;
-  startDate?: string;
-  endDate?: string;
-  pointOfContact?: string;
-  contactEmail?: string;
-  contactPhone?: string;
-  role?: string;
-  dailyRate?: string;
-  numberOfDays?: string;
-  projectType?: string;
-  clientName?: string;
-  deliveryDate?: string;
-  budget?: string;
-  requirements?: string;
-  recipientName?: string;
-  subject?: string;
-  company?: string;
-  keyPoints?: string;
-  eventType?: string;
-  productionDays?: string;
-  crewSize?: string;
-  equipmentNeeds?: string;
-  editingHours?: string;
-  profitMargin?: string;
-  additionalCosts?: string;
-  purpose?: string;
-  length?: string;
-  tone?: string;
-  additionalNotes?: string;
-  transcriptFile?: string;
-}
-
-interface FormDataWithWeather extends FormDataBase {
-  weather?: WeatherData;
-}
-
-interface ResultModalProps {
-  result: TaskResult;
-  onClose: () => void;
-  formData: FormDataWithWeather;
-}
-
-const testData: Record<TaskType, FormDataBase> = {
+const testData: Record<TaskType, FormDataWithWeather> = {
   contractorBrief: {
     contractorName: 'Nick',
     contractorEmail: 'nick@example.com',
