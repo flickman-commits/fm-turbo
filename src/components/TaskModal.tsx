@@ -10,12 +10,63 @@ import { getGoogleMapsLink, getWeatherData, WeatherData } from '@/services/locat
 import { ResultModal } from './ResultModal'
 import OpenAI from 'openai'
 
-interface FormData extends Record<string, string | WeatherData> {
-  weather?: WeatherData;
+type FormDataValue = string | WeatherData | undefined;
+
+interface FormDataBase {
+  [key: string]: FormDataValue;
+  location?: string;
+  address?: string;
+  shootDate?: string;
+  crewMembers?: string;
+  callTimes?: string;
+  schedule?: string;
   googleMapsLink?: string;
+  weather?: WeatherData;
+  contractorName?: string;
+  contractorEmail?: string;
+  client?: string;
+  startDate?: string;
+  endDate?: string;
+  pointOfContact?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  role?: string;
+  dailyRate?: string;
+  numberOfDays?: string;
+  projectType?: string;
+  clientName?: string;
+  deliveryDate?: string;
+  budget?: string;
+  requirements?: string;
+  recipientName?: string;
+  subject?: string;
+  company?: string;
+  keyPoints?: string;
+  eventType?: string;
+  productionDays?: string;
+  crewSize?: string;
+  equipmentNeeds?: string;
+  editingHours?: string;
+  profitMargin?: string;
+  additionalCosts?: string;
+  purpose?: string;
+  length?: string;
+  tone?: string;
+  additionalNotes?: string;
+  transcriptFile?: string;
 }
 
-const testData: Record<TaskType, Record<string, string>> = {
+interface FormDataWithWeather extends FormDataBase {
+  weather?: WeatherData;
+}
+
+interface ResultModalProps {
+  result: TaskResult;
+  onClose: () => void;
+  formData: FormDataWithWeather;
+}
+
+const testData: Record<TaskType, FormDataBase> = {
   contractorBrief: {
     contractorName: 'Nick',
     contractorEmail: 'nick@example.com',
@@ -121,9 +172,9 @@ export function TaskModal({
 }: {
   taskType: TaskType
   onClose: () => void
-  onComplete: (result: TaskResult, formData: FormData) => void
+  onComplete: (result: TaskResult, formData: FormDataWithWeather) => void
 }) {
-  const [formData, setFormData] = useState<FormData>({})
+  const [formData, setFormData] = useState<FormDataWithWeather>({})
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<TaskResult | null>(null)
   const [selectedFileName, setSelectedFileName] = useState('')
@@ -132,7 +183,10 @@ export function TaskModal({
   const config = taskConfigs[taskType]
 
   const isFormValid = () => {
-    return config.fields.every(field => formData[field.id]?.trim())
+    return config.fields.every(field => {
+      const value = formData[field.id]
+      return typeof value === 'string' && value.trim().length > 0
+    })
   }
 
   const handleFillTestData = async () => {
@@ -162,35 +216,40 @@ export function TaskModal({
     const loadingToast = toast.loading('Generating content...')
 
     try {
-      if (taskType === 'runOfShow' && formData.address && formData.shootDate) {
+      const updatedFormData: FormDataWithWeather = { ...formData }
+      
+      if (taskType === 'runOfShow' && typeof formData.address === 'string' && typeof formData.shootDate === 'string') {
         try {
           // Get Google Maps link
-          formData.googleMapsLink = await getGoogleMapsLink(formData.address);
+          const googleMapsLink = await getGoogleMapsLink(formData.address)
+          updatedFormData.googleMapsLink = googleMapsLink
 
           // Try to get weather data, but use fallbacks if it fails
           try {
-            console.log('Fetching weather data for:', formData.address);
-            const weatherData = await getWeatherData(formData.address, formData.shootDate);
-            formData.weather = weatherData;
+            console.log('Fetching weather data for:', formData.address)
+            const weatherData = await getWeatherData(formData.address, formData.shootDate)
+            updatedFormData.weather = weatherData
           } catch (weatherError) {
-            console.error('Weather data error:', weatherError);
-            toast.error('Using default sunrise/sunset times');
+            console.error('Weather data error:', weatherError)
+            toast.error('Using default sunrise/sunset times')
             // Use the values from our test data as fallbacks
-            formData.weather = {
+            updatedFormData.weather = {
               sunrise: '7:15 AM',
               sunset: '4:30 PM',
               temperature: 45,
               conditions: 'partly cloudy',
               high: 50,
               low: 40
-            };
+            }
           }
         } catch (error) {
-          console.error('Error with location services:', error);
+          console.error('Error with location services:', error)
           // If Google Maps link fails, use a basic fallback
-          formData.googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.address)}`;
+          updatedFormData.googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.address)}`
         }
       }
+
+      setFormData(updatedFormData)
 
       const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
         {
@@ -199,7 +258,7 @@ export function TaskModal({
         },
         {
           role: "user",
-          content: getUserPrompt(taskType, formData)
+          content: getUserPrompt(taskType, updatedFormData)
         }
       ]
 
@@ -212,7 +271,7 @@ export function TaskModal({
       onComplete({
         content: response.content || '',
         taskType,
-      }, formData)
+      }, updatedFormData)
       
       toast.dismiss(loadingToast)
       toast.success('Content generated successfully!')
@@ -258,7 +317,7 @@ export function TaskModal({
                         id={field.id}
                         className="flex min-h-[100px] w-full rounded-md border border-[#3D0C11] bg-[#E0CFC0] px-3 py-2 text-sm text-[#3D0C11] placeholder:text-[#3D0C11]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D0C11] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         placeholder={field.placeholder}
-                        value={formData[field.id] || ''}
+                        value={typeof formData[field.id] === 'string' ? formData[field.id] as string : ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
                       />
                     ) : field.type === 'file' ? (
@@ -294,7 +353,7 @@ export function TaskModal({
                         type={field.type}
                         className="flex h-10 w-full rounded-md border border-[#3D0C11] bg-[#E0CFC0] px-3 py-2 text-sm text-[#3D0C11] placeholder:text-[#3D0C11]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D0C11] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         placeholder={field.placeholder}
-                        value={formData[field.id] || ''}
+                        value={typeof formData[field.id] === 'string' ? formData[field.id] as string : ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
                       />
                     )}

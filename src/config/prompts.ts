@@ -198,16 +198,25 @@ Please format the run of show with these sections:
 - **Blue:** Sunset time (${formData.weather?.sunset || 'N/A'})
 
 3. CALL/WRAP TIMES
-- List each crew member with their call and wrap times
+${formData.crewMembers?.split(',').map(member => `- **${member.trim()}:** ${formData.callTimes}`).join('\n')}
 
 4. SCHEDULE
+
 | Time | Activity |
-|-----------------|----------------------------------|
+|------|----------|
 | ${formData.weather?.sunrise || 'N/A'} | **Orange:** Sunrise |
-[Schedule details here]
+${formData.schedule?.split('\n').map(line => {
+  const [time, ...rest] = line.split('-').map(s => s.trim());
+  const activity = rest.join('-').trim();
+  if (!time || !activity) return '';
+  if (activity.toLowerCase().includes('shoot') || activity.toLowerCase().includes('film')) {
+    return `| ${time} | **Green:** ${activity} |`;
+  }
+  return `| ${time} | **Yellow:** ${activity} |`;
+}).join('\n')}
 | ${formData.weather?.sunset || 'N/A'} | **Blue:** Sunset |
 
-Format the schedule as a table with two columns (Time and Activity). Include sunrise and sunset times in the schedule marked with their respective colors. Color code activities based on the color key above.`
+Format all activities according to the color key above.`
 
     case 'budget':
       return `Please create a detailed production budget with the following details:

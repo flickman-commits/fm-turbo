@@ -5,11 +5,29 @@ import ReactMarkdown from 'react-markdown'
 import type { Components } from 'react-markdown'
 import { DottedDialog } from '@/components/ui/dotted-dialog-wrapper'
 import { NotionButton } from '@/components/ui/notion-button'
+import { WeatherData } from '@/services/location'
+
+type FormDataValue = string | WeatherData | undefined;
+
+interface FormDataBase {
+  [key: string]: FormDataValue;
+  location?: string;
+  address?: string;
+  shootDate?: string;
+  crewMembers?: string;
+  callTimes?: string;
+  schedule?: string;
+  googleMapsLink?: string;
+}
+
+interface FormDataWithWeather extends FormDataBase {
+  weather?: WeatherData;
+}
 
 interface ResultModalProps {
-  result: TaskResult
-  onClose: () => void
-  formData?: Record<string, string>
+  result: TaskResult;
+  onClose: () => void;
+  formData: FormDataWithWeather;
 }
 
 export function ResultModal({ result, onClose, formData }: ResultModalProps) {
@@ -47,22 +65,27 @@ export function ResultModal({ result, onClose, formData }: ResultModalProps) {
         .replace(/^Subject:.*\n/m, '')
 
       let subject = ''
-      if (result.taskType === 'contractorBrief' && formData?.contractorEmail) {
-        subject = `Project Brief - ${formData.client}`
+      const getValue = (key: string) => {
+        const value = formData[key]
+        return typeof value === 'string' ? value : ''
+      }
+
+      if (result.taskType === 'contractorBrief' && getValue('contractorEmail')) {
+        subject = `Project Brief - ${getValue('client')}`
       } else if (result.taskType === 'runOfShow') {
-        subject = `Run of Show - ${formData?.eventName || ''}`
+        subject = `Run of Show - ${getValue('eventName')}`
       } else if (result.taskType === 'proposal') {
-        subject = `Video Content Proposal - ${formData?.clientName || ''}`
+        subject = `Video Content Proposal - ${getValue('clientName')}`
       } else if (result.taskType === 'budget') {
-        subject = `Production Budget - ${formData?.eventType || ''}`
+        subject = `Production Budget - ${getValue('eventType')}`
       } else if (result.taskType === 'outreach') {
-        subject = formData?.subject || ''
+        subject = getValue('subject')
       } else {
         subject = `${result.taskType.charAt(0).toUpperCase() + result.taskType.slice(1)}`
       }
 
-      const mailtoUrl = result.taskType === 'contractorBrief' && formData?.contractorEmail
-        ? `mailto:${formData.contractorEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(formattedContent)}`
+      const mailtoUrl = result.taskType === 'contractorBrief' && getValue('contractorEmail')
+        ? `mailto:${getValue('contractorEmail')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(formattedContent)}`
         : `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(formattedContent)}`
 
       window.location.href = mailtoUrl
@@ -75,10 +98,7 @@ export function ResultModal({ result, onClose, formData }: ResultModalProps) {
 
   const handleNotionDuplicate = async () => {
     try {
-      // First copy content to clipboard and wait for it to complete
       await navigator.clipboard.writeText(result.content)
-      
-      // Then open Notion desktop app with a new page
       window.location.href = 'notion://www.notion.so/new'
       toast.success('Opening Notion... Content copied to clipboard for pasting')
     } catch (error) {
@@ -166,10 +186,10 @@ export function ResultModal({ result, onClose, formData }: ResultModalProps) {
       <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="p-4 md:p-6">
           <div className="prose prose-sm max-w-none bg-[#E0CFC0] text-[#3D0C11] prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-p:text-[#3D0C11] prose-p:mb-4 prose-ul:list-disc prose-ul:pl-6 prose-li:mb-1 prose-pre:bg-[#3D0C11]/5 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto prose-code:text-[#3D0C11] prose-code:bg-transparent prose-strong:font-bold">
-            {result.taskType === 'outreach' && formData?.subject ? (
+            {result.taskType === 'outreach' && formData.subject ? (
               <>
                 <div className="mb-6">
-                  <strong>Subject Line:</strong> {formData.subject}
+                  <strong>Subject Line:</strong> {typeof formData.subject === 'string' ? formData.subject : ''}
                 </div>
                 <div>
                   <strong>Body:</strong>
