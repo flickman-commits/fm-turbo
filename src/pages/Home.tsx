@@ -3,6 +3,8 @@ import { TaskType, TaskResult } from '@/types/tasks'
 import { TaskModal } from '@/components/TaskModal'
 import { ResultModal } from '@/components/ResultModal'
 import { FormDataWithWeather } from '@/types/forms'
+import { TrendingAudioButton } from '@/components/ui/trending-audio-button'
+import { links } from '@/config/links'
 
 export default function Home() {
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null)
@@ -61,29 +63,32 @@ export default function Home() {
           ))}
         </div>
 
-        <div className="flex flex-row items-center mt-8">
-          <span className="text-sm font-medium text-[#3D0C11] tracking-tight">A TOOL BY</span>
-          <a 
-            href="https://www.flickman.media/" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="-ml-0.5"
-          >
-            <img 
-              src="/fm-logo.png" 
-              alt="Flickman Media Logo" 
-              className="h-9 md:h-11 translate-y-[2px] [filter:brightness(0)_saturate(100%)_invert(9%)_sepia(29%)_saturate(2614%)_hue-rotate(314deg)_brightness(94%)_contrast(97%)]" 
-            />
-          </a>
-          <span className="text-sm font-medium text-[#3D0C11] tracking-tight translate-y-[2px] -ml-[8px]">.</span>
-          <a 
-            href="https://www.flickman.media/" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="text-sm font-bold text-[#3D0C11] tracking-tight ml-2 hover:text-[#3D0C11]/80 transition-colors"
-          >
-            <span className="underline">WORK WITH US</span>.
-          </a>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-4 mt-8">
+          <div className="flex flex-row items-center">
+            <span className="text-sm font-medium text-[#3D0C11] tracking-tight">A TOOL BY</span>
+            <a 
+              href={links.flickmanMedia}
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="-ml-0.5"
+            >
+              <img 
+                src="/fm-logo.png" 
+                alt="Flickman Media Logo" 
+                className="h-9 md:h-11 translate-y-[2px] [filter:brightness(0)_saturate(100%)_invert(9%)_sepia(29%)_saturate(2614%)_hue-rotate(314deg)_brightness(94%)_contrast(97%)]" 
+              />
+            </a>
+            <span className="text-sm font-medium text-[#3D0C11] tracking-tight translate-y-[2px] -ml-[8px]">.</span>
+            <a 
+              href={links.flickmanMedia}
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-sm font-bold text-[#3D0C11] tracking-tight ml-2 hover:text-[#3D0C11]/80 transition-colors"
+            >
+              <span className="underline">WORK WITH US</span>.
+            </a>
+          </div>
+          <TrendingAudioButton dropboxLink={links.trendingAudios} />
         </div>
       </div>
 
