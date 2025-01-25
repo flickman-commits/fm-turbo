@@ -1,9 +1,15 @@
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import Home from '@/pages/Home'
+import SignUp from '@/pages/SignUp'
 
 export default function App() {
   return (
-    <>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/sign-up" element={<SignUp />} />
+      </Routes>
       <Toaster 
         position="bottom-center"
         className="max-md:!bottom-auto max-md:!top-24 !z-[100]"
@@ -12,7 +18,6 @@ export default function App() {
         }}
         closeButton={false}
       />
-      <Home />
-    </>
+    </Router>
   )
 } 
