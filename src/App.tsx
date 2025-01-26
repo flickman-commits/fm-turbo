@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import Home from '@/pages/Home'
 import SignUp from '@/pages/SignUp'
+import Checkout from '@/pages/Checkout'
 
 export default function App() {
   return (
@@ -9,6 +10,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/sign-up" element={<SignUp />} />
+        <Route path="/checkout" element={<Checkout />} />
       </Routes>
       <Toaster 
         position="bottom-center"
