@@ -1,4 +1,4 @@
-interface CheckoutData {
+export interface AccountData {
   workEmail: string;
   firstName: string;
   lastName: string;
@@ -9,15 +9,12 @@ interface CheckoutData {
   details: string;
 }
 
-// Mock function to simulate checkout process
-export const createCheckoutSession = async (data?: CheckoutData) => {
+export const createAccount = async (data: AccountData): Promise<boolean> => {
   // Simulate API call delay
   await new Promise(resolve => setTimeout(resolve, 1000));
   
   // Log the data that would be sent to the server
-  if (data) {
-    console.log('Creating checkout session with data:', data);
-  }
+  console.log('Creating account with data:', data);
   
   return true;
 }; 

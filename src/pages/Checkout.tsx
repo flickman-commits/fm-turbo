@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { toast } from '@/components/ui/rainbow-toast';
 import { useNavigate } from 'react-router-dom';
-import { createCheckoutSession } from '@/services/checkout';
+import { createAccount, AccountData } from '@/services/account';
 
-const testData = {
+const testData: AccountData = {
   workEmail: 'test@flickmanmedia.com',
   firstName: 'John',
   lastName: 'Doe',
@@ -17,7 +17,7 @@ const testData = {
 export default function Checkout() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<AccountData>({
     workEmail: '',
     firstName: '',
     lastName: '',
@@ -41,7 +41,7 @@ export default function Checkout() {
     // Check if any required field is empty
     const requiredFields = ['firstName', 'lastName', 'companyName', 'jobTitle', 'companySize', 'useCase', 'details'];
     for (const field of requiredFields) {
-      if (!formData[field as keyof typeof formData]) {
+      if (!formData[field as keyof AccountData]) {
         toast.error(`Please fill in ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`);
         return false;
       }
@@ -67,23 +67,26 @@ export default function Checkout() {
       setIsSubmitting(true);
       const loadingToast = toast.loading('Setting up your account...');
       
-      // Store user data in localStorage or your preferred state management
+      // Create account
+      const success = await createAccount(formData);
+      if (!success) {
+        throw new Error('Failed to create account');
+      }
+      
+      // Store user data in localStorage
       localStorage.setItem('userEmail', formData.workEmail);
       localStorage.setItem('userName', `${formData.firstName} ${formData.lastName}`);
-      
-      // Simulate a delay to show loading state (remove in production)
-      await new Promise(resolve => setTimeout(resolve, 1000));
       
       toast.dismiss(loadingToast);
       toast.success('Account created successfully!');
       
-      // Small delay before navigation to show success message
+      // Navigate to home page after a brief delay
       setTimeout(() => {
         navigate('/');
       }, 1500);
       
     } catch (error) {
-      console.error('Checkout error:', error);
+      console.error('Account creation error:', error);
       toast.error('Failed to create account. Please try again.');
     } finally {
       setIsSubmitting(false);
