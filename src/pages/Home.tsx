@@ -5,13 +5,11 @@ import { ResultModal } from '@/components/ResultModal'
 import { FormDataWithWeather } from '@/types/forms'
 import { TrendingAudioButton } from '@/components/ui/trending-audio-button'
 import { links } from '@/config/links'
-import { useNavigate } from 'react-router-dom'
 
 export default function Home() {
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null)
   const [result, setResult] = useState<TaskResult | null>(null)
   const [formData, setFormData] = useState<FormDataWithWeather>({})
-  const navigate = useNavigate()
 
   const handleTaskSelect = (task: TaskType) => {
     setSelectedTask(task)
@@ -20,10 +18,6 @@ export default function Home() {
   const handleTaskComplete = (taskResult: TaskResult, formData: FormDataWithWeather) => {
     setResult(taskResult)
     setFormData(formData)
-  }
-
-  const handleGetStarted = () => {
-    navigate('/checkout')
   }
 
   const tasks: { type: TaskType; label: string; beta?: boolean }[] = [

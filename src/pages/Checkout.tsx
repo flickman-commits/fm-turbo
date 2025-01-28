@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { toast } from '@/components/ui/rainbow-toast';
 import { useNavigate } from 'react-router-dom';
+import { createCheckoutSession } from '@/services/checkout';
 
 const testData = {
   workEmail: 'test@flickmanmedia.com',

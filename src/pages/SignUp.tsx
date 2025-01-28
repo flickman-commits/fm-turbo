@@ -1,35 +1,7 @@
 import { useEffect, useState } from 'react'
-import { links } from '@/config/links'
-import { createCheckoutSession } from '@/services/stripe'
-import { toast } from '@/components/ui/rainbow-toast'
 import { useNavigate } from 'react-router-dom'
-
-const AnimatedCounter = ({ end }: { end: number }) => {
-  const [count, setCount] = useState(0)
-
-  useEffect(() => {
-    const duration = 1000 // 1 second
-    const steps = 60
-    const increment = end / steps
-    const interval = duration / steps
-
-    let current = 0
-
-    const timer = setInterval(() => {
-      current += increment
-      if (current >= end) {
-        setCount(end)
-        clearInterval(timer)
-      } else {
-        setCount(Math.floor(current))
-      }
-    }, interval)
-
-    return () => clearInterval(timer)
-  }, [end])
-
-  return <span>{count.toLocaleString()}+</span>
-}
+import { createCheckoutSession } from '@/services/checkout'
+import { links } from '@/config/links'
 
 const testimonials = [
   {
@@ -62,7 +34,34 @@ const testimonials = [
     text: "From call sheets to schedules, everything is perfectly formatted and professional. My clients love it.",
     image: "/fm-logo.png"
   }
-]
+];
+
+const AnimatedCounter = ({ end }: { end: number }) => {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    const duration = 1000 // 1 second
+    const steps = 60
+    const increment = end / steps
+    const interval = duration / steps
+
+    let current = 0
+
+    const timer = setInterval(() => {
+      current += increment
+      if (current >= end) {
+        setCount(end)
+        clearInterval(timer)
+      } else {
+        setCount(Math.floor(current))
+      }
+    }, interval)
+
+    return () => clearInterval(timer)
+  }, [end])
+
+  return <span>{count.toLocaleString()}+</span>
+}
 
 export default function SignUp() {
   const [activeTestimonial, setActiveTestimonial] = useState(0)
@@ -96,8 +95,13 @@ export default function SignUp() {
     }
   }, [])
 
-  const handleGetStarted = () => {
-    navigate('/checkout')
+  const handleGetStarted = async () => {
+    try {
+      await createCheckoutSession()
+      navigate('/checkout')
+    } catch (error) {
+      console.error('Failed to start checkout:', error)
+    }
   }
 
   return (
