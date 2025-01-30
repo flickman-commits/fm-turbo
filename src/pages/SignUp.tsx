@@ -324,33 +324,120 @@ export default function SignUp() {
       {/* Pricing Section */}
       <section className="py-24 px-4 bg-[#3D0C11] text-[#E0CFC0]">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-5xl font-bold mb-12 tracking-tight animate-on-scroll">
-            Simple, Transparent Pricing
+          <h2 className="text-3xl md:text-5xl font-bold mb-6 tracking-tight animate-on-scroll">
+            Pricing
           </h2>
-          <div className="bg-[#E0CFC0] text-[#3D0C11] rounded-2xl p-8 max-w-md mx-auto animate-on-scroll">
-            <h3 className="text-2xl font-bold mb-4">Pro Plan</h3>
-            <div className="text-4xl font-bold mb-2">$49<span className="text-lg">/month</span></div>
-            <p className="text-[#3D0C11]/70 mb-6">First 7 days free</p>
-            <ul className="text-left space-y-4 mb-8">
-              <li className="flex items-center">
-                <span className="mr-2">✓</span> Unlimited document generation
-              </li>
-              <li className="flex items-center">
-                <span className="mr-2">✓</span> All premium templates
-              </li>
-              <li className="flex items-center">
-                <span className="mr-2">✓</span> Weather & location integration
-              </li>
-              <li className="flex items-center">
-                <span className="mr-2">✓</span> Priority support
-              </li>
-            </ul>
-            <button
-              onClick={handleGetStarted}
-              className="w-full inline-flex items-center justify-center h-[48px] px-8 py-2 text-lg font-medium text-[#E0CFC0] bg-[#3D0C11] rounded-full hover:bg-[#3D0C11]/90 transition-colors"
-            >
-              Get Started for Free
-            </button>
+          <p className="text-xl mb-4 opacity-80 animate-on-scroll">
+            No monthly subscription.
+          </p>
+          <p className="text-xl mb-12 opacity-80 animate-on-scroll">
+            You pay once and it's yours for life.
+          </p>
+          <h3 className="text-2xl font-bold mb-12 tracking-tight animate-on-scroll">
+            Discount for early adopters.
+          </h3>
+
+          {/* Pricing Timeline */}
+          <div className="relative max-w-3xl mx-auto mb-16 animate-on-scroll">
+            <div className="h-1 bg-[#E0CFC0]/20 absolute top-4 left-0 right-0"></div>
+            <div className="flex justify-between relative">
+              <div className="text-center">
+                <div className="w-8 h-8 rounded-full bg-[#E0CFC0] mx-auto mb-2 relative z-10"></div>
+                <div className="font-bold text-2xl">$99</div>
+                <div className="text-sm opacity-60">first 10 users</div>
+              </div>
+              <div className="text-center">
+                <div className="w-8 h-8 rounded-full bg-[#4361EE] mx-auto mb-2 relative z-10"></div>
+                <div className="font-bold text-2xl">$199</div>
+                <div className="text-sm opacity-60">first 100 users</div>
+              </div>
+              <div className="text-center">
+                <div className="w-8 h-8 rounded-full bg-[#E0CFC0]/20 mx-auto mb-2 relative z-10"></div>
+                <div className="font-bold text-2xl">$299</div>
+                <div className="text-sm opacity-60">first 1000 users</div>
+              </div>
+              <div className="text-center">
+                <div className="w-8 h-8 rounded-full bg-[#E0CFC0]/20 mx-auto mb-2 relative z-10"></div>
+                <div className="font-bold text-2xl">$499</div>
+                <div className="text-sm opacity-60">after beta</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 animate-on-scroll">
+            {/* Standard Plan */}
+            <div className="bg-[#E0CFC0] text-[#3D0C11] rounded-2xl p-8">
+              <h3 className="text-2xl font-bold mb-2">Life Time Deal</h3>
+              <div className="flex items-baseline justify-center gap-2 mb-6">
+                <span className="text-4xl font-bold">$199</span>
+                <span className="text-lg line-through opacity-50">$299</span>
+              </div>
+              <ul className="text-left space-y-4 mb-8">
+                <li className="flex items-start">
+                  <span className="mr-2">✓</span>
+                  <span>Unlimited document generation</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">✓</span>
+                  <span>All premium templates</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">✓</span>
+                  <span>Weather & location integration</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">✓</span>
+                  <span>Up to 5 team members</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">✓</span>
+                  <span>Priority support</span>
+                </li>
+              </ul>
+              <button
+                onClick={handleGetStarted}
+                className="w-full inline-flex items-center justify-center h-[48px] px-8 py-2 text-lg font-medium text-[#E0CFC0] bg-[#3D0C11] rounded-full hover:bg-[#3D0C11]/90 transition-colors"
+              >
+                Get Started
+              </button>
+            </div>
+
+            {/* Pro Plan */}
+            <div className="bg-[#E0CFC0] text-[#3D0C11] rounded-2xl p-8">
+              <h3 className="text-2xl font-bold mb-2">LTD PRO</h3>
+              <div className="flex items-baseline justify-center gap-2 mb-6">
+                <span className="text-4xl font-bold">$499</span>
+                <span className="text-lg line-through opacity-50">$999</span>
+              </div>
+              <ul className="text-left space-y-4 mb-8">
+                <li className="flex items-start">
+                  <span className="mr-2">✓</span>
+                  <span>Everything in Life Time Deal</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">✓</span>
+                  <span>Up to 15 team members</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">✓</span>
+                  <span>Advanced AI customization</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">✓</span>
+                  <span>Custom branding</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">✓</span>
+                  <span>API access</span>
+                </li>
+              </ul>
+              <button
+                onClick={handleGetStarted}
+                className="w-full inline-flex items-center justify-center h-[48px] px-8 py-2 text-lg font-medium text-[#E0CFC0] bg-[#3D0C11] rounded-full hover:bg-[#3D0C11]/90 transition-colors"
+              >
+                Get Started
+              </button>
+            </div>
           </div>
         </div>
       </section>
