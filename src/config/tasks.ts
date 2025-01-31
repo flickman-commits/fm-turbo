@@ -3,8 +3,9 @@ import { TaskType } from '@/types/tasks'
 export interface FormField {
   id: string
   label: string
-  type: 'text' | 'textarea' | 'date' | 'number' | 'file'
+  type: 'text' | 'textarea' | 'date' | 'number' | 'file' | 'select' | 'buttonSelect'
   placeholder: string
+  options?: { value: string; label: string; default?: boolean }[]
 }
 
 export interface TaskConfig {
@@ -41,6 +42,7 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
       { id: 'clientName', label: 'Client Name', type: 'text', placeholder: 'Enter client name' },
       { id: 'deliveryDate', label: 'Delivery Date', type: 'date', placeholder: 'Select delivery date' },
       { id: 'budget', label: 'Budget', type: 'text', placeholder: 'Enter budget range' },
+      { id: 'discoveryTranscript', label: 'Discovery Call Transcript', type: 'file', placeholder: 'Upload your discovery call transcript (JSON)' },
       { id: 'requirements', label: 'Special Requirements', type: 'textarea', placeholder: 'Enter any special requirements or notes' }
     ]
   },
@@ -49,6 +51,11 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
     description: 'Create a personalized outreach message for potential clients or partners.',
     fields: [
       { id: 'recipientName', label: 'Recipient Name', type: 'text', placeholder: 'Enter recipient name' },
+      { id: 'familiarity', label: 'Familiarity', type: 'buttonSelect', placeholder: 'Select familiarity level', options: [
+        { value: 'neverMet', label: '🤝 Never Met', default: true },
+        { value: 'justMet', label: '👋 Just Met' },
+        { value: 'knowThem', label: '🤗 I Know Them' }
+      ]},
       { id: 'subject', label: 'Subject', type: 'text', placeholder: 'Enter message subject' },
       { id: 'company', label: 'Company', type: 'text', placeholder: 'Enter company name' },
       { id: 'role', label: 'Recipient Role', type: 'text', placeholder: 'Enter recipient role' },

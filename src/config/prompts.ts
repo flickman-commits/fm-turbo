@@ -11,6 +11,12 @@ interface FormData {
   crewMembers?: string;
   callTimes?: string;
   schedule?: string;
+  discoveryTranscript?: string;
+  recipientName?: string;
+  company?: string;
+  role?: string;
+  familiarity?: string;
+  keyPoints?: string;
 }
 
 // System prompts for different task types
@@ -46,9 +52,13 @@ Next Steps:
 - Send over a W9 just so we have it for tax purposes
 Let me know if you have any questions. Looking forward to working with you!`,
   
-  outreach: `You are the owner of a video production company based in NYC reaching out to a new potential client of Flickman Media. You write emails to potential new clients that you've never met all the time and are very good at it. Your tone is likable, warm and intriguing. People like to answer your emails because you have intrigued them with your words.`,
+  outreach: `You are the owner of a video production company based in NYC reaching out to a potential client of Flickman Media. Your tone should be likable, warm and intriguing. People like to answer your emails because you have intrigued them with your words. Adjust your tone and approach based on your familiarity with the recipient:
+
+- For "Never Met": Be professional yet intriguing, focus on creating curiosity and establishing credibility without being too formal.
+- For "Just Met": Reference your recent meeting/interaction, be warmer and more familiar while maintaining professionalism.
+- For "I Know Them": Be friendly and casual, leverage your existing relationship while still being professional.`,
   
-  proposal: `You are an expert video production assistant helping to generate professional content for Flickman Media. Create a detailed video content proposal that includes clear sections for project overview, production approach, technical requirements, timeline, and budget breakdown. Format your response in clean, well-structured markdown with appropriate headers and lists.`,
+  proposal: `You are an expert video production assistant helping to generate professional content for Flickman Media. Create a detailed video content proposal that includes clear sections for project overview, production approach, technical requirements, timeline, and budget breakdown.`,
   
   runOfShow: `You are a senior producer at Flickman Media who's in charge of creating the run of show for an upcoming video shoot. You are very thorough and detailed, you are also very concise.`,
   
@@ -103,59 +113,30 @@ Let me know if you have any questions. Looking forward to working with you!`
 Your email should use the following details:
 
 Recipient: ${formData.recipientName}
-Subject: ${formData.subject}
 Company: ${formData.company}
 Role: ${formData.role}
+Familiarity Level: ${formData.familiarity}
 Key Points: ${formData.keyPoints}
 
-Don't write anything too salesy - we are just looking to start a conversation. Write as if you are speaking to an old friend, keep it casual.
-
-The structure should be like this:
-
-"Hey ***first name***"
-<insert reason for reaching out - this should mention something in the key points section>
-<Get into our value proposition - what we can do for them>
-<close with some sort of question intended to get them to answer the email -- things like "curious if you are doing anything on paid social. how are you approaching that?>
-
-The email should be no more than 100 words. Keep it short and sweet. In each email please misspell 2 words, but only slightly. Also, don't make the formatting perfect, let some things that are capitalized normally not be capitalized, however don't make any grammatical or capitalization errors with our company name "Flickman Media" or their company name. Do not include any signature, name, or sign-off at the end - the email should end with your final message sentence. Use markdown for basic structure but keep the formatting clean and minimal.
-
-Here are 3 good outreach messages for you to emulate -- specifically notice how they use some sort of personal anecdote to start the message and how they all end with a question -- mimic these when you're writing your outreach message:
-
-Hey ____,
-
-I walk by your guys Madison Ave location almost every day — it's always packed in there. Every time I'm walking by I always think about the creative we could do for you guys.
-
-My name is Matt, I run a video production company here in New York and I've got a couple ideas I'd love to send your way. Are you the right person to send to?
-
-Thanks,
-Matt
-
-Hey ___,
-
-I've been getting targeting with your guys ads for a week, and as a creative, I felt I needed to share my 2 cents. I love the concept behind them but think we can execute differently to really make them come alive. I've got 3 ideas specifically, that I can share in a Loom video. Are you the right person to send to?
-
-Thanks,
-Matt
-
-Hey ____,
-
-My girlfriend won't stop talking about your brand — I gave her my word that I'd try to pitch you guys… so here I am.
-
-I've got 14 ideas on what we'd do to help with your creative. Any chance I can tell you my favorite 3 over coffee or a Zoom?
-
-Thanks,
-Matt`
+${formData.familiarity === 'justMet' ? 'Make sure to reference your recent meeting/interaction in a natural way.' : ''}
+${formData.familiarity === 'knowThem' ? 'Use a more casual, friendly tone that reflects your existing relationship.' : ''}`
 
     case 'proposal':
-      return `Please create a detailed video content proposal with the following details:
+      return `You are an expert video production assistant helping to generate professional content for Flickman Media. Create a detailed video content proposal that includes clear sections for project overview, production approach, technical requirements, timeline, and budget breakdown.
 
-Project Type: ${formData.projectType}
-Client: ${formData.clientName}
-Delivery Date: ${formData.deliveryDate}
-Budget Range: ${formData.budget}
-Special Requirements: ${formData.requirements}
+This is transcript from the discovery call that I had with the client -- please use this as a reference to what the client is expecting to see in the proposal, the objectives of the project, and any other relevant info to this project:
 
-Include sections for project overview, production approach, technical requirements, timeline, and budget breakdown. Format the response in clear markdown with appropriate sections and bullet points.`
+${formData.discoveryTranscript || ''}
+
+Based on the discovery call transcript and the following details, create a comprehensive proposal:
+
+Project Type: ${formData.projectType || ''}
+Client: ${formData.clientName || ''}
+Delivery Date: ${formData.deliveryDate || ''}
+Budget: ${formData.budget || ''}
+Special Requirements: ${formData.requirements || ''}
+
+Format your response in clean, well-structured markdown with appropriate headers and lists.`
 
     case 'runOfShow':
       const getWeatherEmoji = (condition: string) => {

@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { TaskType, TaskResult } from '@/types/tasks'
+import { useState, useEffect } from 'react'
+import { TaskType, TaskResult, taskActionConfigs, TaskAction, TaskActionConfig } from '@/types/tasks'
 import { taskConfigs } from '@/config/tasks'
 import { systemPrompts, getUserPrompt } from '@/config/prompts'
 import { DottedDialog } from '@/components/ui/dotted-dialog-wrapper'
@@ -7,9 +7,13 @@ import { Label } from '@/components/ui/label'
 import { toast } from '@/components/ui/rainbow-toast'
 import { createChatCompletion } from '@/services/openai'
 import { getGoogleMapsLink, getWeatherData } from '@/services/location'
-import { ResultModal } from './ResultModal'
+import { NotionButton } from '@/components/ui/notion-button'
+import ReactMarkdown from 'react-markdown'
+import type { Components } from 'react-markdown'
 import OpenAI from 'openai'
 import { FormDataWithWeather } from '@/types/forms'
+
+type ViewState = 'input' | 'loading' | 'result'
 
 const testData: Record<TaskType, FormDataWithWeather> = {
   contractorBrief: {
@@ -50,6 +54,59 @@ Sunday, December 8th - Miami, FL (Shoot):
     clientName: 'TechCorp Inc.',
     deliveryDate: '2024-06-15',
     budget: '$50,000',
+    discoveryTranscript: JSON.stringify({
+      participants: {
+        client: "Sarah Chen",
+        role: "Head of Marketing",
+        company: "TechCorp Inc.",
+        interviewer: "Matt Flickman"
+      },
+      date: "2024-01-15",
+      duration: "45 minutes",
+      conversation: [
+        {
+          speaker: "client",
+          text: "We're looking to create a series of videos that showcase our company culture and attract top talent."
+        },
+        {
+          speaker: "interviewer",
+          text: "That's great! Can you tell me more about what makes your company culture unique?"
+        },
+        {
+          speaker: "client",
+          text: "Well, we're a tech company but we have a really strong focus on work-life balance and professional development. We have flexible working hours, regular team building events, and a mentorship program. We also have a beautiful office space that we'd love to showcase."
+        },
+        {
+          speaker: "interviewer",
+          text: "Sounds perfect. What's your timeline looking like for this project?"
+        },
+        {
+          speaker: "client",
+          text: "We'd like to have this ready by mid-June as we're planning a big recruitment push in Q3. We're thinking maybe 2-3 videos, each around 2-3 minutes long."
+        },
+        {
+          speaker: "interviewer",
+          text: "And do you have any specific elements you'd like to highlight in these videos?"
+        },
+        {
+          speaker: "client",
+          text: "Yes, definitely want to show our team collaboration, our office space, maybe some interviews with current employees about why they love working here. We also have some unique perks like our rooftop garden and game room that would be great to feature."
+        }
+      ],
+      keyPoints: [
+        "Company culture focus",
+        "Work-life balance",
+        "Professional development",
+        "Office space showcase",
+        "Team collaboration",
+        "Employee testimonials"
+      ],
+      timeline: {
+        deadline: "2024-06-15",
+        deliverables: "2-3 videos",
+        videoDuration: "2-3 minutes each"
+      }
+    }, null, 2),
     requirements: 'Full video production setup, professional crew, and high-end equipment for corporate brand video'
   },
   outreach: {
@@ -57,6 +114,7 @@ Sunday, December 8th - Miami, FL (Shoot):
     subject: 'Video Production Partnership for Huel',
     company: 'Huel',
     role: 'Creative Strategist',
+    familiarity: 'neverMet',
     keyPoints: 'Experienced in brand storytelling, product launches, and social media content creation. Specialized in food & beverage industry video production.'
   },
   runOfShow: {
@@ -110,6 +168,46 @@ We shouldn't cut between speakers too often, the minimum would be 10 seconds of 
   }
 }
 
+const BUSINESS_QUOTES = [
+  "If you have < $10,000 saved up, don't buy crypto. Invest in the ability to make money. Then, you can restart the game as many times as you want.",
+  "If you can't sit still, ignore notifications, and focus on one task for eight hours straight, never expect to build something great.",
+  "If you can't explain why you believe what you believe, it's not your belief, it's someone else's.",
+  "The only thing crazier than chasing your goals is expecting other people to understand them.",
+  "The person who asks the most times gets the most. The problem is, people don't like being asked. So you have to give value consistently so you can earn the right to keep asking. Winners win because they take more shots on goal. But they only get those shots on goal because they know how to get into scoring position.",
+  "If you want better clients, stop selling cheap stuff",
+  "The best way to hit next year's goals is to not wait until next year to work on them.",
+  "The best marketing is the kind that works.",
+  "The reason it's taking so long is because you're in a rush.",
+  "The cost of settling is higher than the price of ambition. You just pay it later."
+]
+
+const LoadingOverlay = () => {
+  const [quoteIndex, setQuoteIndex] = useState(() => Math.floor(Math.random() * BUSINESS_QUOTES.length))
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setQuoteIndex(current => (current + 1) % BUSINESS_QUOTES.length)
+    }, 7000) // Change quote every 7 seconds
+
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div className="absolute inset-0 bg-[#E0CFC0]/90 flex flex-col items-center justify-center z-50 p-8">
+      <div className="w-12 h-12 border-4 border-[#3D0C11]/20 border-t-[#3D0C11] rounded-full animate-spin mb-4"></div>
+      <p className="text-[#3D0C11] text-lg font-medium text-center mb-12">
+        Hold tight... Turbo is doing tedious work for you...
+      </p>
+      <div className="max-w-2xl w-full bg-[#3D0C11]/10 border-2 border-[#3D0C11] rounded-lg p-6">
+        <p className="text-2xl font-bold text-[#3D0C11] mb-3 text-left">💭 Words of Wisdom</p>
+        <p className="text-lg text-[#3D0C11] leading-relaxed">
+          "{BUSINESS_QUOTES[quoteIndex]}"
+        </p>
+      </div>
+    </div>
+  )
+}
+
 export function TaskModal({
   taskType,
   onClose,
@@ -120,12 +218,14 @@ export function TaskModal({
   onComplete: (result: TaskResult, formData: FormDataWithWeather) => void
 }) {
   const [formData, setFormData] = useState<FormDataWithWeather>({})
-  const [isLoading, setIsLoading] = useState(false)
+  const [viewState, setViewState] = useState<ViewState>('input')
   const [result, setResult] = useState<TaskResult | null>(null)
   const [selectedFileName, setSelectedFileName] = useState('')
+  const [isCopied, setIsCopied] = useState(false)
 
   if (!taskType) return null
   const config = taskConfigs[taskType]
+  const isLoading = viewState === 'loading'
 
   const isFormValid = () => {
     return config.fields.every(field => {
@@ -157,8 +257,7 @@ export function TaskModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-    const loadingToast = toast.loading('Generating content...')
+    setViewState('loading')
 
     try {
       const updatedFormData: FormDataWithWeather = { ...formData }
@@ -177,7 +276,6 @@ export function TaskModal({
           } catch (weatherError) {
             console.error('Weather data error:', weatherError)
             toast.error('Using default sunrise/sunset times')
-            // Use the values from our test data as fallbacks
             updatedFormData.weather = {
               sunrise: '7:15 AM',
               sunset: '4:30 PM',
@@ -189,7 +287,6 @@ export function TaskModal({
           }
         } catch (error) {
           console.error('Error with location services:', error)
-          // If Google Maps link fails, use a basic fallback
           updatedFormData.googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.address)}`
         }
       }
@@ -213,20 +310,375 @@ export function TaskModal({
         throw new Error('Failed to generate content')
       }
 
-      onComplete({
+      const newResult = {
         content: response.content || '',
         taskType,
-      }, updatedFormData)
-      
-      toast.dismiss(loadingToast)
-      toast.success('Content generated successfully!')
-      onClose()
+      }
+
+      setResult(newResult)
+      setViewState('result')
     } catch (error) {
       console.error('Error generating content:', error)
-      toast.dismiss(loadingToast)
       toast.error('Failed to generate content. Please try again.')
-    } finally {
-      setIsLoading(false)
+      setViewState('input')
+    }
+  }
+
+  const handleAction = (action: TaskActionConfig) => {
+    switch (action.type) {
+      case 'gmail':
+        handleGmailCompose()
+        break
+      case 'notion':
+        handleNotionDuplicate()
+        break
+      case 'copy':
+        handleCopy()
+        break
+    }
+  }
+
+  const handleCopy = async () => {
+    try {
+      if (!result) return
+      await navigator.clipboard.writeText(result.content)
+      setIsCopied(true)
+      toast.success('Content copied to clipboard!')
+      setTimeout(() => setIsCopied(false), 2000)
+    } catch (error) {
+      console.error('Failed to copy:', error)
+      toast.error('Failed to copy content')
+    }
+  }
+
+  const handleGmailCompose = () => {
+    try {
+      if (!result) return
+      // Format content for email using clean plain text
+      const formattedContent = result.content
+        .replace(/\*\*(.*?)\*\*/g, '$1')
+        .replace(/\*(.*?)\*/g, '$1')
+        .replace(/^# (.*?)$/gm, '\n$1\n')
+        .replace(/^## (.*?)$/gm, '\n$1\n')
+        .replace(/^### (.*?)$/gm, '\n$1\n')
+        .replace(/^- (.*?)$/gm, '  • $1')
+        .replace(/\n{3,}/g, '\n\n')
+        .replace(/^Subject:.*\n/m, '')
+
+      let subject = ''
+      const getValue = (key: string) => {
+        const value = formData[key]
+        return typeof value === 'string' ? value : ''
+      }
+
+      if (taskType === 'contractorBrief' && getValue('contractorEmail')) {
+        subject = `Project Brief - ${getValue('client')}`
+      } else if (taskType === 'runOfShow') {
+        subject = `Run of Show - ${getValue('eventName')}`
+      } else if (taskType === 'proposal') {
+        subject = `Video Content Proposal - ${getValue('clientName')}`
+      } else if (taskType === 'budget') {
+        subject = `Production Budget - ${getValue('eventType')}`
+      } else if (taskType === 'outreach') {
+        subject = getValue('subject')
+      } else {
+        subject = `${taskType.charAt(0).toUpperCase() + taskType.slice(1)}`
+      }
+
+      const mailtoUrl = taskType === 'contractorBrief' && getValue('contractorEmail')
+        ? `mailto:${getValue('contractorEmail')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(formattedContent)}`
+        : `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(formattedContent)}`
+
+      window.location.href = mailtoUrl
+      toast.success('Opening email composer...')
+    } catch (error) {
+      console.error('Failed to prepare email:', error)
+      toast.error('Failed to prepare email')
+    }
+  }
+
+  const handleNotionDuplicate = async () => {
+    try {
+      if (!result) return
+      await navigator.clipboard.writeText(result.content)
+      window.location.href = 'notion://www.notion.so/new'
+      toast.success('Opening Notion... Content copied to clipboard for pasting')
+    } catch (error) {
+      console.error('Failed to open Notion:', error)
+      toast.error('Failed to open Notion')
+    }
+  }
+
+  const markdownComponents: Components = {
+    h1: (props) => <h1 className="text-2xl font-bold mb-4" {...props} />,
+    h2: (props) => <h2 className="text-xl font-bold mb-3" {...props} />,
+    p: ({ children, ...props }) => {
+      if (typeof children === 'string') {
+        if (children.includes('Weather Conditions:')) {
+          const formattedContent = children
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\|(.*?)°F/g, '<span class="text-[#3D0C11]">|$1°F</span>')
+          return <p className="mb-2" dangerouslySetInnerHTML={{ __html: formattedContent }} />
+        }
+        if (children.includes('**') || children.includes('Yellow') || children.includes('Green') || children.includes('Orange') || children.includes('Blue')) {
+          const formattedContent = children
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/Yellow/g, '<span class="text-yellow-600">Yellow</span>')
+            .replace(/Green/g, '<span class="text-green-600">Green</span>')
+            .replace(/Orange/g, '<span class="text-orange-600">Orange</span>')
+            .replace(/Blue/g, '<span class="text-blue-600">Blue</span>')
+          return <p className="mb-2" dangerouslySetInnerHTML={{ __html: formattedContent }} />
+        }
+      }
+      return <p className="mb-2" {...props}>{children}</p>
+    },
+    ul: (props) => <ul className="list-disc pl-6 mb-4" {...props} />,
+    li: ({ children, ...props }) => {
+      if (typeof children === 'string' && (children.includes('**') || children.includes('Yellow') || children.includes('Green') || children.includes('Orange') || children.includes('Blue'))) {
+        const formattedContent = children
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/Yellow/g, '<span class="text-yellow-600">Yellow</span>')
+          .replace(/Green/g, '<span class="text-green-600">Green</span>')
+          .replace(/Orange/g, '<span class="text-orange-600">Orange</span>')
+          .replace(/Blue/g, '<span class="text-blue-600">Blue</span>')
+        return <li className="mb-1" dangerouslySetInnerHTML={{ __html: formattedContent }} />
+      }
+      return <li className="mb-1" {...props}>{children}</li>
+    },
+    strong: (props) => <strong className="font-bold text-[#3D0C11]" {...props} />,
+    em: (props) => <em className="italic text-[#3D0C11]" {...props} />,
+    code: (props) => <code className="font-mono text-[#3D0C11]" {...props} />,
+    a: (props) => (
+      <a
+        className="text-[#3D0C11] underline hover:text-[#3D0C11]/80 transition-colors"
+        target="_blank"
+        rel="noopener noreferrer"
+        {...props}
+      />
+    )
+  }
+
+  const renderContent = () => {
+    switch (viewState) {
+      case 'loading':
+        return <LoadingOverlay />
+      case 'result':
+        if (!result) return null
+        const actions = taskActionConfigs[result.taskType] || []
+        return (
+          <div className="flex flex-col h-full overflow-hidden">
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-4 md:p-6">
+                <div className="prose prose-sm max-w-none bg-[#E0CFC0] text-[#3D0C11] prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-p:text-[#3D0C11] prose-p:mb-4 prose-ul:list-disc prose-ul:pl-6 prose-li:mb-1 prose-pre:bg-[#3D0C11]/5 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto prose-code:text-[#3D0C11] prose-code:bg-transparent prose-strong:font-bold">
+                  {result.taskType === 'outreach' && formData.subject ? (
+                    <>
+                      <div className="mb-6">
+                        <strong>Subject Line:</strong> {typeof formData.subject === 'string' ? formData.subject : ''}
+                      </div>
+                      <div>
+                        <strong>Body:</strong>
+                        <div className="mt-2">
+                          <ReactMarkdown components={markdownComponents}>
+                            {result.content}
+                          </ReactMarkdown>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <ReactMarkdown components={markdownComponents}>
+                      {result.content}
+                    </ReactMarkdown>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="flex-shrink-0 flex flex-col sm:flex-row justify-between gap-3 sm:gap-2 p-4 md:p-6 border-t border-[#3D0C11]">
+              <button
+                onClick={() => setViewState('input')}
+                className="inline-flex items-center justify-center h-[48px] px-6 py-2 text-base font-medium text-[#3D0C11] bg-[#E0CFC0] hover:bg-[#3D0C11]/10 border-2 border-[#3D0C11] rounded-full transition-colors min-w-[100px]"
+              >
+                Back
+              </button>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-2">
+                {actions.map((action) => {
+                  switch (action.type) {
+                    case 'gmail':
+                      return (
+                        <button
+                          key="gmail"
+                          onClick={() => handleAction(action)}
+                          className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-sm font-medium text-[#3D0C11] bg-[#E0CFC0] hover:bg-[#3D0C11]/10 border-2 border-[#3D0C11] rounded-full transition-colors min-w-[180px]"
+                        >
+                          <span className="flex items-center gap-2 whitespace-nowrap">
+                            Compose in <img src="/gmail-icon.png" alt="Gmail" className="h-4 w-auto relative top-[1px]" />
+                          </span>
+                        </button>
+                      )
+                    case 'notion':
+                      return (
+                        <NotionButton
+                          key="notion"
+                          onClick={() => handleAction(action)}
+                          className="text-[#3D0C11] bg-[#E0CFC0] hover:bg-[#3D0C11]/10 border-2 border-[#3D0C11] min-w-[180px] text-sm whitespace-nowrap"
+                        />
+                      )
+                    case 'copy':
+                      return (
+                        <button
+                          key="copy"
+                          onClick={() => handleAction(action)}
+                          disabled={isCopied}
+                          className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-sm font-medium text-[#E0CFC0] bg-[#3D0C11] hover:bg-[#3D0C11]/90 rounded-full transition-colors disabled:opacity-50 min-w-[180px] whitespace-nowrap"
+                        >
+                          {isCopied ? 'Copied!' : action.label}
+                        </button>
+                      )
+                    default:
+                      return null
+                  }
+                })}
+              </div>
+            </div>
+          </div>
+        )
+      case 'input':
+        return (
+          <>
+            <div className="flex-shrink-0 flex justify-end p-4 md:p-6 pb-4 border-b border-[#3D0C11]">
+              <button
+                type="button"
+                onClick={handleFillTestData}
+                className="text-sm text-[#3D0C11]/80 hover:text-[#3D0C11] hover:bg-[#3D0C11]/10 px-2 py-1 rounded-md transition-colors"
+              >
+                Fill Test Data
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1">
+              <div className="flex-1 overflow-y-auto">
+                <div className="p-4 md:p-6">
+                  <div className="space-y-4">
+                    {config.fields.map((field) => (
+                      <div key={field.id} className="space-y-2">
+                        <Label htmlFor={field.id} className="text-sm font-medium text-[#3D0C11]">
+                          {field.label}
+                        </Label>
+                        {field.type === 'textarea' ? (
+                          <textarea
+                            id={field.id}
+                            className="flex min-h-[100px] w-full rounded-md border border-[#3D0C11] bg-[#E0CFC0] px-3 py-2 text-sm text-[#3D0C11] placeholder:text-[#3D0C11]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D0C11] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder={field.placeholder}
+                            value={typeof formData[field.id] === 'string' ? formData[field.id] as string : ''}
+                            onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
+                          />
+                        ) : field.type === 'file' ? (
+                          <div className="space-y-2">
+                            <div className="relative flex items-center">
+                              <input
+                                id={field.id}
+                                type="file"
+                                accept=".json"
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0]
+                                  if (file) {
+                                    setSelectedFileName(file.name)
+                                    const reader = new FileReader()
+                                    reader.onload = (event) => {
+                                      try {
+                                        const jsonContent = JSON.parse(event.target?.result as string)
+                                        const formattedJson = JSON.stringify(jsonContent, null, 2)
+                                        setFormData(prev => ({ ...prev, [field.id]: formattedJson }))
+                                      } catch (error) {
+                                        console.error('Failed to parse JSON file:', error)
+                                        toast.error('Invalid JSON file format')
+                                      }
+                                    }
+                                    reader.readAsText(file)
+                                  } else {
+                                    setSelectedFileName('')
+                                    setFormData(prev => ({ ...prev, [field.id]: '' }))
+                                  }
+                                }}
+                              />
+                              <div className="flex h-10 w-full rounded-md border border-[#3D0C11] bg-[#E0CFC0] text-sm text-[#3D0C11]">
+                                <div className="flex items-center px-3 border-r border-[#3D0C11]">
+                                  Choose File
+                                </div>
+                                <div className="flex items-center px-3 flex-1">
+                                  {selectedFileName || 'No file chosen'}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ) : field.type === 'buttonSelect' ? (
+                          <div className="flex items-center gap-2 p-1 bg-[#E0CFC0]/50 rounded-full border-2 border-[#3D0C11]">
+                            {field.options?.map((option) => (
+                              <button
+                                key={option.value}
+                                type="button"
+                                className={`flex-1 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                                  formData[field.id] === option.value || (!formData[field.id] && option.default)
+                                    ? 'bg-[#3D0C11] text-[#E0CFC0]'
+                                    : 'text-[#3D0C11] hover:bg-[#3D0C11]/10'
+                                }`}
+                                onClick={() => setFormData(prev => ({ ...prev, [field.id]: option.value }))}
+                              >
+                                {option.label}
+                              </button>
+                            ))}
+                          </div>
+                        ) : field.type === 'select' ? (
+                          <select
+                            id={field.id}
+                            className="flex h-10 w-full rounded-md border border-[#3D0C11] bg-[#E0CFC0] px-3 py-2 text-sm text-[#3D0C11] placeholder:text-[#3D0C11]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D0C11] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            value={typeof formData[field.id] === 'string' ? formData[field.id] as string : field.options?.find(opt => opt.default)?.value || ''}
+                            onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
+                          >
+                            {field.options?.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            id={field.id}
+                            type={field.type}
+                            className="flex h-10 w-full rounded-md border border-[#3D0C11] bg-[#E0CFC0] px-3 py-2 text-sm text-[#3D0C11] placeholder:text-[#3D0C11]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D0C11] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder={field.placeholder}
+                            value={typeof formData[field.id] === 'string' ? formData[field.id] as string : ''}
+                            onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-shrink-0 border-t border-[#3D0C11] bg-[#E0CFC0] p-4 md:p-6 mt-auto">
+                <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-2">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-[#3D0C11] hover:text-[#3D0C11] bg-[#E0CFC0] border border-[#3D0C11] rounded-full hover:bg-[#3D0C11]/10 transition-colors disabled:opacity-50"
+                    disabled={isLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-[#E0CFC0] bg-[#3D0C11] rounded-full hover:bg-[#3D0C11]/90 transition-colors disabled:opacity-50 disabled:hover:bg-[#3D0C11]"
+                    disabled={isLoading || !isFormValid()}
+                  >
+                    {isLoading ? 'Generating...' : 'Generate'}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </>
+        )
     }
   }
 
@@ -234,108 +686,16 @@ export function TaskModal({
     <DottedDialog
       open={true}
       onOpenChange={onClose}
-      title={config.title}
-      description={config.description}
+      title={viewState === 'result' && result ? `Your ${
+        result.taskType === 'runOfShow' ? 'Run of Show' : 
+        result.taskType === 'contractorBrief' ? 'Contractor Brief' :
+        result.taskType.charAt(0).toUpperCase() + result.taskType.slice(1)
+      }` : config.title}
+      description={viewState === 'result' ? 'View and share your generated content' : config.description}
     >
-      <div className="flex flex-col h-full overflow-hidden">
-        <div className="flex-shrink-0 flex justify-end p-4 md:p-6 pb-4 border-b border-[#3D0C11]">
-          <button
-            type="button"
-            onClick={handleFillTestData}
-            className="text-sm text-[#3D0C11]/80 hover:text-[#3D0C11] hover:bg-[#3D0C11]/10 px-2 py-1 rounded-md transition-colors"
-          >
-            Fill Test Data
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1">
-          <div className="flex-1 overflow-y-auto">
-            <div className="p-4 md:p-6">
-              <div className="space-y-4">
-                {config.fields.map((field) => (
-                  <div key={field.id} className="space-y-2">
-                    <Label htmlFor={field.id} className="text-sm font-medium text-[#3D0C11]">
-                      {field.label}
-                    </Label>
-                    {field.type === 'textarea' ? (
-                      <textarea
-                        id={field.id}
-                        className="flex min-h-[100px] w-full rounded-md border border-[#3D0C11] bg-[#E0CFC0] px-3 py-2 text-sm text-[#3D0C11] placeholder:text-[#3D0C11]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D0C11] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        placeholder={field.placeholder}
-                        value={typeof formData[field.id] === 'string' ? formData[field.id] as string : ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
-                      />
-                    ) : field.type === 'file' ? (
-                      <div className="relative">
-                        <input
-                          id={field.id}
-                          type="file"
-                          accept=".txt"
-                          className="flex h-10 w-full rounded-md border border-[#3D0C11] bg-[#E0CFC0] px-3 py-2 text-sm text-[#3D0C11] placeholder:text-[#3D0C11]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D0C11] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0]
-                            if (file) {
-                              setSelectedFileName(file.name)
-                              const reader = new FileReader()
-                              reader.onload = (event) => {
-                                setFormData(prev => ({ ...prev, [field.id]: event.target?.result as string }))
-                              }
-                              reader.readAsText(file)
-                            } else {
-                              setSelectedFileName('')
-                            }
-                          }}
-                        />
-                        {selectedFileName && (
-                          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-sm text-[#3D0C11]/70">
-                            {selectedFileName}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <input
-                        id={field.id}
-                        type={field.type}
-                        className="flex h-10 w-full rounded-md border border-[#3D0C11] bg-[#E0CFC0] px-3 py-2 text-sm text-[#3D0C11] placeholder:text-[#3D0C11]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D0C11] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        placeholder={field.placeholder}
-                        value={typeof formData[field.id] === 'string' ? formData[field.id] as string : ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex-shrink-0 border-t border-[#3D0C11] bg-[#E0CFC0] p-4 md:p-6 mt-auto">
-            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-[#3D0C11] hover:text-[#3D0C11] bg-[#E0CFC0] border border-[#3D0C11] rounded-full hover:bg-[#3D0C11]/10 transition-colors disabled:opacity-50"
-                disabled={isLoading}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-[#E0CFC0] bg-[#3D0C11] rounded-full hover:bg-[#3D0C11]/90 transition-colors disabled:opacity-50 disabled:hover:bg-[#3D0C11]"
-                disabled={isLoading || !isFormValid()}
-              >
-                {isLoading ? 'Generating...' : 'Generate'}
-              </button>
-            </div>
-          </div>
-        </form>
+      <div className="flex flex-col h-full overflow-hidden relative">
+        {renderContent()}
       </div>
-      {result && (
-        <ResultModal
-          result={result}
-          onClose={() => setResult(null)}
-          formData={formData}
-        />
-      )}
     </DottedDialog>
   )
 } 

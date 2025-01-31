@@ -7,7 +7,7 @@ const testimonials = [
   {
     name: "Sarah Johnson",
     role: "Freelance Photographer",
-    text: "FM Turbo has completely transformed how I handle my production schedules. What used to take hours now takes minutes.",
+    text: "Turbo has completely transformed how I handle my production schedules. What used to take hours now takes minutes.",
     image: "/fm-logo.png"
   },
   {
@@ -19,7 +19,7 @@ const testimonials = [
   {
     name: "Emma Davis",
     role: "Production Manager",
-    text: "I can't imagine going back to manual scheduling. FM Turbo has saved me countless hours of work.",
+    text: "I can't imagine going back to manual scheduling. Turbo has saved me countless hours of work.",
     image: "/fm-logo.png"
   },
   {
@@ -133,7 +133,7 @@ export default function SignUp() {
             onClick={handleGetStarted}
             className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-lg font-medium text-[#E0CFC0] bg-[#3D0C11] rounded-full hover:bg-[#3D0C11]/90 transition-colors animate-on-scroll mb-16"
           >
-            Get Started for Free
+            Start Free Trial
           </button>
 
           <div className="animate-on-scroll">
@@ -181,6 +181,64 @@ export default function SignUp() {
         </div>
       </section>
 
+      {/* Perfect Fit Section */}
+      <section className="py-24 px-4 bg-[#E0CFC0]">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl md:text-5xl font-bold mb-12 text-[#3D0C11] tracking-tight text-center animate-on-scroll">
+            Is Turbo Right for You?
+          </h2>
+          <div className="grid md:grid-cols-2 gap-8 animate-on-scroll">
+            {/* Good Fit Column */}
+            <div className="bg-[#3D0C11] text-[#E0CFC0] rounded-2xl p-8">
+              <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <span>You're a Good Fit If</span>
+                <span className="text-3xl">🎯</span>
+              </h3>
+              <ul className="space-y-4">
+                <li className="flex items-start gap-3">
+                  <span className="text-xl">💻</span>
+                  <span>You use Premiere Pro, Honeybooks</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-xl">👖</span>
+                  <span>You wear baggy jeans</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-xl">🏃‍♂️</span>
+                  <span>You've never had a corporate job (or left the one you did)</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-xl">😤</span>
+                  <span>Outreach is the most annoying part of your job</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Not a Fit Column */}
+            <div className="bg-[#3D0C11]/10 text-[#3D0C11] rounded-2xl p-8">
+              <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <span>You're NOT a Good Fit If</span>
+                <span className="text-3xl">🚫</span>
+              </h3>
+              <ul className="space-y-4">
+                <li className="flex items-start gap-3">
+                  <span className="text-xl">🪮</span>
+                  <span>You comb your hair every morning</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-xl">⏰</span>
+                  <span>You enjoy tedious, time-sucking tasks</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-xl">🤖</span>
+                  <span>You've said the words "I don't have a creative bone in my body"</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* How it Works Section */}
       <section className="py-24 px-4 bg-[#E0CFC0]">
         <div className="max-w-4xl mx-auto text-center">
@@ -188,7 +246,7 @@ export default function SignUp() {
             How it Works
           </h2>
           <p className="text-xl text-[#3D0C11]/80 mb-12 animate-on-scroll">
-            Watch how FM Turbo transforms your creative workflow in seconds
+            Watch how Turbo transforms your creative workflow in seconds
           </p>
           <div className="aspect-video w-full bg-[#3D0C11]/5 rounded-lg shadow-lg animate-on-scroll">
             {/* Video placeholder - replace with actual video component */}
@@ -210,7 +268,7 @@ export default function SignUp() {
               <thead>
                 <tr className="border-b-2 border-[#3D0C11]">
                   <th className="py-4 px-6 text-left text-[#3D0C11]">Feature</th>
-                  <th className="py-4 px-6 text-center text-[#3D0C11]">FM Turbo</th>
+                  <th className="py-4 px-6 text-center text-[#3D0C11]">Turbo</th>
                   <th className="py-4 px-6 text-center text-[#3D0C11]">ChatGPT</th>
                 </tr>
               </thead>
@@ -328,14 +386,14 @@ export default function SignUp() {
             Pricing
           </h2>
           <p className="text-xl mb-4 opacity-80 animate-on-scroll">
-            No monthly subscription.
+            We're keeping it simple early on. Get all the Turbo features for one monthly price.
+          </p>
+          <p className="text-xl mb-4 opacity-80 animate-on-scroll">
+            Start with a 7-day free trial. Cancel if you hate it.
           </p>
           <p className="text-xl mb-12 opacity-80 animate-on-scroll">
-            You pay once and it's yours for life.
+            You'll lock in this price forever. It pays to be early and thanks for being one of our early customers.
           </p>
-          <h3 className="text-2xl font-bold mb-12 tracking-tight animate-on-scroll">
-            Discount for early adopters.
-          </h3>
 
           {/* Pricing Timeline */}
           <div className="relative max-w-3xl mx-auto mb-16 animate-on-scroll">
@@ -343,100 +401,77 @@ export default function SignUp() {
             <div className="flex justify-between relative">
               <div className="text-center">
                 <div className="w-8 h-8 rounded-full bg-[#E0CFC0] mx-auto mb-2 relative z-10"></div>
-                <div className="font-bold text-2xl">$99</div>
+                <div className="font-bold text-2xl">$10<span className="text-base">/mo</span></div>
                 <div className="text-sm opacity-60">first 10 users</div>
               </div>
               <div className="text-center">
                 <div className="w-8 h-8 rounded-full bg-[#4361EE] mx-auto mb-2 relative z-10"></div>
-                <div className="font-bold text-2xl">$199</div>
+                <div className="font-bold text-2xl">$20<span className="text-base">/mo</span></div>
                 <div className="text-sm opacity-60">first 100 users</div>
               </div>
               <div className="text-center">
                 <div className="w-8 h-8 rounded-full bg-[#E0CFC0]/20 mx-auto mb-2 relative z-10"></div>
-                <div className="font-bold text-2xl">$299</div>
+                <div className="font-bold text-2xl">$40<span className="text-base">/mo</span></div>
                 <div className="text-sm opacity-60">first 1000 users</div>
               </div>
               <div className="text-center">
                 <div className="w-8 h-8 rounded-full bg-[#E0CFC0]/20 mx-auto mb-2 relative z-10"></div>
-                <div className="font-bold text-2xl">$499</div>
+                <div className="font-bold text-2xl">¯\_(ツ)_/¯</div>
                 <div className="text-sm opacity-60">after beta</div>
               </div>
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 animate-on-scroll">
-            {/* Standard Plan */}
+          <div className="max-w-md mx-auto animate-on-scroll">
+            {/* Current Price Plan */}
             <div className="bg-[#E0CFC0] text-[#3D0C11] rounded-2xl p-8">
-              <h3 className="text-2xl font-bold mb-2">Life Time Deal</h3>
+              <h3 className="text-2xl font-bold mb-2">Current Price</h3>
               <div className="flex items-baseline justify-center gap-2 mb-6">
-                <span className="text-4xl font-bold">$199</span>
-                <span className="text-lg line-through opacity-50">$299</span>
+                <span className="text-4xl font-bold">$20</span>
+                <span className="text-lg">/month</span>
               </div>
-              <ul className="text-left space-y-4 mb-8">
-                <li className="flex items-start">
-                  <span className="mr-2">✓</span>
-                  <span>Unlimited document generation</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">✓</span>
-                  <span>All premium templates</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">✓</span>
-                  <span>Weather & location integration</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">✓</span>
-                  <span>Up to 5 team members</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">✓</span>
-                  <span>Priority support</span>
-                </li>
-              </ul>
+              <div className="mb-8">
+                <h4 className="font-semibold mb-4">Currently Included:</h4>
+                <ul className="text-left space-y-4">
+                  <li className="flex items-start">
+                    <span className="mr-2">🎬</span>
+                    <span>Run of Show Generator</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="mr-2">📝</span>
+                    <span>Call Sheet Creation</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="mr-2">💰</span>
+                    <span>Production Budget Calculator</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="mr-2">🌤️</span>
+                    <span>Weather & Location Integration</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="mr-2">✨</span>
+                    <span>Premium Templates</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="mr-2">👥</span>
+                    <span>Up to 5 Team Members</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="mr-2">🎯</span>
+                    <span>Priority Support</span>
+                  </li>
+                </ul>
+              </div>
               <button
                 onClick={handleGetStarted}
                 className="w-full inline-flex items-center justify-center h-[48px] px-8 py-2 text-lg font-medium text-[#E0CFC0] bg-[#3D0C11] rounded-full hover:bg-[#3D0C11]/90 transition-colors"
               >
-                Get Started
+                Start Free Trial
               </button>
-            </div>
-
-            {/* Pro Plan */}
-            <div className="bg-[#E0CFC0] text-[#3D0C11] rounded-2xl p-8">
-              <h3 className="text-2xl font-bold mb-2">LTD PRO</h3>
-              <div className="flex items-baseline justify-center gap-2 mb-6">
-                <span className="text-4xl font-bold">$499</span>
-                <span className="text-lg line-through opacity-50">$999</span>
-              </div>
-              <ul className="text-left space-y-4 mb-8">
-                <li className="flex items-start">
-                  <span className="mr-2">✓</span>
-                  <span>Everything in Life Time Deal</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">✓</span>
-                  <span>Up to 15 team members</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">✓</span>
-                  <span>Advanced AI customization</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">✓</span>
-                  <span>Custom branding</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">✓</span>
-                  <span>API access</span>
-                </li>
-              </ul>
-              <button
-                onClick={handleGetStarted}
-                className="w-full inline-flex items-center justify-center h-[48px] px-8 py-2 text-lg font-medium text-[#E0CFC0] bg-[#3D0C11] rounded-full hover:bg-[#3D0C11]/90 transition-colors"
-              >
-                Get Started
-              </button>
+              <p className="text-sm text-[#3D0C11]/60 mt-4 text-center">
+                7-day free trial • Lock in this price forever
+              </p>
             </div>
           </div>
         </div>
@@ -465,13 +500,13 @@ export default function SignUp() {
             Ready to Turbocharge Your Creative Business?
           </h2>
           <p className="text-xl mb-8 opacity-80 max-w-2xl mx-auto animate-on-scroll">
-            Join thousands of creators who are saving time and growing their business with FM Turbo.
+            Join thousands of creators who are saving time and growing their business with Turbo.
           </p>
           <button
             onClick={handleGetStarted}
             className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-lg font-medium text-[#3D0C11] bg-[#E0CFC0] rounded-full hover:bg-[#E0CFC0]/90 transition-colors animate-on-scroll"
           >
-            Get Started for Free
+            Start Free Trial
           </button>
         </div>
       </section>

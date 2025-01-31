@@ -8,16 +8,13 @@ import { links } from '@/config/links'
 
 export default function Home() {
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null)
-  const [result, setResult] = useState<TaskResult | null>(null)
-  const [formData, setFormData] = useState<FormDataWithWeather>({})
 
   const handleTaskSelect = (task: TaskType) => {
     setSelectedTask(task)
   }
 
   const handleTaskComplete = (taskResult: TaskResult, formData: FormDataWithWeather) => {
-    setResult(taskResult)
-    setFormData(formData)
+    // Do nothing - we're handling the result in the TaskModal now
   }
 
   const tasks: { type: TaskType; label: string; beta?: boolean }[] = [
@@ -32,8 +29,8 @@ export default function Home() {
   return (
     <main className="min-h-screen flex flex-col items-center px-4 py-12 bg-[#E0CFC0]">
       <div className="w-full max-w-3xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-bold mb-12 text-[#3D0C11] tracking-tight">
-          WHAT WOULD YOU LIKE TO CREATE?
+        <h1 className="text-5xl md:text-7xl font-bold mb-12 text-[#3D0C11] tracking-tight text-center">
+          What would you like to create today?
         </h1>
         
         <div className="space-y-4 mb-8">
@@ -97,14 +94,6 @@ export default function Home() {
           taskType={selectedTask}
           onClose={() => setSelectedTask(null)}
           onComplete={handleTaskComplete}
-        />
-      )}
-
-      {result && (
-        <ResultModal
-          result={result}
-          onClose={() => setResult(null)}
-          formData={formData}
         />
       )}
     </main>
