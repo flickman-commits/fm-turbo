@@ -36,15 +36,15 @@ const testimonials = [
   }
 ];
 
-const AnimatedCounter = ({ end }: { end: number }) => {
+const CURRENT_USERS = 112
+
+const AnimatedCounter = ({ end, duration = 1000 }: { end: number; duration?: number }) => {
   const [count, setCount] = useState(0)
 
   useEffect(() => {
-    const duration = 1000 // 1 second
     const steps = 60
     const increment = end / steps
-    const interval = duration / steps
-
+    const stepDuration = duration / steps
     let current = 0
 
     const timer = setInterval(() => {
@@ -55,12 +55,12 @@ const AnimatedCounter = ({ end }: { end: number }) => {
       } else {
         setCount(Math.floor(current))
       }
-    }, interval)
+    }, stepDuration)
 
     return () => clearInterval(timer)
-  }, [end])
+  }, [end, duration])
 
-  return <span>{count.toLocaleString()}+</span>
+  return <span>{count}</span>
 }
 
 export default function SignUp() {
@@ -380,99 +380,96 @@ export default function SignUp() {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-24 px-4 bg-[#3D0C11] text-[#E0CFC0]">
+      <section className="py-24 px-4 bg-[#E0CFC0]">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-5xl font-bold mb-6 tracking-tight animate-on-scroll">
+          <h2 className="text-4xl font-bold mb-6 text-[#3D0C11] tracking-tight">
             Pricing
           </h2>
-          <p className="text-xl mb-4 opacity-80 animate-on-scroll">
+          <p className="text-xl mb-12 text-[#3D0C11]/80">
             We're keeping it simple early on. Get all the Turbo features for one monthly price.
           </p>
-          <p className="text-xl mb-4 opacity-80 animate-on-scroll">
+          <p className="text-lg mb-8 text-[#3D0C11]/80">
             Start with a 7-day free trial. Cancel if you hate it.
           </p>
-          <p className="text-xl mb-12 opacity-80 animate-on-scroll">
+          <p className="text-lg mb-12 text-[#3D0C11]/80">
             You'll lock in this price forever. It pays to be early and thanks for being one of our early customers.
           </p>
 
-          {/* Pricing Timeline */}
-          <div className="relative max-w-3xl mx-auto mb-16 animate-on-scroll">
-            <div className="h-1 bg-[#E0CFC0]/20 absolute top-4 left-0 right-0"></div>
-            <div className="flex justify-between relative">
-              <div className="text-center">
-                <div className="w-8 h-8 rounded-full bg-[#E0CFC0] mx-auto mb-2 relative z-10"></div>
-                <div className="font-bold text-2xl">$10<span className="text-base">/mo</span></div>
-                <div className="text-sm opacity-60">first 10 users</div>
+          <div className="bg-[#3D0C11]/5 rounded-xl p-4 mb-12 inline-block">
+            <div className="text-lg font-medium text-[#3D0C11] flex items-center gap-2">
+              Current Users: <AnimatedCounter end={CURRENT_USERS} duration={2000} />
+            </div>
+          </div>
+
+          <div className="relative max-w-2xl mx-auto">
+            <div className="h-1 bg-[#3D0C11]/20 rounded-full mb-8">
+              <div 
+                className="absolute -top-2 w-4 h-4 bg-[#4F46E5] rounded-full" 
+                style={{ 
+                  left: 0,
+                  animation: 'slideRight 2s ease-out forwards',
+                }}
+              />
+            </div>
+            <div className="flex justify-between text-[#3D0C11]">
+              <div>
+                <div className="text-2xl font-bold">$10<span className="text-lg font-normal">/mo</span></div>
+                <div className="text-sm">first 10 users</div>
               </div>
-              <div className="text-center">
-                <div className="w-8 h-8 rounded-full bg-[#4361EE] mx-auto mb-2 relative z-10"></div>
-                <div className="font-bold text-2xl">$20<span className="text-base">/mo</span></div>
-                <div className="text-sm opacity-60">first 100 users</div>
+              <div>
+                <div className="text-2xl font-bold">$20<span className="text-lg font-normal">/mo</span></div>
+                <div className="text-sm">first 100 users</div>
               </div>
-              <div className="text-center">
-                <div className="w-8 h-8 rounded-full bg-[#E0CFC0]/20 mx-auto mb-2 relative z-10"></div>
-                <div className="font-bold text-2xl">$40<span className="text-base">/mo</span></div>
-                <div className="text-sm opacity-60">first 1000 users</div>
+              <div>
+                <div className="text-2xl font-bold">$40<span className="text-lg font-normal">/mo</span></div>
+                <div className="text-sm">first 1000 users</div>
               </div>
-              <div className="text-center">
-                <div className="w-8 h-8 rounded-full bg-[#E0CFC0]/20 mx-auto mb-2 relative z-10"></div>
-                <div className="font-bold text-2xl">¯\_(ツ)_/¯</div>
-                <div className="text-sm opacity-60">after beta</div>
+              <div>
+                <div className="text-2xl font-bold">¯\_(ツ)_/¯</div>
+                <div className="text-sm">after beta</div>
               </div>
             </div>
           </div>
 
-          <div className="max-w-md mx-auto animate-on-scroll">
-            {/* Current Price Plan */}
-            <div className="bg-[#E0CFC0] text-[#3D0C11] rounded-2xl p-8">
-              <h3 className="text-2xl font-bold mb-2">Current Price</h3>
-              <div className="flex items-baseline justify-center gap-2 mb-6">
-                <span className="text-4xl font-bold">$20</span>
-                <span className="text-lg">/month</span>
+          <div className="mt-12 bg-[#3D0C11]/5 rounded-xl p-8 max-w-md mx-auto">
+            <h3 className="text-2xl font-bold mb-4 text-[#3D0C11]">Current Price</h3>
+            <div className="text-6xl font-bold text-[#3D0C11] mb-8">$20<span className="text-2xl font-normal">/mo</span></div>
+            
+            <div className="mb-8">
+              <h4 className="text-lg font-semibold mb-4 text-[#3D0C11]">Everything You Need:</h4>
+              <div className="grid grid-cols-1 gap-3">
+                <div className="flex items-start gap-3">
+                  <span className="text-[#3D0C11]">✓</span>
+                  <span className="text-[#3D0C11]/80">Run of Show Generator</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-[#3D0C11]">✓</span>
+                  <span className="text-[#3D0C11]/80">Call Sheet Generator</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-[#3D0C11]">✓</span>
+                  <span className="text-[#3D0C11]/80">Weather Integration</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-[#3D0C11]">✓</span>
+                  <span className="text-[#3D0C11]/80">Production Budget Calculator</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-[#3D0C11]">✓</span>
+                  <span className="text-[#3D0C11]/80">Client Proposal Generator</span>
+                </div>
               </div>
-              <div className="mb-8">
-                <h4 className="font-semibold mb-4">Currently Included:</h4>
-                <ul className="text-left space-y-4">
-                  <li className="flex items-start">
-                    <span className="mr-2">🎬</span>
-                    <span>Run of Show Generator</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="mr-2">📝</span>
-                    <span>Call Sheet Creation</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="mr-2">💰</span>
-                    <span>Production Budget Calculator</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="mr-2">🌤️</span>
-                    <span>Weather & Location Integration</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="mr-2">✨</span>
-                    <span>Premium Templates</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="mr-2">👥</span>
-                    <span>Up to 5 Team Members</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="mr-2">🎯</span>
-                    <span>Priority Support</span>
-                  </li>
-                </ul>
-              </div>
-              <button
-                onClick={handleGetStarted}
-                className="w-full inline-flex items-center justify-center h-[48px] px-8 py-2 text-lg font-medium text-[#E0CFC0] bg-[#3D0C11] rounded-full hover:bg-[#3D0C11]/90 transition-colors"
-              >
-                Start Free Trial
-              </button>
-              <p className="text-sm text-[#3D0C11]/60 mt-4 text-center">
-                7-day free trial • Lock in this price forever
-              </p>
             </div>
+
+            <button
+              onClick={handleGetStarted}
+              className="w-full inline-flex items-center justify-center h-[48px] px-8 py-2 text-lg font-medium text-[#E0CFC0] bg-[#3D0C11] rounded-full hover:bg-[#3D0C11]/90 transition-colors"
+            >
+              Start Free Trial
+            </button>
+            <p className="text-sm text-[#3D0C11]/60 mt-4 text-center">
+              7-day free trial • Lock in this price forever
+            </p>
           </div>
         </div>
       </section>
@@ -534,4 +531,28 @@ export default function SignUp() {
       </footer>
     </main>
   )
+}
+
+const slideRightKeyframes = `
+  @keyframes slideRight {
+    from {
+      left: 0;
+    }
+    to {
+      left: calc(33.33% - 8px);
+    }
+  }
+`
+
+const injectGlobalStyles = () => {
+  if (typeof document !== 'undefined') {
+    const style = document.createElement('style')
+    style.innerHTML = slideRightKeyframes
+    document.head.appendChild(style)
+  }
+}
+
+// Inject the styles when the component mounts
+if (typeof window !== 'undefined') {
+  injectGlobalStyles()
 } 

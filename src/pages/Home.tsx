@@ -23,7 +23,7 @@ export default function Home() {
   return (
     <main className="min-h-screen flex flex-col items-center px-4 py-12 bg-[#E0CFC0]">
       <div className="w-full max-w-3xl mx-auto">
-        <h1 className="text-5xl md:text-7xl font-bold mb-12 text-[#3D0C11] tracking-tight text-center">
+        <h1 className="text-4xl md:text-7xl font-bold mb-12 text-[#3D0C11] tracking-tight text-center">
           What would you like to create today?
         </h1>
         
