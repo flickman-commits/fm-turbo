@@ -1,8 +1,6 @@
 import { useState } from 'react'
-import { TaskType, TaskResult } from '@/types/tasks'
+import { TaskType } from '@/types/tasks'
 import { TaskModal } from '@/components/TaskModal'
-import { ResultModal } from '@/components/ResultModal'
-import { FormDataWithWeather } from '@/types/forms'
 import { TrendingAudioButton } from '@/components/ui/trending-audio-button'
 import { links } from '@/config/links'
 
@@ -11,10 +9,6 @@ export default function Home() {
 
   const handleTaskSelect = (task: TaskType) => {
     setSelectedTask(task)
-  }
-
-  const handleTaskComplete = (taskResult: TaskResult, formData: FormDataWithWeather) => {
-    // Do nothing - we're handling the result in the TaskModal now
   }
 
   const tasks: { type: TaskType; label: string; beta?: boolean }[] = [
@@ -93,7 +87,6 @@ export default function Home() {
         <TaskModal
           taskType={selectedTask}
           onClose={() => setSelectedTask(null)}
-          onComplete={handleTaskComplete}
         />
       )}
     </main>

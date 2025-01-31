@@ -215,7 +215,7 @@ export function TaskModal({
 }: {
   taskType: TaskType
   onClose: () => void
-  onComplete: (result: TaskResult, formData: FormDataWithWeather) => void
+  onComplete?: (result: TaskResult, formData: FormDataWithWeather) => void
 }) {
   const [formData, setFormData] = useState<FormDataWithWeather>({})
   const [viewState, setViewState] = useState<ViewState>('input')
