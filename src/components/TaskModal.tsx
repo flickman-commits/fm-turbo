@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { TaskType, TaskResult, taskActionConfigs, TaskAction, TaskActionConfig } from '@/types/tasks'
+import { TaskType, TaskResult, taskActionConfigs, TaskActionConfig } from '@/types/tasks'
 import { taskConfigs } from '@/config/tasks'
 import { systemPrompts, getUserPrompt } from '@/config/prompts'
 import { DottedDialog } from '@/components/ui/dotted-dialog-wrapper'
@@ -211,11 +211,9 @@ const LoadingOverlay = () => {
 export function TaskModal({
   taskType,
   onClose,
-  onComplete,
 }: {
   taskType: TaskType
   onClose: () => void
-  onComplete?: (result: TaskResult, formData: FormDataWithWeather) => void
 }) {
   const [formData, setFormData] = useState<FormDataWithWeather>({})
   const [viewState, setViewState] = useState<ViewState>('input')

@@ -183,6 +183,8 @@ ${formData.crewMembers?.split(',').map(member => `- **${member.trim()}:** ${form
 
 4. SCHEDULE
 
+Date
+
 | Time | Activity |
 |------|----------|
 | ${formData.weather?.sunrise || 'N/A'} | **Orange:** Sunrise |
