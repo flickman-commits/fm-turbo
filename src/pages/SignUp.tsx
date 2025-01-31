@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { createCheckoutSession } from '@/services/checkout'
 import { links } from '@/config/links'
 
+// This can be updated when we get new user counts
+export const CURRENT_USER_COUNT = 112
+
 const testimonials = [
   {
     name: "Sarah Johnson",
@@ -35,8 +38,6 @@ const testimonials = [
     image: "/fm-logo.png"
   }
 ];
-
-const CURRENT_USERS = 112
 
 const AnimatedCounter = ({ end, duration = 1000 }: { end: number; duration?: number }) => {
   const [count, setCount] = useState(0)
@@ -105,40 +106,52 @@ export default function SignUp() {
   }
 
   return (
-    <main className="min-h-screen bg-[#E0CFC0]">
+    <main className="min-h-screen bg-[#F5F0E8]">
       {/* Hero Section */}
       <section className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-6xl md:text-8xl font-bold mb-6 text-[#3D0C11] tracking-tight animate-on-scroll">
+          <h1 className="text-6xl md:text-8xl font-bold mb-6 text-black tracking-tight animate-on-scroll">
             Turbocharge Your Creative Business
           </h1>
-          <p className="text-xl md:text-2xl mb-12 text-[#3D0C11]/80 tracking-tight max-w-3xl mx-auto animate-on-scroll">
+          <p className="text-xl md:text-2xl mb-12 text-black/80 tracking-tight max-w-3xl mx-auto animate-on-scroll">
             Transform hours of business tasks into seconds. Built specifically for freelance creatives who want to focus on what they do best.
           </p>
           
           <div className="mb-12 animate-on-scroll">
             <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="flex -space-x-1">
-                <div className="w-8 h-8 rounded-full bg-[#3D0C11] border-2 border-[#E0CFC0]"></div>
-                <div className="w-8 h-8 rounded-full bg-[#3D0C11] border-2 border-[#E0CFC0]"></div>
-                <div className="w-8 h-8 rounded-full bg-[#3D0C11] border-2 border-[#E0CFC0]"></div>
+              <div className="flex -space-x-2">
+                <img 
+                  src="/profile-pic-1.jpg" 
+                  alt="Creator profile" 
+                  className="w-8 h-8 rounded-full border-2 border-[#F5F0E8] object-cover relative z-30"
+                />
+                <img 
+                  src="/profile-pic-2.jpg" 
+                  alt="Creator profile" 
+                  className="w-8 h-8 rounded-full border-2 border-[#F5F0E8] object-cover relative z-20"
+                />
+                <img 
+                  src="/profile-pic-3.jpg" 
+                  alt="Creator profile" 
+                  className="w-8 h-8 rounded-full border-2 border-[#F5F0E8] object-cover relative z-10"
+                />
               </div>
-              <div className="text-lg font-medium text-[#3D0C11]">
-                TRUSTED BY <AnimatedCounter end={2000} /> CREATORS AND COUNTING...
+              <div className="text-lg font-medium text-black">
+                TRUSTED BY <AnimatedCounter end={CURRENT_USER_COUNT} /> CREATORS AND COUNTING...
               </div>
             </div>
           </div>
 
           <button
             onClick={handleGetStarted}
-            className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-lg font-medium text-[#E0CFC0] bg-[#3D0C11] rounded-full hover:bg-[#3D0C11]/90 transition-colors animate-on-scroll mb-16"
+            className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-lg font-medium text-[#F5F0E8] bg-black rounded-full hover:bg-[#E94E1B] transition-colors animate-on-scroll mb-16"
           >
             Start Free Trial
           </button>
 
           <div className="animate-on-scroll">
-            <div className="text-sm font-medium text-[#3D0C11]/60 mb-8 tracking-tight">
-              AS SEEN IN
+            <div className="text-sm font-medium text-[#E94E1B]/60 mb-8 tracking-tight">
+              TRUSTED BY CREATORS FROM
             </div>
             <div className="grid grid-cols-3 md:grid-cols-6 gap-8 items-center justify-items-center">
               <img src="/fm-logo.png" alt="FM" className="h-6 opacity-30" />
@@ -153,43 +166,53 @@ export default function SignUp() {
       </section>
 
       {/* Understanding Section */}
-      <section className="py-24 px-4 bg-[#3D0C11] text-[#E0CFC0]">
+      <section className="py-24 px-4 bg-black text-[#F5F0E8]">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl md:text-5xl font-bold mb-12 tracking-tight animate-on-scroll">
+          <h2 className="text-5xl md:text-7xl font-bold mb-12 tracking-tight animate-on-scroll">
             We Get It Because We Live It
           </h2>
           <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-6 animate-on-scroll">
               <div className="space-y-2">
-                <h3 className="text-xl font-semibold">The Creative's Dilemma</h3>
+                <h3 className="text-xl font-semibold text-[#29ABE2]">The Creative's Dilemma</h3>
                 <p>You didn't become a creative to spend hours on proposals and budgets.</p>
               </div>
               <div className="space-y-2">
-                <h3 className="text-xl font-semibold">The Time Trap</h3>
+                <h3 className="text-xl font-semibold text-[#00A651]">The Time Trap</h3>
                 <p>Every hour spent on admin is an hour not spent creating.</p>
               </div>
               <div className="space-y-2">
-                <h3 className="text-xl font-semibold">The Quality Question</h3>
+                <h3 className="text-xl font-semibold text-[#E94E1B]">The Quality Question</h3>
                 <p>Generic AI tools don't understand the nuances of creative work.</p>
+              </div>
+              <div className="mt-8">
+                <a 
+                  href="https://loom.com/share/folder/1e6008374a5c4d4c862d760843a0b1de"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-lg font-medium text-black bg-[#F5F0E8] rounded-full hover:bg-[#29ABE2] hover:text-[#F5F0E8] transition-colors whitespace-nowrap"
+                >
+                  Watch live product development calls
+                </a>
               </div>
             </div>
             <div className="relative h-64 md:h-auto animate-on-scroll">
               {/* TODO: Add supporting image/video */}
-              <div className="absolute inset-0 bg-[#E0CFC0]/10 rounded-lg"></div>
+              <div className="absolute inset-0 bg-[#F5F0E8]/10 rounded-lg"></div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Perfect Fit Section */}
-      <section className="py-24 px-4 bg-[#E0CFC0]">
+      <section className="py-24 px-4 bg-[#F5F0E8]">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl md:text-5xl font-bold mb-12 text-[#3D0C11] tracking-tight text-center animate-on-scroll">
+          <h2 className="text-5xl md:text-7xl font-bold mb-12 text-black tracking-tight text-center animate-on-scroll">
             Is Turbo Right for You?
           </h2>
           <div className="grid md:grid-cols-2 gap-8 animate-on-scroll">
             {/* Good Fit Column */}
-            <div className="bg-[#3D0C11] text-[#E0CFC0] rounded-2xl p-8">
+            <div className="bg-black text-[#F5F0E8] rounded-2xl p-8 hover:bg-[#29ABE2] transition-colors">
               <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
                 <span>You're a Good Fit If</span>
                 <span className="text-3xl">🎯</span>
@@ -215,7 +238,7 @@ export default function SignUp() {
             </div>
 
             {/* Not a Fit Column */}
-            <div className="bg-[#3D0C11]/10 text-[#3D0C11] rounded-2xl p-8">
+            <div className="bg-black/5 text-black rounded-2xl p-8 hover:bg-[#E94E1B]/10 transition-colors">
               <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
                 <span>You're NOT a Good Fit If</span>
                 <span className="text-3xl">🚫</span>
@@ -240,18 +263,18 @@ export default function SignUp() {
       </section>
 
       {/* How it Works Section */}
-      <section className="py-24 px-4 bg-[#E0CFC0]">
+      <section className="py-24 px-4 bg-[#F5F0E8]">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-5xl font-bold mb-8 tracking-tight animate-on-scroll text-[#3D0C11]">
+          <h2 className="text-5xl md:text-7xl font-bold mb-8 tracking-tight animate-on-scroll text-[#E94E1B]">
             How it Works
           </h2>
-          <p className="text-xl text-[#3D0C11]/80 mb-12 animate-on-scroll">
+          <p className="text-xl text-[#E94E1B]/80 mb-12 animate-on-scroll">
             Watch how Turbo transforms your creative workflow in seconds
           </p>
-          <div className="aspect-video w-full bg-[#3D0C11]/5 rounded-lg shadow-lg animate-on-scroll">
+          <div className="aspect-video w-full bg-[#E94E1B]/5 rounded-lg shadow-lg animate-on-scroll">
             {/* Video placeholder - replace with actual video component */}
             <div className="flex items-center justify-center h-full">
-              <div className="text-[#3D0C11]/40 text-lg">Video Demo Coming Soon</div>
+              <div className="text-[#E94E1B]/40 text-lg">Video Demo Coming Soon</div>
             </div>
           </div>
         </div>
@@ -260,38 +283,38 @@ export default function SignUp() {
       {/* Features Comparison */}
       <section className="py-24 px-4">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl md:text-5xl font-bold mb-12 text-[#3D0C11] tracking-tight text-center animate-on-scroll">
+          <h2 className="text-5xl md:text-7xl font-bold mb-12 text-[#E94E1B] tracking-tight text-center animate-on-scroll">
             Purpose-Built for Creatives
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse animate-on-scroll">
               <thead>
-                <tr className="border-b-2 border-[#3D0C11]">
-                  <th className="py-4 px-6 text-left text-[#3D0C11]">Feature</th>
-                  <th className="py-4 px-6 text-center text-[#3D0C11]">Turbo</th>
-                  <th className="py-4 px-6 text-center text-[#3D0C11]">ChatGPT</th>
+                <tr className="border-b-2 border-[#E94E1B]">
+                  <th className="py-4 px-6 text-left text-[#E94E1B]">Feature</th>
+                  <th className="py-4 px-6 text-center text-[#E94E1B]">Turbo</th>
+                  <th className="py-4 px-6 text-center text-[#E94E1B]">ChatGPT</th>
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-b border-[#3D0C11]/20">
-                  <td className="py-4 px-6 text-[#3D0C11]">Industry-Specific Templates</td>
-                  <td className="py-4 px-6 text-center text-[#3D0C11]">✓</td>
-                  <td className="py-4 px-6 text-center text-[#3D0C11]">✗</td>
+                <tr className="border-b border-[#E94E1B]/20">
+                  <td className="py-4 px-6 text-[#E94E1B]">Industry-Specific Templates</td>
+                  <td className="py-4 px-6 text-center text-[#E94E1B]">✓</td>
+                  <td className="py-4 px-6 text-center text-[#E94E1B]">✗</td>
                 </tr>
-                <tr className="border-b border-[#3D0C11]/20">
-                  <td className="py-4 px-6 text-[#3D0C11]">Run of Show Generator</td>
-                  <td className="py-4 px-6 text-center text-[#3D0C11]">✓</td>
-                  <td className="py-4 px-6 text-center text-[#3D0C11]">✗</td>
+                <tr className="border-b border-[#E94E1B]/20">
+                  <td className="py-4 px-6 text-[#E94E1B]">Run of Show Generator</td>
+                  <td className="py-4 px-6 text-center text-[#E94E1B]">✓</td>
+                  <td className="py-4 px-6 text-center text-[#E94E1B]">✗</td>
                 </tr>
-                <tr className="border-b border-[#3D0C11]/20">
-                  <td className="py-4 px-6 text-[#3D0C11]">Weather Integration</td>
-                  <td className="py-4 px-6 text-center text-[#3D0C11]">✓</td>
-                  <td className="py-4 px-6 text-center text-[#3D0C11]">✗</td>
+                <tr className="border-b border-[#E94E1B]/20">
+                  <td className="py-4 px-6 text-[#E94E1B]">Weather Integration</td>
+                  <td className="py-4 px-6 text-center text-[#E94E1B]">✓</td>
+                  <td className="py-4 px-6 text-center text-[#E94E1B]">✗</td>
                 </tr>
-                <tr className="border-b border-[#3D0C11]/20">
-                  <td className="py-4 px-6 text-[#3D0C11]">Production Budget Calculator</td>
-                  <td className="py-4 px-6 text-center text-[#3D0C11]">✓</td>
-                  <td className="py-4 px-6 text-center text-[#3D0C11]">✗</td>
+                <tr className="border-b border-[#E94E1B]/20">
+                  <td className="py-4 px-6 text-[#E94E1B]">Production Budget Calculator</td>
+                  <td className="py-4 px-6 text-center text-[#E94E1B]">✓</td>
+                  <td className="py-4 px-6 text-center text-[#E94E1B]">✗</td>
                 </tr>
               </tbody>
             </table>
@@ -300,9 +323,9 @@ export default function SignUp() {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-24 px-4 bg-[#3D0C11] text-[#E0CFC0]">
+      <section className="py-24 px-4 bg-[#E94E1B] text-[#F5F0E8]">
         <div className="max-w-6xl mx-auto text-center">
-          <h2 className="text-3xl md:text-5xl font-bold mb-16 tracking-tight animate-on-scroll">
+          <h2 className="text-5xl md:text-7xl font-bold mb-16 tracking-tight animate-on-scroll">
             What Creators Are Saying
           </h2>
           <div className="relative h-[400px] overflow-hidden">
@@ -345,7 +368,7 @@ export default function SignUp() {
                       zIndex,
                     }}
                   >
-                    <div className="bg-[#E0CFC0]/10 rounded-lg p-8 h-full flex flex-col items-center justify-center">
+                    <div className="bg-[#F5F0E8]/10 rounded-lg p-8 h-full flex flex-col items-center justify-center">
                       <img
                         src={testimonial.image}
                         alt={testimonial.name}
@@ -354,7 +377,7 @@ export default function SignUp() {
                       <p className="text-xl mb-6 italic">"{testimonial.text}"</p>
                       <div className="mt-auto">
                         <p className="font-semibold text-lg">{testimonial.name}</p>
-                        <p className="text-[#E0CFC0]/60">{testimonial.role}</p>
+                        <p className="text-[#F5F0E8]/60">{testimonial.role}</p>
                       </div>
                     </div>
                   </div>
@@ -369,8 +392,8 @@ export default function SignUp() {
                 onClick={() => setActiveTestimonial(index)}
                 className={`w-2 h-2 rounded-full transition-all ${
                   index === activeTestimonial
-                    ? 'bg-[#E0CFC0] w-4'
-                    : 'bg-[#E0CFC0]/30'
+                    ? 'bg-[#F5F0E8] w-4'
+                    : 'bg-[#F5F0E8]/30'
                 }`}
                 aria-label={`Go to testimonial ${index + 1}`}
               />
@@ -380,120 +403,116 @@ export default function SignUp() {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-24 px-4 bg-[#E0CFC0]">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-6 text-[#3D0C11] tracking-tight">
-            Pricing
-          </h2>
-          <p className="text-xl mb-12 text-[#3D0C11]/80">
-            We're keeping it simple early on. Get all the Turbo features for one monthly price.
-          </p>
-          <p className="text-lg mb-8 text-[#3D0C11]/80">
-            Start with a 7-day free trial. Cancel if you hate it.
-          </p>
-          <p className="text-lg mb-12 text-[#3D0C11]/80">
-            You'll lock in this price forever. It pays to be early and thanks for being one of our early customers.
-          </p>
+      <section className="py-24 px-4 bg-[#F5F0E8]">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-[1fr,400px] gap-8 items-start">
+            {/* Left Column - Pricing Info */}
+            <div className="text-center md:text-left">
+              <h2 className="text-5xl md:text-7xl font-bold mb-6 text-black tracking-tight">
+                Pricing
+              </h2>
+              <p className="text-xl mb-8 text-black/80">
+                We're keeping it simple—get all Turbo features for one monthly price.
+              </p>
+              <p className="text-lg mb-12 text-black/80">
+                We want to reward early customers, so the price you pay today is locked in for life.
+              </p>
 
-          <div className="bg-[#3D0C11]/5 rounded-xl p-4 mb-12 inline-block">
-            <div className="text-lg font-medium text-[#3D0C11] flex items-center gap-2">
-              Current Users: <AnimatedCounter end={CURRENT_USERS} duration={2000} />
-            </div>
-          </div>
+              <div className="bg-black/5 rounded-xl p-4 mb-12 inline-block hover:bg-[#00A651]/10 transition-colors">
+                <div className="text-lg font-medium text-black flex items-center gap-2">
+                  Current Users: <AnimatedCounter end={CURRENT_USER_COUNT} duration={2000} />
+                </div>
+              </div>
 
-          <div className="relative max-w-2xl mx-auto">
-            <div className="h-1 bg-[#3D0C11]/20 rounded-full mb-8">
-              <div 
-                className="absolute -top-2 w-4 h-4 bg-[#4F46E5] rounded-full" 
-                style={{ 
-                  left: 0,
-                  animation: 'slideRight 2s ease-out forwards',
-                }}
-              />
-            </div>
-            <div className="flex justify-between text-[#3D0C11]">
-              <div>
-                <div className="text-2xl font-bold">$10<span className="text-lg font-normal">/mo</span></div>
-                <div className="text-sm">first 10 users</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold">$20<span className="text-lg font-normal">/mo</span></div>
-                <div className="text-sm">first 100 users</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold">$40<span className="text-lg font-normal">/mo</span></div>
-                <div className="text-sm">first 1000 users</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold">¯\_(ツ)_/¯</div>
-                <div className="text-sm">after beta</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-12 bg-[#3D0C11]/5 rounded-xl p-8 max-w-md mx-auto">
-            <h3 className="text-2xl font-bold mb-4 text-[#3D0C11]">Current Price</h3>
-            <div className="text-6xl font-bold text-[#3D0C11] mb-8">$20<span className="text-2xl font-normal">/mo</span></div>
-            
-            <div className="mb-8">
-              <h4 className="text-lg font-semibold mb-4 text-[#3D0C11]">Everything You Need:</h4>
-              <div className="grid grid-cols-1 gap-3">
-                <div className="flex items-start gap-3">
-                  <span className="text-[#3D0C11]">✓</span>
-                  <span className="text-[#3D0C11]/80">Run of Show Generator</span>
+              <div className="relative max-w-2xl">
+                <div className="h-1 bg-black/20 rounded-full mb-8">
+                  <div 
+                    className="absolute -top-2 w-4 h-4 bg-[#29ABE2] rounded-full" 
+                    style={{ 
+                      left: 0,
+                      animation: 'slideRight 2s ease-out forwards',
+                    }}
+                  />
                 </div>
-                <div className="flex items-start gap-3">
-                  <span className="text-[#3D0C11]">✓</span>
-                  <span className="text-[#3D0C11]/80">Call Sheet Generator</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="text-[#3D0C11]">✓</span>
-                  <span className="text-[#3D0C11]/80">Weather Integration</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="text-[#3D0C11]">✓</span>
-                  <span className="text-[#3D0C11]/80">Production Budget Calculator</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="text-[#3D0C11]">✓</span>
-                  <span className="text-[#3D0C11]/80">Client Proposal Generator</span>
+                <div className="flex justify-between text-black">
+                  <div>
+                    <div className="text-2xl font-bold">$10<span className="text-lg font-normal">/mo</span></div>
+                    <div className="text-sm">first 10 users</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold">$20<span className="text-lg font-normal">/mo</span></div>
+                    <div className="text-sm">first 100 users</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold">$40<span className="text-lg font-normal">/mo</span></div>
+                    <div className="text-sm">first 1000 users</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold">¯\_(ツ)_/¯</div>
+                    <div className="text-sm">after beta</div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <button
-              onClick={handleGetStarted}
-              className="w-full inline-flex items-center justify-center h-[48px] px-8 py-2 text-lg font-medium text-[#E0CFC0] bg-[#3D0C11] rounded-full hover:bg-[#3D0C11]/90 transition-colors"
-            >
-              Start Free Trial
-            </button>
-            <p className="text-sm text-[#3D0C11]/60 mt-4 text-center">
-              7-day free trial • Lock in this price forever
-            </p>
-          </div>
-        </div>
-      </section>
+            {/* Right Column - Pricing Card */}
+            <div className="md:sticky md:top-8">
+              <div className="bg-black/5 rounded-xl p-8">
+                <h3 className="text-2xl font-bold mb-4 text-black">Current Price</h3>
+                <div className="text-6xl font-bold text-black mb-8">$20<span className="text-2xl font-normal">/mo</span></div>
+                
+                <div className="mb-8">
+                  <h4 className="text-lg font-semibold mb-4 text-black">Everything You Need:</h4>
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="flex items-start gap-3">
+                      <span className="text-[#00A651]">✓</span>
+                      <span className="text-[#E94E1B]/80">Content Proposal</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <span className="text-[#00A651]">✓</span>
+                      <span className="text-[#E94E1B]/80">Outreach Message</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <span className="text-[#00A651]">✓</span>
+                      <span className="text-[#E94E1B]/80">Run of Show</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <span className="text-[#00A651]">✓</span>
+                      <span className="text-[#E94E1B]/80">Production Budget</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <span className="text-[#00A651]">✓</span>
+                      <span className="text-[#E94E1B]/80">Contractor Brief</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <span className="text-[#00A651]">✓</span>
+                      <span className="text-[#E94E1B]/80">Timeline from Transcript</span>
+                      <span className="px-1.5 py-0.5 text-xs font-medium bg-[#E94E1B] text-[#F5F0E8] rounded">
+                        BETA
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-      {/* Trusted By Section */}
-      <section className="py-24 px-4 bg-[#3D0C11]/5">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-xl font-medium mb-8 text-[#3D0C11]/70 tracking-tight animate-on-scroll">
-            TRUSTED BY CREATORS FROM
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center justify-items-center animate-on-scroll">
-            {/* Add company logos */}
-            <div className="w-32 h-12 bg-[#3D0C11]/10 rounded"></div>
-            <div className="w-32 h-12 bg-[#3D0C11]/10 rounded"></div>
-            <div className="w-32 h-12 bg-[#3D0C11]/10 rounded"></div>
-            <div className="w-32 h-12 bg-[#3D0C11]/10 rounded"></div>
+                <button
+                  onClick={handleGetStarted}
+                  className="w-full inline-flex items-center justify-center h-[48px] px-8 py-2 text-lg font-medium text-[#F5F0E8] bg-black rounded-full hover:bg-[#00A651] transition-colors"
+                >
+                  Start Free Trial
+                </button>
+                <p className="text-sm text-black/60 mt-4 text-center">
+                  7-day free trial • Lock in this price forever
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Final CTA */}
-      <section className="py-24 px-4 bg-[#3D0C11] text-[#E0CFC0]">
+      <section className="py-24 px-4 bg-black text-[#F5F0E8]">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-5xl font-bold mb-6 tracking-tight animate-on-scroll">
+          <h2 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight animate-on-scroll">
             Ready to Turbocharge Your Creative Business?
           </h2>
           <p className="text-xl mb-8 opacity-80 max-w-2xl mx-auto animate-on-scroll">
@@ -501,7 +520,7 @@ export default function SignUp() {
           </p>
           <button
             onClick={handleGetStarted}
-            className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-lg font-medium text-[#3D0C11] bg-[#E0CFC0] rounded-full hover:bg-[#E0CFC0]/90 transition-colors animate-on-scroll"
+            className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-lg font-medium text-black bg-[#F5F0E8] rounded-full hover:bg-[#E94E1B] hover:text-[#F5F0E8] transition-colors animate-on-scroll"
           >
             Start Free Trial
           </button>
@@ -509,7 +528,7 @@ export default function SignUp() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 bg-[#3D0C11] text-[#E0CFC0]/70">
+      <footer className="py-12 px-4 bg-black text-[#F5F0E8]/70">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center mb-4 md:mb-0">
             <a 

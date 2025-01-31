@@ -21,42 +21,51 @@ export default function Home() {
   ]
 
   return (
-    <main className="min-h-screen flex flex-col items-center px-4 py-12 bg-[#E0CFC0]">
+    <main className="min-h-screen flex flex-col items-center px-4 py-12 bg-[#F5F0E8]">
       <div className="w-full max-w-3xl mx-auto">
-        <h1 className="text-4xl md:text-7xl font-bold mb-12 text-[#3D0C11] tracking-tight text-center">
+        <h1 className="text-4xl md:text-7xl font-bold mb-12 text-black tracking-tight text-center">
           What would you like to create today?
         </h1>
         
         <div className="space-y-4 mb-8">
-          {tasks.map((task) => (
-            <div 
-              key={task.type}
-              className="flex items-center justify-between border-b border-[#3D0C11] pb-4 group cursor-pointer"
-              onClick={() => handleTaskSelect(task.type)}
-            >
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl md:text-2xl font-semibold text-[#3D0C11] tracking-tight">
-                  {task.label}
-                </h2>
-                {task.beta && (
-                  <span className="px-1.5 py-0.5 text-xs font-medium bg-[#3D0C11] text-[#E0CFC0] rounded">
-                    BETA
-                  </span>
-                )}
-              </div>
-              <button
-                className="text-3xl text-[#3D0C11] hover:scale-110 transition-transform"
-                aria-label={`Open ${task.label}`}
+          {tasks.map((task, index) => {
+            // Alternate between the three accent colors
+            const colors = ['#E94E1B', '#00A651', '#29ABE2']
+            const colorIndex = index % 3
+            const accentColor = colors[colorIndex]
+            
+            return (
+              <div 
+                key={task.type}
+                className="flex items-center justify-between border-b border-black pb-4 group cursor-pointer hover:border-[var(--accent-color)]"
+                onClick={() => handleTaskSelect(task.type)}
+                style={{ '--accent-color': accentColor } as any}
               >
-                +
-              </button>
-            </div>
-          ))}
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-black group-hover:text-[var(--accent-color)] transition-colors">
+                    {task.label}
+                  </h2>
+                  {task.beta && (
+                    <span className="px-1.5 py-0.5 text-xs font-medium bg-black text-[#F5F0E8] rounded">
+                      BETA
+                    </span>
+                  )}
+                </div>
+                <button
+                  className="text-3xl text-black hover:text-[var(--accent-color)] hover:scale-110 transition-all"
+                  style={{ '--accent-color': accentColor } as any}
+                  aria-label={`Open ${task.label}`}
+                >
+                  +
+                </button>
+              </div>
+            )
+          })}
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-4 mt-8">
           <div className="flex flex-row items-center">
-            <span className="text-sm font-medium text-[#3D0C11] tracking-tight">A TOOL BY</span>
+            <span className="text-sm font-medium text-black tracking-tight">A TOOL BY</span>
             <a 
               href={links.flickmanMedia}
               target="_blank" 
@@ -66,15 +75,15 @@ export default function Home() {
               <img 
                 src="/fm-logo.png" 
                 alt="Flickman Media Logo" 
-                className="h-9 md:h-11 translate-y-[2px] [filter:brightness(0)_saturate(100%)_invert(9%)_sepia(29%)_saturate(2614%)_hue-rotate(314deg)_brightness(94%)_contrast(97%)]" 
+                className="h-9 md:h-11 translate-y-[2px]" 
               />
             </a>
-            <span className="text-sm font-medium text-[#3D0C11] tracking-tight translate-y-[2px] -ml-[8px]">.</span>
+            <span className="text-sm font-medium text-black tracking-tight translate-y-[2px] -ml-[8px]">.</span>
             <a 
               href={links.flickmanMedia}
               target="_blank" 
               rel="noopener noreferrer" 
-              className="text-sm font-bold text-[#3D0C11] tracking-tight ml-2 hover:text-[#3D0C11]/80 transition-colors"
+              className="text-sm font-bold text-[#E94E1B] tracking-tight ml-2 hover:text-[#00A651] transition-colors"
             >
               <span className="underline">WORK WITH US</span>.
             </a>
