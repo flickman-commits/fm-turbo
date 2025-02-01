@@ -12,11 +12,6 @@ import ReactMarkdown from 'react-markdown'
 import type { Components } from 'react-markdown'
 import OpenAI from 'openai'
 import { FormDataWithWeather } from '@/types/forms'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Button } from '@/components/ui/button'
-import { Loader2 } from 'lucide-react'
 
 type ViewState = 'input' | 'loading' | 'result'
 
