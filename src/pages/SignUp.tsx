@@ -1,8 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { createCheckoutSession } from '@/services/checkout'
 import { links } from '@/config/links'
-import { PRICING_TIERS, getCurrentPricingTier, formatPrice, getSliderPosition } from '@/utils/pricing'
+import { PRICING_TIERS, getCurrentPricingTier, getSliderPosition } from '@/utils/pricing'
 import { PRICE_COMPARISONS } from '@/utils/priceComparisons'
 
 // This can be updated when we get new user counts
@@ -97,7 +95,6 @@ export default function SignUp() {
   const [activeTestimonial, setActiveTestimonial] = useState(0)
   const [isPricingVisible, setIsPricingVisible] = useState(false)
   const pricingSliderRef = useRef<HTMLDivElement>(null)
-  const navigate = useNavigate()
   const currentTier = getCurrentPricingTier(CURRENT_USER_COUNT)
 
   useEffect(() => {
