@@ -148,20 +148,20 @@ export default function SignUp() {
   };
 
   return (
-    <main className="min-h-screen bg-[#F5F0E8]">
+    <main className="min-h-screen bg-[#F5F0E8] overflow-x-hidden">
       {/* Hero Section - Beige */}
       <section className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden bg-[#F5F0E8]">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-6xl md:text-8xl font-bold mb-6 text-black tracking-tight animate-on-scroll">
             Turbocharge Your Creative Business
           </h1>
-          <p className="text-xl md:text-2xl mb-12 text-black/80 tracking-tight max-w-3xl mx-auto animate-on-scroll">
+          <p className="text-lg md:text-2xl mb-12 text-black/80 tracking-tight max-w-3xl mx-auto animate-on-scroll">
             Transform hours of business tasks into seconds. Built specifically for freelance creatives who want to focus on what they do best.
           </p>
           
           <div className="mb-12 animate-on-scroll">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="flex -space-x-2">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-4">
+              <div className="flex -space-x-2 mb-4 sm:mb-0">
                 <img 
                   src="/profile-pic-1.jpg" 
                   alt="Creator profile" 
@@ -178,7 +178,7 @@ export default function SignUp() {
                   className="w-8 h-8 rounded-full border-2 border-[#F5F0E8] object-cover relative z-10"
                 />
               </div>
-              <div className="text-lg font-medium text-black">
+              <div className="text-base sm:text-lg font-medium text-black text-center sm:text-left">
                 TRUSTED BY <HeroCounter end={CURRENT_USER_COUNT} duration={2000} /> CREATORS AND COUNTING...
               </div>
             </div>
@@ -186,7 +186,7 @@ export default function SignUp() {
 
           <button
             onClick={handleGetStarted}
-            className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-lg font-medium text-[#F5F0E8] bg-black rounded-full hover:bg-[#E94E1B] transition-colors animate-on-scroll mb-16"
+            className="inline-flex items-center justify-center h-[48px] px-6 sm:px-8 py-2 text-base sm:text-lg font-medium text-[#F5F0E8] bg-black rounded-full hover:bg-[#E94E1B] transition-colors animate-on-scroll mb-16 w-full sm:w-auto"
           >
             Start Free Trial
           </button>
@@ -195,13 +195,13 @@ export default function SignUp() {
             <div className="text-sm font-bold text-[#E94E1B]/60 mb-8 tracking-tight">
               TRUSTED BY CREATORS FROM
             </div>
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-8 items-center justify-items-center">
-              <img src="/times-logo.png" alt="Times" className="h-18 opacity-30" />
-              <img src="/times-logo.png" alt="Times" className="h-18 opacity-30" />
-              <img src="/times-logo.png" alt="Times" className="h-18 opacity-30" />
-              <img src="/times-logo.png" alt="Times" className="h-18 opacity-30" />
-              <img src="/times-logo.png" alt="Times" className="h-18 opacity-30" />
-              <img src="/times-logo.png" alt="Times" className="h-18 opacity-30" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 sm:gap-8 items-center justify-items-center">
+              <img src="/times-logo.png" alt="Times" className="h-12 sm:h-18 opacity-30" />
+              <img src="/times-logo.png" alt="Times" className="h-12 sm:h-18 opacity-30" />
+              <img src="/times-logo.png" alt="Times" className="h-12 sm:h-18 opacity-30" />
+              <img src="/times-logo.png" alt="Times" className="h-12 sm:h-18 opacity-30" />
+              <img src="/times-logo.png" alt="Times" className="h-12 sm:h-18 opacity-30" />
+              <img src="/times-logo.png" alt="Times" className="h-12 sm:h-18 opacity-30" />
             </div>
           </div>
         </div>
@@ -471,28 +471,28 @@ export default function SignUp() {
       </section>
 
       {/* Pricing Section - Beige */}
-      <section className="py-24 px-4 bg-[#F5F0E8]">
+      <section className="py-12 sm:py-24 px-4 bg-[#F5F0E8]">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-[1fr,400px] gap-8">
             {/* Left Column - Pricing Info */}
             <div className="text-center md:text-left">
-              <h2 className="text-5xl md:text-7xl font-bold mb-6 text-black tracking-tight">
+              <h2 className="text-4xl sm:text-5xl md:text-7xl font-bold mb-6 text-black tracking-tight">
                 Simple, Transparent Pricing
               </h2>
-              <p className="text-xl mb-8 text-black/80">
+              <p className="text-lg sm:text-xl mb-8 text-black/80">
                 We're keeping it simple—get all Turbo features for one monthly price.
               </p>
-              <p className="text-lg mb-12 text-black/80">
+              <p className="text-base sm:text-lg mb-12 text-black/80">
                 We want to reward early customers, so the price you pay today is locked in for life.
               </p>
 
               <div className="bg-black/5 rounded-xl p-4 mb-12 inline-block hover:bg-[#00A651]/10 transition-colors">
-                <div className="text-lg font-medium text-black flex items-center gap-2">
+                <div className="text-base sm:text-lg font-medium text-black flex items-center gap-2">
                   Current Users: <AnimatedCounter end={CURRENT_USER_COUNT} duration={1000} start={isPricingVisible} />
                 </div>
               </div>
 
-              <div className="relative max-w-2xl" ref={pricingSliderRef}>
+              <div className="relative max-w-2xl mx-auto md:mx-0" ref={pricingSliderRef}>
                 <div className="h-1 bg-black/20 rounded-full mb-8">
                   <div 
                     className="absolute -top-2 w-4 h-4 bg-[#29ABE2] rounded-full transition-all duration-1000 -translate-x-1/2" 
@@ -513,16 +513,16 @@ export default function SignUp() {
                         width: 'max-content'
                       }}
                     >
-                      <div className="text-2xl font-bold">
+                      <div className="text-xl sm:text-2xl font-bold whitespace-nowrap">
                         {typeof tier.price === 'number' ? (
                           <>
-                            ${tier.price}<span className="text-lg font-normal">/mo</span>
+                            ${tier.price}<span className="text-base sm:text-lg font-normal">/mo</span>
                           </>
                         ) : (
                           tier.price
                         )}
                       </div>
-                      <div className="text-sm">{tier.name}</div>
+                      <div className="text-xs sm:text-sm whitespace-nowrap">{tier.name}</div>
                     </div>
                   ))}
                 </div>
@@ -530,13 +530,13 @@ export default function SignUp() {
             </div>
 
             {/* Right Column - Pricing Card */}
-            <div className="md:sticky md:top-8">
-              <div className="bg-white rounded-xl p-8 shadow-lg">
-                <h3 className="text-2xl font-bold mb-4 text-black">Current Price</h3>
-                <div className="text-6xl font-bold text-black mb-8">
+            <div className="md:sticky md:top-8 mt-16 md:mt-0">
+              <div className="bg-white rounded-xl p-6 sm:p-8 shadow-lg">
+                <h3 className="text-xl sm:text-2xl font-bold mb-4 text-black">Current Price</h3>
+                <div className="text-4xl sm:text-6xl font-bold text-black mb-8">
                   {typeof currentTier.price === 'number' ? (
                     <>
-                      ${currentTier.price}<span className="text-2xl font-normal">/mo</span>
+                      ${currentTier.price}<span className="text-xl sm:text-2xl font-normal">/mo</span>
                     </>
                   ) : (
                     currentTier.price
@@ -544,7 +544,7 @@ export default function SignUp() {
                 </div>
                 
                 <div className="mb-8">
-                  <h4 className="text-lg font-semibold mb-4 text-black">Tasks Included:</h4>
+                  <h4 className="text-base sm:text-lg font-semibold mb-4 text-black">Tasks Included:</h4>
                   <div className="grid grid-cols-1 gap-3">
                     <div className="flex items-start gap-3">
                       <span className="text-[#00A651]">✓</span>
@@ -578,11 +578,11 @@ export default function SignUp() {
 
                 <button
                   onClick={handleGetStarted}
-                  className="w-full inline-flex items-center justify-center h-[48px] px-8 py-2 text-lg font-medium text-[#F5F0E8] bg-black rounded-full hover:bg-[#29ABE2] transition-colors"
+                  className="w-full inline-flex items-center justify-center h-[48px] px-6 sm:px-8 py-2 text-base sm:text-lg font-medium text-[#F5F0E8] bg-black rounded-full hover:bg-[#29ABE2] transition-colors"
                 >
                   Start Free Trial
                 </button>
-                <p className="text-sm text-black/60 mt-4 text-center">
+                <p className="text-xs sm:text-sm text-black/60 mt-4 text-center">
                   7-day free trial • Lock in this price forever
                 </p>
               </div>
@@ -590,13 +590,13 @@ export default function SignUp() {
           </div>
 
           {/* Price Comparisons Section */}
-          <div className="mt-16 bg-white rounded-xl p-8 shadow-lg">
-            <h4 className="text-2xl font-bold mb-8 text-black text-center">Less Expensive Than:</h4>
-            <div className={`grid ${currentTier.price === 'FREE' ? 'grid-cols-1' : 'grid-cols-3'} gap-8`}>
+          <div className="mt-16 bg-white rounded-xl p-6 sm:p-8 shadow-lg">
+            <h4 className="text-xl sm:text-2xl font-bold mb-8 text-black text-center">Less Expensive Than:</h4>
+            <div className={`grid ${currentTier.price === 'FREE' ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'} gap-8`}>
               {PRICE_COMPARISONS[currentTier.price].map((comparison, index) => (
                 <div key={index} className={`text-center ${currentTier.price === 'FREE' ? 'mx-auto' : ''}`}>
-                  <div className="text-6xl mb-4">{comparison.emoji}</div>
-                  <div className="font-medium text-black text-2xl">{comparison.item}</div>
+                  <div className="text-4xl sm:text-6xl mb-4">{comparison.emoji}</div>
+                  <div className="font-medium text-black text-xl sm:text-2xl">{comparison.item}</div>
                   <div className="text-[#E94E1B] font-medium mt-1">{comparison.price}</div>
                 </div>
               ))}
@@ -606,17 +606,17 @@ export default function SignUp() {
       </section>
 
       {/* Final CTA Section - Black */}
-      <section className="py-24 px-4 bg-black text-[#F5F0E8]">
+      <section className="py-12 sm:py-24 px-4 bg-black text-[#F5F0E8]">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight animate-on-scroll">
+          <h2 className="text-4xl sm:text-5xl md:text-7xl font-bold mb-6 tracking-tight animate-on-scroll">
             Ready to Turbocharge Your Creative Business?
           </h2>
-          <p className="text-xl mb-8 opacity-80 max-w-2xl mx-auto animate-on-scroll">
+          <p className="text-base sm:text-xl mb-8 opacity-80 max-w-2xl mx-auto animate-on-scroll">
             Join thousands of creators who are saving time and growing their business with Turbo.
           </p>
           <button
             onClick={handleGetStarted}
-            className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-lg font-medium text-black bg-[#F5F0E8] rounded-full hover:bg-[#29ABE2] hover:text-[#F5F0E8] transition-colors animate-on-scroll"
+            className="inline-flex items-center justify-center h-[48px] px-6 sm:px-8 py-2 text-base sm:text-lg font-medium text-black bg-[#F5F0E8] rounded-full hover:bg-[#29ABE2] hover:text-[#F5F0E8] transition-colors animate-on-scroll w-full sm:w-auto"
           >
             Start Free Trial
           </button>
@@ -624,7 +624,7 @@ export default function SignUp() {
       </section>
 
       {/* Footer - Black */}
-      <footer className="py-12 px-4 bg-black text-[#F5F0E8]">
+      <footer className="py-8 sm:py-12 px-4 bg-black text-[#F5F0E8]">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center mb-4 md:mb-0">
             <a 
@@ -635,11 +635,11 @@ export default function SignUp() {
               <img 
                 src="/fm-logo.png" 
                 alt="Flickman Media Logo" 
-                className="h-9 w-auto [filter:brightness(0)_saturate(100%)_invert(100%)_sepia(0%)_saturate(0%)_hue-rotate(0deg)_brightness(100%)_contrast(100%)]" 
+                className="h-6 sm:h-9 w-auto [filter:brightness(0)_saturate(100%)_invert(100%)_sepia(0%)_saturate(0%)_hue-rotate(0deg)_brightness(100%)_contrast(100%)]" 
               />
             </a>
           </div>
-          <div className="text-sm">
+          <div className="text-xs sm:text-sm text-center md:text-left">
             © {new Date().getFullYear()} Flickman Media. All rights reserved.
           </div>
         </div>

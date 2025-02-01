@@ -250,7 +250,6 @@ export function TaskModal({
     } else {
       setFormData(testData[taskType])
     }
-    toast.success('Test data filled')
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -312,7 +311,7 @@ export function TaskModal({
         content: response.content || '',
         taskType,
       }
-
+      
       setResult(newResult)
       setViewState('result')
     } catch (error) {
@@ -467,6 +466,15 @@ export function TaskModal({
         const actions = taskActionConfigs[result.taskType] || []
         return (
           <div className="flex flex-col h-full overflow-hidden">
+            <div className="flex-shrink-0 px-6 pt-8 pb-6 border-b border-black flex justify-between items-center">
+              <button
+                onClick={() => setViewState('input')}
+                className="text-sm text-black/60 hover:text-black transition-colors"
+              >
+                Back
+              </button>
+              <div className="w-[40px]"></div>
+            </div>
             <div className="flex-1 overflow-y-auto">
               <div className="p-4 md:p-6">
                 <div className="prose prose-sm max-w-none bg-[#F5F0E8] text-black prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-p:text-black prose-p:mb-4 prose-ul:list-disc prose-ul:pl-6 prose-li:mb-1 prose-pre:bg-black/5 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto prose-code:text-black prose-code:bg-transparent prose-strong:font-bold">
@@ -494,10 +502,70 @@ export function TaskModal({
             </div>
             <div className="flex-shrink-0 flex flex-col sm:flex-row justify-between gap-3 sm:gap-2 p-4 md:p-6 border-t border-black">
               <button
-                onClick={() => setViewState('input')}
+                onClick={async () => {
+                  setViewState('loading');
+                  try {
+                    const updatedFormData: FormDataWithWeather = { ...formData };
+                    
+                    if (taskType === 'runOfShow' && typeof formData.address === 'string' && typeof formData.shootDate === 'string') {
+                      try {
+                        const googleMapsLink = await getGoogleMapsLink(formData.address);
+                        updatedFormData.googleMapsLink = googleMapsLink;
+                        
+                        try {
+                          const weatherData = await getWeatherData(formData.address, formData.shootDate);
+                          updatedFormData.weather = weatherData;
+                        } catch (weatherError) {
+                          console.error('Weather data error:', weatherError);
+                          toast.error('Using default sunrise/sunset times');
+                          updatedFormData.weather = {
+                            sunrise: '7:15 AM',
+                            sunset: '4:30 PM',
+                            temperature: 45,
+                            conditions: 'partly cloudy',
+                            high: 50,
+                            low: 40
+                          };
+                        }
+                      } catch (error) {
+                        console.error('Error with location services:', error);
+                        updatedFormData.googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.address)}`;
+                      }
+                    }
+                    
+                    const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+                      {
+                        role: "system",
+                        content: systemPrompts[taskType]
+                      },
+                      {
+                        role: "user",
+                        content: getUserPrompt(taskType, updatedFormData)
+                      }
+                    ];
+                    
+                    const response = await createChatCompletion(messages);
+                    
+                    if (!response) {
+                      throw new Error('Failed to generate content');
+                    }
+                    
+                    const newResult = {
+                      content: response.content || '',
+                      taskType,
+                    };
+                    
+                    setResult(newResult);
+                    setViewState('result');
+                  } catch (error) {
+                    console.error('Error generating content:', error);
+                    toast.error('Failed to generate content. Please try again.');
+                    setViewState('result');
+                  }
+                }}
                 className="inline-flex items-center justify-center h-[48px] px-6 py-2 text-base font-medium text-black bg-[#F5F0E8] hover:bg-[#29ABE2] hover:text-[#F5F0E8] border-2 border-black rounded-full transition-colors min-w-[100px]"
               >
-                Back
+                Regenerate
               </button>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-2">
                 {actions.map((action) => {
@@ -523,7 +591,7 @@ export function TaskModal({
                         />
                       )
                     case 'copy':
-                      return (
+  return (
                         <button
                           key="copy"
                           onClick={() => handleAction(action)}
@@ -545,46 +613,46 @@ export function TaskModal({
         return (
           <>
             <div className="flex-shrink-0 flex justify-end p-4 md:p-6 pb-4 border-b border-black">
-              <button
-                type="button"
-                onClick={handleFillTestData}
+          <button
+            type="button"
+            onClick={handleFillTestData}
                 className="text-sm text-black/80 hover:text-black hover:bg-[#29ABE2]/10 px-2 py-1 rounded-md transition-colors"
-              >
-                Fill Test Data
-              </button>
-            </div>
+          >
+            Fill Test Data
+          </button>
+        </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1">
-              <div className="flex-1 overflow-y-auto">
-                <div className="p-4 md:p-6">
-                  <div className="space-y-4">
-                    {config.fields.map((field) => (
-                      <div key={field.id} className="space-y-2">
+        <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1">
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4 md:p-6">
+              <div className="space-y-4">
+                {config.fields.map((field) => (
+                  <div key={field.id} className="space-y-2">
                         <Label htmlFor={field.id} className="text-sm font-medium text-black">
-                          {field.label}
-                        </Label>
-                        {field.type === 'textarea' ? (
-                          <textarea
-                            id={field.id}
+                      {field.label}
+                    </Label>
+                    {field.type === 'textarea' ? (
+                      <textarea
+                        id={field.id}
                             className="flex min-h-[100px] w-full rounded-md border border-black bg-[#F5F0E8] px-3 py-2 text-sm text-black placeholder:text-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#29ABE2] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder={field.placeholder}
+                        placeholder={field.placeholder}
                             value={typeof formData[field.id] === 'string' ? formData[field.id] as string : ''}
-                            onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
-                          />
-                        ) : field.type === 'file' ? (
+                        onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
+                      />
+                    ) : field.type === 'file' ? (
                           <div className="space-y-2">
                             <div className="relative flex items-center">
-                              <input
-                                id={field.id}
-                                type="file"
+                        <input
+                          id={field.id}
+                          type="file"
                                 accept=".json"
                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0]
-                                  if (file) {
-                                    setSelectedFileName(file.name)
-                                    const reader = new FileReader()
-                                    reader.onload = (event) => {
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (file) {
+                              setSelectedFileName(file.name)
+                              const reader = new FileReader()
+                              reader.onload = (event) => {
                                       try {
                                         const jsonContent = JSON.parse(event.target?.result as string)
                                         const formattedJson = JSON.stringify(jsonContent, null, 2)
@@ -593,14 +661,14 @@ export function TaskModal({
                                         console.error('Failed to parse JSON file:', error)
                                         toast.error('Invalid JSON file format')
                                       }
-                                    }
-                                    reader.readAsText(file)
-                                  } else {
-                                    setSelectedFileName('')
+                              }
+                              reader.readAsText(file)
+                            } else {
+                              setSelectedFileName('')
                                     setFormData(prev => ({ ...prev, [field.id]: '' }))
-                                  }
-                                }}
-                              />
+                            }
+                          }}
+                        />
                               <div className="flex h-10 w-full rounded-md border border-black bg-[#F5F0E8] text-sm text-black">
                                 <div className="flex items-center px-3 border-r border-black">
                                   Choose File
@@ -627,7 +695,7 @@ export function TaskModal({
                                 {option.label}
                               </button>
                             ))}
-                          </div>
+                      </div>
                         ) : field.type === 'select' ? (
                           <select
                             id={field.id}
@@ -641,42 +709,42 @@ export function TaskModal({
                               </option>
                             ))}
                           </select>
-                        ) : (
-                          <input
-                            id={field.id}
-                            type={field.type}
+                    ) : (
+                      <input
+                        id={field.id}
+                        type={field.type}
                             className="flex h-10 w-full rounded-md border border-black bg-[#F5F0E8] px-3 py-2 text-sm text-black placeholder:text-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#29ABE2] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder={field.placeholder}
+                        placeholder={field.placeholder}
                             value={typeof formData[field.id] === 'string' ? formData[field.id] as string : ''}
-                            onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
-                          />
-                        )}
-                      </div>
-                    ))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
+                      />
+                    )}
                   </div>
-                </div>
+                ))}
               </div>
+            </div>
+          </div>
 
               <div className="flex-shrink-0 border-t border-black bg-[#F5F0E8] p-4 md:p-6 mt-auto">
-                <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-2">
-                  <button
-                    type="button"
-                    onClick={onClose}
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-2">
+              <button
+                type="button"
+                onClick={onClose}
                     className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-black hover:text-[#F5F0E8] bg-[#F5F0E8] border-2 border-black rounded-full hover:bg-[#E94E1B] transition-colors disabled:opacity-50"
-                    disabled={isLoading}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
+                disabled={isLoading}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
                     className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-[#F5F0E8] bg-black hover:bg-[#29ABE2] rounded-full transition-colors disabled:opacity-50 disabled:hover:bg-black"
-                    disabled={isLoading || !isFormValid()}
-                  >
-                    {isLoading ? 'Generating...' : 'Generate'}
-                  </button>
-                </div>
-              </div>
-            </form>
+                disabled={isLoading || !isFormValid()}
+              >
+                {isLoading ? 'Generating...' : 'Generate'}
+              </button>
+            </div>
+          </div>
+        </form>
           </>
         )
     }
