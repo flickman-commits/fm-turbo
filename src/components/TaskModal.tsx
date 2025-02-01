@@ -192,20 +192,20 @@ const LoadingOverlay = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setQuoteIndex(current => (current + 1) % BUSINESS_QUOTES.length)
-    }, 7000) // Change quote every 7 seconds
+    }, 7000)
 
     return () => clearInterval(interval)
   }, [])
 
   return (
-    <div className="absolute inset-0 bg-[#E0CFC0]/90 flex flex-col items-center justify-center z-50 p-8">
-      <div className="w-12 h-12 border-4 border-[#3D0C11]/20 border-t-[#3D0C11] rounded-full animate-spin mb-4"></div>
-      <p className="text-[#3D0C11] text-lg font-medium text-center mb-12">
+    <div className="absolute inset-0 bg-[#F5F0E8] flex flex-col items-center justify-center z-50 p-8">
+      <div className="w-12 h-12 border-4 border-black/20 border-t-black rounded-full animate-spin mb-4"></div>
+      <p className="text-black text-lg font-medium text-center mb-12">
         Hold tight... Turbo is doing tedious work for you...
       </p>
-      <div className="max-w-2xl w-full bg-[#3D0C11]/10 border-2 border-[#3D0C11] rounded-lg p-6">
-        <p className="text-2xl font-bold text-[#3D0C11] mb-3 text-left">💭 Words of Wisdom</p>
-        <p className="text-lg text-[#3D0C11] leading-relaxed">
+      <div className="max-w-2xl w-full bg-black/5 border-2 border-black rounded-lg p-6">
+        <p className="text-2xl font-bold text-black mb-3 text-left">💭 Words of Wisdom</p>
+        <p className="text-lg text-black leading-relaxed">
           "{BUSINESS_QUOTES[quoteIndex]}"
         </p>
       </div>
@@ -413,47 +413,47 @@ export function TaskModal({
   }
 
   const markdownComponents: Components = {
-    h1: (props) => <h1 className="text-2xl font-bold mb-4" {...props} />,
-    h2: (props) => <h2 className="text-xl font-bold mb-3" {...props} />,
+    h1: (props) => <h1 className="text-2xl font-bold mb-4 text-black" {...props} />,
+    h2: (props) => <h2 className="text-xl font-bold mb-3 text-black" {...props} />,
     p: ({ children, ...props }) => {
       if (typeof children === 'string') {
         if (children.includes('Weather Conditions:')) {
           const formattedContent = children
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\|(.*?)°F/g, '<span class="text-[#3D0C11]">|$1°F</span>')
+            .replace(/\|(.*?)°F/g, '<span class="text-black">|$1°F</span>')
           return <p className="mb-2" dangerouslySetInnerHTML={{ __html: formattedContent }} />
         }
         if (children.includes('**') || children.includes('Yellow') || children.includes('Green') || children.includes('Orange') || children.includes('Blue')) {
           const formattedContent = children
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/Yellow/g, '<span class="text-yellow-600">Yellow</span>')
-            .replace(/Green/g, '<span class="text-green-600">Green</span>')
-            .replace(/Orange/g, '<span class="text-orange-600">Orange</span>')
-            .replace(/Blue/g, '<span class="text-blue-600">Blue</span>')
+            .replace(/Yellow/g, '<span class="text-[#E94E1B]">Yellow</span>')
+            .replace(/Green/g, '<span class="text-[#29ABE2]">Green</span>')
+            .replace(/Orange/g, '<span class="text-[#E94E1B]">Orange</span>')
+            .replace(/Blue/g, '<span class="text-[#29ABE2]">Blue</span>')
           return <p className="mb-2" dangerouslySetInnerHTML={{ __html: formattedContent }} />
         }
       }
-      return <p className="mb-2" {...props}>{children}</p>
+      return <p className="mb-2 text-black" {...props}>{children}</p>
     },
-    ul: (props) => <ul className="list-disc pl-6 mb-4" {...props} />,
+    ul: (props) => <ul className="list-disc pl-6 mb-4 text-black" {...props} />,
     li: ({ children, ...props }) => {
       if (typeof children === 'string' && (children.includes('**') || children.includes('Yellow') || children.includes('Green') || children.includes('Orange') || children.includes('Blue'))) {
         const formattedContent = children
           .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-          .replace(/Yellow/g, '<span class="text-yellow-600">Yellow</span>')
-          .replace(/Green/g, '<span class="text-green-600">Green</span>')
-          .replace(/Orange/g, '<span class="text-orange-600">Orange</span>')
-          .replace(/Blue/g, '<span class="text-blue-600">Blue</span>')
+          .replace(/Yellow/g, '<span class="text-[#E94E1B]">Yellow</span>')
+          .replace(/Green/g, '<span class="text-[#29ABE2]">Green</span>')
+          .replace(/Orange/g, '<span class="text-[#E94E1B]">Orange</span>')
+          .replace(/Blue/g, '<span class="text-[#29ABE2]">Blue</span>')
         return <li className="mb-1" dangerouslySetInnerHTML={{ __html: formattedContent }} />
       }
-      return <li className="mb-1" {...props}>{children}</li>
+      return <li className="mb-1 text-black" {...props}>{children}</li>
     },
-    strong: (props) => <strong className="font-bold text-[#3D0C11]" {...props} />,
-    em: (props) => <em className="italic text-[#3D0C11]" {...props} />,
-    code: (props) => <code className="font-mono text-[#3D0C11]" {...props} />,
+    strong: (props) => <strong className="font-bold text-black" {...props} />,
+    em: (props) => <em className="italic text-black" {...props} />,
+    code: (props) => <code className="font-mono text-black" {...props} />,
     a: (props) => (
       <a
-        className="text-[#3D0C11] underline hover:text-[#3D0C11]/80 transition-colors"
+        className="text-black underline hover:text-[#29ABE2] transition-colors"
         target="_blank"
         rel="noopener noreferrer"
         {...props}
@@ -472,7 +472,7 @@ export function TaskModal({
           <div className="flex flex-col h-full overflow-hidden">
             <div className="flex-1 overflow-y-auto">
               <div className="p-4 md:p-6">
-                <div className="prose prose-sm max-w-none bg-[#E0CFC0] text-[#3D0C11] prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-p:text-[#3D0C11] prose-p:mb-4 prose-ul:list-disc prose-ul:pl-6 prose-li:mb-1 prose-pre:bg-[#3D0C11]/5 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto prose-code:text-[#3D0C11] prose-code:bg-transparent prose-strong:font-bold">
+                <div className="prose prose-sm max-w-none bg-[#F5F0E8] text-black prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-p:text-black prose-p:mb-4 prose-ul:list-disc prose-ul:pl-6 prose-li:mb-1 prose-pre:bg-black/5 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto prose-code:text-black prose-code:bg-transparent prose-strong:font-bold">
                   {result.taskType === 'outreach' && formData.subject ? (
                     <>
                       <div className="mb-6">
@@ -495,10 +495,10 @@ export function TaskModal({
                 </div>
               </div>
             </div>
-            <div className="flex-shrink-0 flex flex-col sm:flex-row justify-between gap-3 sm:gap-2 p-4 md:p-6 border-t border-[#3D0C11]">
+            <div className="flex-shrink-0 flex flex-col sm:flex-row justify-between gap-3 sm:gap-2 p-4 md:p-6 border-t border-black">
               <button
                 onClick={() => setViewState('input')}
-                className="inline-flex items-center justify-center h-[48px] px-6 py-2 text-base font-medium text-[#3D0C11] bg-[#E0CFC0] hover:bg-[#3D0C11]/10 border-2 border-[#3D0C11] rounded-full transition-colors min-w-[100px]"
+                className="inline-flex items-center justify-center h-[48px] px-6 py-2 text-base font-medium text-black bg-[#F5F0E8] hover:bg-[#29ABE2] hover:text-[#F5F0E8] border-2 border-black rounded-full transition-colors min-w-[100px]"
               >
                 Back
               </button>
@@ -510,7 +510,7 @@ export function TaskModal({
                         <button
                           key="gmail"
                           onClick={() => handleAction(action)}
-                          className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-sm font-medium text-[#3D0C11] bg-[#E0CFC0] hover:bg-[#3D0C11]/10 border-2 border-[#3D0C11] rounded-full transition-colors min-w-[180px]"
+                          className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-sm font-medium text-black bg-[#F5F0E8] hover:bg-[#29ABE2] hover:text-[#F5F0E8] border-2 border-black rounded-full transition-colors min-w-[180px]"
                         >
                           <span className="flex items-center gap-2 whitespace-nowrap">
                             Compose in <img src="/gmail-icon.png" alt="Gmail" className="h-4 w-auto relative top-[1px]" />
@@ -522,7 +522,7 @@ export function TaskModal({
                         <NotionButton
                           key="notion"
                           onClick={() => handleAction(action)}
-                          className="text-[#3D0C11] bg-[#E0CFC0] hover:bg-[#3D0C11]/10 border-2 border-[#3D0C11] min-w-[180px] text-sm whitespace-nowrap"
+                          className="text-black bg-[#F5F0E8] hover:bg-[#E94E1B] hover:text-[#F5F0E8] border-2 border-black min-w-[180px] text-sm whitespace-nowrap"
                         />
                       )
                     case 'copy':
@@ -531,7 +531,7 @@ export function TaskModal({
                           key="copy"
                           onClick={() => handleAction(action)}
                           disabled={isCopied}
-                          className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-sm font-medium text-[#E0CFC0] bg-[#3D0C11] hover:bg-[#3D0C11]/90 rounded-full transition-colors disabled:opacity-50 min-w-[180px] whitespace-nowrap"
+                          className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-sm font-medium text-[#F5F0E8] bg-black hover:bg-[#29ABE2] rounded-full transition-colors disabled:opacity-50 min-w-[180px] whitespace-nowrap"
                         >
                           {isCopied ? 'Copied!' : action.label}
                         </button>
@@ -547,11 +547,11 @@ export function TaskModal({
       case 'input':
         return (
           <>
-            <div className="flex-shrink-0 flex justify-end p-4 md:p-6 pb-4 border-b border-[#3D0C11]">
+            <div className="flex-shrink-0 flex justify-end p-4 md:p-6 pb-4 border-b border-black">
               <button
                 type="button"
                 onClick={handleFillTestData}
-                className="text-sm text-[#3D0C11]/80 hover:text-[#3D0C11] hover:bg-[#3D0C11]/10 px-2 py-1 rounded-md transition-colors"
+                className="text-sm text-black/80 hover:text-black hover:bg-[#29ABE2]/10 px-2 py-1 rounded-md transition-colors"
               >
                 Fill Test Data
               </button>
@@ -563,13 +563,13 @@ export function TaskModal({
                   <div className="space-y-4">
                     {config.fields.map((field) => (
                       <div key={field.id} className="space-y-2">
-                        <Label htmlFor={field.id} className="text-sm font-medium text-[#3D0C11]">
+                        <Label htmlFor={field.id} className="text-sm font-medium text-black">
                           {field.label}
                         </Label>
                         {field.type === 'textarea' ? (
                           <textarea
                             id={field.id}
-                            className="flex min-h-[100px] w-full rounded-md border border-[#3D0C11] bg-[#E0CFC0] px-3 py-2 text-sm text-[#3D0C11] placeholder:text-[#3D0C11]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D0C11] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex min-h-[100px] w-full rounded-md border border-black bg-[#F5F0E8] px-3 py-2 text-sm text-black placeholder:text-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#29ABE2] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             placeholder={field.placeholder}
                             value={typeof formData[field.id] === 'string' ? formData[field.id] as string : ''}
                             onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
@@ -604,8 +604,8 @@ export function TaskModal({
                                   }
                                 }}
                               />
-                              <div className="flex h-10 w-full rounded-md border border-[#3D0C11] bg-[#E0CFC0] text-sm text-[#3D0C11]">
-                                <div className="flex items-center px-3 border-r border-[#3D0C11]">
+                              <div className="flex h-10 w-full rounded-md border border-black bg-[#F5F0E8] text-sm text-black">
+                                <div className="flex items-center px-3 border-r border-black">
                                   Choose File
                                 </div>
                                 <div className="flex items-center px-3 flex-1">
@@ -615,15 +615,15 @@ export function TaskModal({
                             </div>
                           </div>
                         ) : field.type === 'buttonSelect' ? (
-                          <div className="flex items-center gap-2 p-1 bg-[#E0CFC0]/50 rounded-full border-2 border-[#3D0C11]">
+                          <div className="flex items-center gap-2 p-1 bg-[#F5F0E8]/50 rounded-full border-2 border-black">
                             {field.options?.map((option) => (
                               <button
                                 key={option.value}
                                 type="button"
                                 className={`flex-1 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                                   formData[field.id] === option.value || (!formData[field.id] && option.default)
-                                    ? 'bg-[#3D0C11] text-[#E0CFC0]'
-                                    : 'text-[#3D0C11] hover:bg-[#3D0C11]/10'
+                                    ? 'bg-black text-[#F5F0E8]'
+                                    : 'text-black hover:bg-[#29ABE2] hover:text-[#F5F0E8]'
                                 }`}
                                 onClick={() => setFormData(prev => ({ ...prev, [field.id]: option.value }))}
                               >
@@ -634,7 +634,7 @@ export function TaskModal({
                         ) : field.type === 'select' ? (
                           <select
                             id={field.id}
-                            className="flex h-10 w-full rounded-md border border-[#3D0C11] bg-[#E0CFC0] px-3 py-2 text-sm text-[#3D0C11] placeholder:text-[#3D0C11]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D0C11] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex h-10 w-full rounded-md border border-black bg-[#F5F0E8] px-3 py-2 text-sm text-black placeholder:text-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#29ABE2] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             value={typeof formData[field.id] === 'string' ? formData[field.id] as string : field.options?.find(opt => opt.default)?.value || ''}
                             onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
                           >
@@ -648,7 +648,7 @@ export function TaskModal({
                           <input
                             id={field.id}
                             type={field.type}
-                            className="flex h-10 w-full rounded-md border border-[#3D0C11] bg-[#E0CFC0] px-3 py-2 text-sm text-[#3D0C11] placeholder:text-[#3D0C11]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D0C11] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex h-10 w-full rounded-md border border-black bg-[#F5F0E8] px-3 py-2 text-sm text-black placeholder:text-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#29ABE2] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             placeholder={field.placeholder}
                             value={typeof formData[field.id] === 'string' ? formData[field.id] as string : ''}
                             onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
@@ -660,19 +660,19 @@ export function TaskModal({
                 </div>
               </div>
 
-              <div className="flex-shrink-0 border-t border-[#3D0C11] bg-[#E0CFC0] p-4 md:p-6 mt-auto">
+              <div className="flex-shrink-0 border-t border-black bg-[#F5F0E8] p-4 md:p-6 mt-auto">
                 <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-2">
                   <button
                     type="button"
                     onClick={onClose}
-                    className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-[#3D0C11] hover:text-[#3D0C11] bg-[#E0CFC0] border border-[#3D0C11] rounded-full hover:bg-[#3D0C11]/10 transition-colors disabled:opacity-50"
+                    className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-black hover:text-[#F5F0E8] bg-[#F5F0E8] border-2 border-black rounded-full hover:bg-[#E94E1B] transition-colors disabled:opacity-50"
                     disabled={isLoading}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-[#E0CFC0] bg-[#3D0C11] rounded-full hover:bg-[#3D0C11]/90 transition-colors disabled:opacity-50 disabled:hover:bg-[#3D0C11]"
+                    className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-[#F5F0E8] bg-black hover:bg-[#29ABE2] rounded-full transition-colors disabled:opacity-50 disabled:hover:bg-black"
                     disabled={isLoading || !isFormValid()}
                   >
                     {isLoading ? 'Generating...' : 'Generate'}
@@ -696,7 +696,7 @@ export function TaskModal({
       }` : config.title}
       description={viewState === 'result' ? 'View and share your generated content' : config.description}
     >
-      <div className="flex flex-col h-full overflow-hidden relative">
+      <div className="flex flex-col h-full overflow-hidden relative bg-[#F5F0E8]">
         {renderContent()}
       </div>
     </DottedDialog>
