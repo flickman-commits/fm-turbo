@@ -219,7 +219,7 @@ export function TaskModal({
   const [viewState, setViewState] = useState<ViewState>('input')
   const [result, setResult] = useState<TaskResult | null>(null)
   const [selectedFileName, setSelectedFileName] = useState('')
-  const [isCopied, setIsCopied] = useState(false)
+  const [copiedButtons, setCopiedButtons] = useState<Record<string, boolean>>({})
 
   if (!taskType) return null
   const config = taskConfigs[taskType]
@@ -331,18 +331,20 @@ export function TaskModal({
         handleNotionDuplicate()
         break
       case 'copy':
-        handleCopy()
+        handleCopy(action.label)
         break
     }
   }
 
-  const handleCopy = async () => {
+  const handleCopy = async (buttonLabel: string) => {
     try {
       if (!result) return
       await navigator.clipboard.writeText(result.content)
-      setIsCopied(true)
+      setCopiedButtons(prev => ({ ...prev, [buttonLabel]: true }))
       toast.success('Content copied to clipboard!')
-      setTimeout(() => setIsCopied(false), 2000)
+      setTimeout(() => {
+        setCopiedButtons(prev => ({ ...prev, [buttonLabel]: false }))
+      }, 2000)
     } catch (error) {
       console.error('Failed to copy:', error)
       toast.error('Failed to copy content')
@@ -525,10 +527,10 @@ export function TaskModal({
                         <button
                           key="copy"
                           onClick={() => handleAction(action)}
-                          disabled={isCopied}
+                          disabled={copiedButtons[action.label]}
                           className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-sm font-medium text-[#F5F0E8] bg-black hover:bg-[#29ABE2] rounded-full transition-colors disabled:opacity-50 min-w-[180px] whitespace-nowrap"
                         >
-                          {isCopied ? 'Copied!' : action.label}
+                          {copiedButtons[action.label] ? 'Copied!' : action.label}
                         </button>
                       )
                     default:
