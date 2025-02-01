@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createCheckoutSession } from '@/services/checkout'
 import { links } from '@/config/links'
+import { PRICING_TIERS, getCurrentPricingTier, formatPrice, getSliderPosition } from '@/utils/pricing'
+import { PRICE_COMPARISONS } from '@/utils/priceComparisons'
 
 // This can be updated when we get new user counts
 export const CURRENT_USER_COUNT = 112
@@ -39,7 +41,34 @@ const testimonials = [
   }
 ];
 
-const AnimatedCounter = ({ end, duration = 1000 }: { end: number; duration?: number }) => {
+const AnimatedCounter = ({ end, duration = 1000, start = false }: { end: number; duration?: number; start: boolean }) => {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    if (!start) return;
+    
+    const steps = 60
+    const increment = end / steps
+    const stepDuration = duration / steps
+    let current = 0
+
+    const timer = setInterval(() => {
+      current += increment
+      if (current >= end) {
+        setCount(end)
+        clearInterval(timer)
+      } else {
+        setCount(Math.floor(current))
+      }
+    }, stepDuration)
+
+    return () => clearInterval(timer)
+  }, [end, duration, start])
+
+  return <span>{count}</span>
+}
+
+const HeroCounter = ({ end, duration = 1000 }: { end: number; duration?: number }) => {
   const [count, setCount] = useState(0)
 
   useEffect(() => {
@@ -66,11 +95,14 @@ const AnimatedCounter = ({ end, duration = 1000 }: { end: number; duration?: num
 
 export default function SignUp() {
   const [activeTestimonial, setActiveTestimonial] = useState(0)
+  const [isPricingVisible, setIsPricingVisible] = useState(false)
+  const pricingSliderRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
+  const currentTier = getCurrentPricingTier(CURRENT_USER_COUNT)
 
   useEffect(() => {
     // Initialize intersection observer for fade-in animations
-    const observer = new IntersectionObserver((entries) => {
+    const fadeObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.classList.add('animate-in')
@@ -82,8 +114,24 @@ export default function SignUp() {
 
     // Observe all animatable elements
     document.querySelectorAll('.animate-on-scroll').forEach((el) => {
-      observer.observe(el)
+      fadeObserver.observe(el)
     })
+
+    // Initialize intersection observer for pricing slider
+    const pricingObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !isPricingVisible) {
+          setIsPricingVisible(true)
+        }
+      })
+    }, {
+      threshold: 0.5
+    })
+
+    // Observe pricing slider
+    if (pricingSliderRef.current) {
+      pricingObserver.observe(pricingSliderRef.current)
+    }
 
     // Testimonial rotation
     const interval = setInterval(() => {
@@ -91,24 +139,21 @@ export default function SignUp() {
     }, 2000) // Rotate every 2 seconds
 
     return () => {
-      observer.disconnect()
+      fadeObserver.disconnect()
+      pricingObserver.disconnect()
       clearInterval(interval)
     }
-  }, [])
+  }, [isPricingVisible])
 
-  const handleGetStarted = async () => {
-    try {
-      await createCheckoutSession()
-      navigate('/checkout')
-    } catch (error) {
-      console.error('Failed to start checkout:', error)
-    }
-  }
+  const handleGetStarted = (e: React.MouseEvent) => {
+    e.preventDefault();
+    window.location.href = 'https://buy.stripe.com/bIY03Zg215Y40TucMO';
+  };
 
   return (
     <main className="min-h-screen bg-[#F5F0E8]">
-      {/* Hero Section */}
-      <section className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden">
+      {/* Hero Section - Beige */}
+      <section className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden bg-[#F5F0E8]">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-6xl md:text-8xl font-bold mb-6 text-black tracking-tight animate-on-scroll">
             Turbocharge Your Creative Business
@@ -137,7 +182,7 @@ export default function SignUp() {
                 />
               </div>
               <div className="text-lg font-medium text-black">
-                TRUSTED BY <AnimatedCounter end={CURRENT_USER_COUNT} /> CREATORS AND COUNTING...
+                TRUSTED BY <HeroCounter end={CURRENT_USER_COUNT} duration={2000} /> CREATORS AND COUNTING...
               </div>
             </div>
           </div>
@@ -150,17 +195,161 @@ export default function SignUp() {
           </button>
 
           <div className="animate-on-scroll">
-            <div className="text-sm font-medium text-[#E94E1B]/60 mb-8 tracking-tight">
+            <div className="text-sm font-bold text-[#E94E1B]/60 mb-8 tracking-tight">
               TRUSTED BY CREATORS FROM
             </div>
             <div className="grid grid-cols-3 md:grid-cols-6 gap-8 items-center justify-items-center">
-              <img src="/fm-logo.png" alt="FM" className="h-6 opacity-30" />
-              <img src="/fm-logo.png" alt="FM" className="h-8 opacity-30" />
-              <img src="/fm-logo.png" alt="FM" className="h-8 opacity-30" />
-              <img src="/fm-logo.png" alt="FM" className="h-6 opacity-30" />
-              <img src="/fm-logo.png" alt="FM" className="h-6 opacity-30" />
-              <img src="/fm-logo.png" alt="FM" className="h-6 opacity-30" />
+              <img src="/times-logo.png" alt="Times" className="h-18 opacity-30" />
+              <img src="/times-logo.png" alt="Times" className="h-18 opacity-30" />
+              <img src="/times-logo.png" alt="Times" className="h-18 opacity-30" />
+              <img src="/times-logo.png" alt="Times" className="h-18 opacity-30" />
+              <img src="/times-logo.png" alt="Times" className="h-18 opacity-30" />
+              <img src="/times-logo.png" alt="Times" className="h-18 opacity-30" />
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How it Works Section - Black */}
+      <section className="py-24 px-4 bg-black text-[#F5F0E8]">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight animate-on-scroll">
+              How it Works
+            </h2>
+            <p className="text-xl mb-12 opacity-80 animate-on-scroll">
+              Watch how Turbo transforms your creative workflow in seconds
+            </p>
+            <div className="bg-[#F5F0E8]/10 rounded-xl p-8 backdrop-blur-sm">
+              <div className="aspect-video rounded-lg bg-[#F5F0E8]/5 flex items-center justify-center">
+                <p className="text-[#F5F0E8]/60">Video Demo Coming Soon</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 mt-16">
+            <div className="space-y-8">
+              <div className="animate-on-scroll">
+                <div className="flex items-start gap-4">
+                  <div className="bg-[#E94E1B] rounded-lg p-3">
+                    <span className="text-2xl">📝</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2">Content Proposal</h3>
+                    <p className="text-[#F5F0E8]/80">Generate professional proposals in seconds, increasing your win rate and saving hours of writing time</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="animate-on-scroll">
+                <div className="flex items-start gap-4">
+                  <div className="bg-[#E94E1B] rounded-lg p-3">
+                    <span className="text-2xl">💌</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2">Outreach Message</h3>
+                    <p className="text-[#F5F0E8]/80">Craft personalized outreach messages that get responses, turning cold leads into warm conversations</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="animate-on-scroll">
+                <div className="flex items-start gap-4">
+                  <div className="bg-[#E94E1B] rounded-lg p-3">
+                    <span className="text-2xl">📋</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2">Run of Show</h3>
+                    <p className="text-[#F5F0E8]/80">Create detailed production schedules instantly, keeping your crew organized and shoots running smoothly</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-8">
+              <div className="animate-on-scroll">
+                <div className="flex items-start gap-4">
+                  <div className="bg-[#E94E1B] rounded-lg p-3">
+                    <span className="text-2xl">💰</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2">Production Budget</h3>
+                    <p className="text-[#F5F0E8]/80">Generate accurate budgets quickly, ensuring profitability while maintaining transparency with clients</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="animate-on-scroll">
+                <div className="flex items-start gap-4">
+                  <div className="bg-[#E94E1B] rounded-lg p-3">
+                    <span className="text-2xl">📄</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2">Contractor Brief</h3>
+                    <p className="text-[#F5F0E8]/80">Create clear, comprehensive briefs for your team, ensuring everyone knows their roles and deliverables</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="animate-on-scroll">
+                <div className="flex items-start gap-4">
+                  <div className="bg-[#E94E1B] rounded-lg p-3">
+                    <span className="text-2xl">⏱️</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2">Timeline from Transcript <span className="text-xs bg-[#E94E1B] px-1.5 py-0.5 rounded ml-2">BETA</span></h3>
+                    <p className="text-[#F5F0E8]/80">Convert interview transcripts into organized timelines automatically, cutting post-production planning time in half</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Purpose-Built Section - Beige */}
+      <section className="py-24 px-4 bg-[#F5F0E8]">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-4xl md:text-6xl font-bold mb-12 tracking-tight text-center text-black animate-on-scroll">
+            Purpose-Built for Creatives
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b-2 border-[#E94E1B]">
+                  <th className="py-4 px-6 text-left text-[#E94E1B] font-medium">Feature</th>
+                  <th className="py-4 px-6 text-center text-[#E94E1B] font-medium">Turbo</th>
+                  <th className="py-4 px-6 text-center text-[#E94E1B] font-medium">ChatGPT</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-[#E94E1B]/20">
+                  <td className="py-4 px-6 text-[#E94E1B]">Pre-defined tasks that are relevant to your business</td>
+                  <td className="py-4 px-6 text-center text-[#E94E1B]">✓</td>
+                  <td className="py-4 px-6 text-center text-[#E94E1B]">✗</td>
+                </tr>
+                <tr className="border-b border-[#E94E1B]/20">
+                  <td className="py-4 px-6 text-[#E94E1B]">Custom prompts built for freelance creatives</td>
+                  <td className="py-4 px-6 text-center text-[#E94E1B]">✓</td>
+                  <td className="py-4 px-6 text-center text-[#E94E1B]">✗</td>
+                </tr>
+                <tr className="border-b border-[#E94E1B]/20">
+                  <td className="py-4 px-6 text-[#E94E1B]">Created by nerds that are also creatives</td>
+                  <td className="py-4 px-6 text-center text-[#E94E1B]">✓</td>
+                  <td className="py-4 px-6 text-center text-[#E94E1B]">✗</td>
+                </tr>
+                <tr className="border-b border-[#E94E1B]/20">
+                  <td className="py-4 px-6 text-[#E94E1B]">Aesthetic interface</td>
+                  <td className="py-4 px-6 text-center text-[#E94E1B]">✓</td>
+                  <td className="py-4 px-6 text-center text-[#E94E1B]">✗</td>
+                </tr>
+                <tr className="border-b border-[#E94E1B]/20">
+                  <td className="py-4 px-6 text-[#E94E1B]">Built on OpenAI</td>
+                  <td className="py-4 px-6 text-center text-[#E94E1B]">✓</td>
+                  <td className="py-4 px-6 text-center text-[#E94E1B]">✓</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
@@ -204,128 +393,10 @@ export default function SignUp() {
         </div>
       </section>
 
-      {/* Perfect Fit Section */}
-      <section className="py-24 px-4 bg-[#F5F0E8]">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-5xl md:text-7xl font-bold mb-12 text-black tracking-tight text-center animate-on-scroll">
-            Is Turbo Right for You?
-          </h2>
-          <div className="grid md:grid-cols-2 gap-8 animate-on-scroll">
-            {/* Good Fit Column */}
-            <div className="bg-black text-[#F5F0E8] rounded-2xl p-8 hover:bg-[#29ABE2] transition-colors">
-              <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <span>You're a Good Fit If</span>
-                <span className="text-3xl">🎯</span>
-              </h3>
-              <ul className="space-y-4">
-                <li className="flex items-start gap-3">
-                  <span className="text-xl">💻</span>
-                  <span>You use Premiere Pro, Honeybooks</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-xl">👖</span>
-                  <span>You wear baggy jeans</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-xl">🏃‍♂️</span>
-                  <span>You've never had a corporate job (or left the one you did)</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-xl">😤</span>
-                  <span>Outreach is the most annoying part of your job</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Not a Fit Column */}
-            <div className="bg-black/5 text-black rounded-2xl p-8 hover:bg-[#E94E1B]/10 transition-colors">
-              <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <span>You're NOT a Good Fit If</span>
-                <span className="text-3xl">🚫</span>
-              </h3>
-              <ul className="space-y-4">
-                <li className="flex items-start gap-3">
-                  <span className="text-xl">🪮</span>
-                  <span>You comb your hair every morning</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-xl">⏰</span>
-                  <span>You enjoy tedious, time-sucking tasks</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-xl">🤖</span>
-                  <span>You've said the words "I don't have a creative bone in my body"</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How it Works Section */}
-      <section className="py-24 px-4 bg-[#F5F0E8]">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-5xl md:text-7xl font-bold mb-8 tracking-tight animate-on-scroll text-[#E94E1B]">
-            How it Works
-          </h2>
-          <p className="text-xl text-[#E94E1B]/80 mb-12 animate-on-scroll">
-            Watch how Turbo transforms your creative workflow in seconds
-          </p>
-          <div className="aspect-video w-full bg-[#E94E1B]/5 rounded-lg shadow-lg animate-on-scroll">
-            {/* Video placeholder - replace with actual video component */}
-            <div className="flex items-center justify-center h-full">
-              <div className="text-[#E94E1B]/40 text-lg">Video Demo Coming Soon</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Comparison */}
-      <section className="py-24 px-4">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-5xl md:text-7xl font-bold mb-12 text-[#E94E1B] tracking-tight text-center animate-on-scroll">
-            Purpose-Built for Creatives
-          </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse animate-on-scroll">
-              <thead>
-                <tr className="border-b-2 border-[#E94E1B]">
-                  <th className="py-4 px-6 text-left text-[#E94E1B]">Feature</th>
-                  <th className="py-4 px-6 text-center text-[#E94E1B]">Turbo</th>
-                  <th className="py-4 px-6 text-center text-[#E94E1B]">ChatGPT</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b border-[#E94E1B]/20">
-                  <td className="py-4 px-6 text-[#E94E1B]">Industry-Specific Templates</td>
-                  <td className="py-4 px-6 text-center text-[#E94E1B]">✓</td>
-                  <td className="py-4 px-6 text-center text-[#E94E1B]">✗</td>
-                </tr>
-                <tr className="border-b border-[#E94E1B]/20">
-                  <td className="py-4 px-6 text-[#E94E1B]">Run of Show Generator</td>
-                  <td className="py-4 px-6 text-center text-[#E94E1B]">✓</td>
-                  <td className="py-4 px-6 text-center text-[#E94E1B]">✗</td>
-                </tr>
-                <tr className="border-b border-[#E94E1B]/20">
-                  <td className="py-4 px-6 text-[#E94E1B]">Weather Integration</td>
-                  <td className="py-4 px-6 text-center text-[#E94E1B]">✓</td>
-                  <td className="py-4 px-6 text-center text-[#E94E1B]">✗</td>
-                </tr>
-                <tr className="border-b border-[#E94E1B]/20">
-                  <td className="py-4 px-6 text-[#E94E1B]">Production Budget Calculator</td>
-                  <td className="py-4 px-6 text-center text-[#E94E1B]">✓</td>
-                  <td className="py-4 px-6 text-center text-[#E94E1B]">✗</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
+      {/* Testimonials Section - Coral */}
       <section className="py-24 px-4 bg-[#E94E1B] text-[#F5F0E8]">
-        <div className="max-w-6xl mx-auto text-center">
-          <h2 className="text-5xl md:text-7xl font-bold mb-16 tracking-tight animate-on-scroll">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-4xl md:text-6xl font-bold mb-12 tracking-tight text-center animate-on-scroll">
             What Creators Are Saying
           </h2>
           <div className="relative h-[400px] overflow-hidden">
@@ -368,16 +439,16 @@ export default function SignUp() {
                       zIndex,
                     }}
                   >
-                    <div className="bg-[#F5F0E8]/10 rounded-lg p-8 h-full flex flex-col items-center justify-center">
+                    <div className="bg-[#F5F0E8] rounded-lg p-8 h-full flex flex-col items-center justify-center text-black">
                       <img
                         src={testimonial.image}
                         alt={testimonial.name}
-                        className="w-20 h-20 rounded-full mb-6 opacity-30"
+                        className="w-20 h-20 rounded-full mb-6"
                       />
-                      <p className="text-xl mb-6 italic">"{testimonial.text}"</p>
+                      <p className="text-xl mb-6 italic text-black/80">"{testimonial.text}"</p>
                       <div className="mt-auto">
-                        <p className="font-semibold text-lg">{testimonial.name}</p>
-                        <p className="text-[#F5F0E8]/60">{testimonial.role}</p>
+                        <p className="font-semibold text-lg text-black">{testimonial.name}</p>
+                        <p className="text-black/60">{testimonial.role}</p>
                       </div>
                     </div>
                   </div>
@@ -402,14 +473,14 @@ export default function SignUp() {
         </div>
       </section>
 
-      {/* Pricing Section */}
+      {/* Pricing Section - Beige */}
       <section className="py-24 px-4 bg-[#F5F0E8]">
         <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-[1fr,400px] gap-8 items-start">
+          <div className="grid md:grid-cols-[1fr,400px] gap-8">
             {/* Left Column - Pricing Info */}
             <div className="text-center md:text-left">
               <h2 className="text-5xl md:text-7xl font-bold mb-6 text-black tracking-tight">
-                Pricing
+                Simple, Transparent Pricing
               </h2>
               <p className="text-xl mb-8 text-black/80">
                 We're keeping it simple—get all Turbo features for one monthly price.
@@ -420,49 +491,63 @@ export default function SignUp() {
 
               <div className="bg-black/5 rounded-xl p-4 mb-12 inline-block hover:bg-[#00A651]/10 transition-colors">
                 <div className="text-lg font-medium text-black flex items-center gap-2">
-                  Current Users: <AnimatedCounter end={CURRENT_USER_COUNT} duration={2000} />
+                  Current Users: <AnimatedCounter end={CURRENT_USER_COUNT} duration={1000} start={isPricingVisible} />
                 </div>
               </div>
 
-              <div className="relative max-w-2xl">
+              <div className="relative max-w-2xl" ref={pricingSliderRef}>
                 <div className="h-1 bg-black/20 rounded-full mb-8">
                   <div 
-                    className="absolute -top-2 w-4 h-4 bg-[#29ABE2] rounded-full" 
+                    className="absolute -top-2 w-4 h-4 bg-[#29ABE2] rounded-full transition-all duration-1000 -translate-x-1/2" 
                     style={{ 
-                      left: 0,
-                      animation: 'slideRight 2s ease-out forwards',
+                      left: isPricingVisible ? `${getSliderPosition(CURRENT_USER_COUNT)}%` : '0%',
                     }}
                   />
                 </div>
                 <div className="flex justify-between text-black">
-                  <div>
-                    <div className="text-2xl font-bold">$10<span className="text-lg font-normal">/mo</span></div>
-                    <div className="text-sm">first 10 users</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold">$20<span className="text-lg font-normal">/mo</span></div>
-                    <div className="text-sm">first 100 users</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold">$40<span className="text-lg font-normal">/mo</span></div>
-                    <div className="text-sm">first 1000 users</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold">¯\_(ツ)_/¯</div>
-                    <div className="text-sm">after beta</div>
-                  </div>
+                  {PRICING_TIERS.map((tier, index) => (
+                    <div 
+                      key={index} 
+                      className={`${currentTier === tier ? 'opacity-100' : 'opacity-60'}`}
+                      style={{
+                        position: 'absolute',
+                        left: `${tier.position}%`,
+                        transform: 'translateX(-50%)',
+                        width: 'max-content'
+                      }}
+                    >
+                      <div className="text-2xl font-bold">
+                        {typeof tier.price === 'number' ? (
+                          <>
+                            ${tier.price}<span className="text-lg font-normal">/mo</span>
+                          </>
+                        ) : (
+                          tier.price
+                        )}
+                      </div>
+                      <div className="text-sm">{tier.name}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
 
             {/* Right Column - Pricing Card */}
             <div className="md:sticky md:top-8">
-              <div className="bg-black/5 rounded-xl p-8">
+              <div className="bg-white rounded-xl p-8 shadow-lg">
                 <h3 className="text-2xl font-bold mb-4 text-black">Current Price</h3>
-                <div className="text-6xl font-bold text-black mb-8">$20<span className="text-2xl font-normal">/mo</span></div>
+                <div className="text-6xl font-bold text-black mb-8">
+                  {typeof currentTier.price === 'number' ? (
+                    <>
+                      ${currentTier.price}<span className="text-2xl font-normal">/mo</span>
+                    </>
+                  ) : (
+                    currentTier.price
+                  )}
+                </div>
                 
                 <div className="mb-8">
-                  <h4 className="text-lg font-semibold mb-4 text-black">Everything You Need:</h4>
+                  <h4 className="text-lg font-semibold mb-4 text-black">Tasks Included:</h4>
                   <div className="grid grid-cols-1 gap-3">
                     <div className="flex items-start gap-3">
                       <span className="text-[#00A651]">✓</span>
@@ -496,7 +581,7 @@ export default function SignUp() {
 
                 <button
                   onClick={handleGetStarted}
-                  className="w-full inline-flex items-center justify-center h-[48px] px-8 py-2 text-lg font-medium text-[#F5F0E8] bg-black rounded-full hover:bg-[#00A651] transition-colors"
+                  className="w-full inline-flex items-center justify-center h-[48px] px-8 py-2 text-lg font-medium text-[#F5F0E8] bg-black rounded-full hover:bg-[#29ABE2] transition-colors"
                 >
                   Start Free Trial
                 </button>
@@ -506,10 +591,24 @@ export default function SignUp() {
               </div>
             </div>
           </div>
+
+          {/* Price Comparisons Section */}
+          <div className="mt-16 bg-white rounded-xl p-8 shadow-lg">
+            <h4 className="text-2xl font-bold mb-8 text-black text-center">Less Expensive Than:</h4>
+            <div className={`grid ${currentTier.price === 'FREE' ? 'grid-cols-1' : 'grid-cols-3'} gap-8`}>
+              {PRICE_COMPARISONS[currentTier.price].map((comparison, index) => (
+                <div key={index} className={`text-center ${currentTier.price === 'FREE' ? 'mx-auto' : ''}`}>
+                  <div className="text-6xl mb-4">{comparison.emoji}</div>
+                  <div className="font-medium text-black text-2xl">{comparison.item}</div>
+                  <div className="text-[#E94E1B] font-medium mt-1">{comparison.price}</div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Final CTA */}
+      {/* Final CTA Section - Black */}
       <section className="py-24 px-4 bg-black text-[#F5F0E8]">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight animate-on-scroll">
@@ -520,15 +619,15 @@ export default function SignUp() {
           </p>
           <button
             onClick={handleGetStarted}
-            className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-lg font-medium text-black bg-[#F5F0E8] rounded-full hover:bg-[#E94E1B] hover:text-[#F5F0E8] transition-colors animate-on-scroll"
+            className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-lg font-medium text-black bg-[#F5F0E8] rounded-full hover:bg-[#29ABE2] hover:text-[#F5F0E8] transition-colors animate-on-scroll"
           >
             Start Free Trial
           </button>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-12 px-4 bg-black text-[#F5F0E8]/70">
+      {/* Footer - Black */}
+      <footer className="py-12 px-4 bg-black text-[#F5F0E8]">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center mb-4 md:mb-0">
             <a 
@@ -539,7 +638,7 @@ export default function SignUp() {
               <img 
                 src="/fm-logo.png" 
                 alt="Flickman Media Logo" 
-                className="h-8 w-auto [filter:brightness(0)_saturate(100%)_invert(100%)_sepia(0%)_saturate(0%)_hue-rotate(0deg)_brightness(100%)_contrast(100%)]" 
+                className="h-9 w-auto [filter:brightness(0)_saturate(100%)_invert(100%)_sepia(0%)_saturate(0%)_hue-rotate(0deg)_brightness(100%)_contrast(100%)]" 
               />
             </a>
           </div>
