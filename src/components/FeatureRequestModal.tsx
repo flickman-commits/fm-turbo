@@ -26,7 +26,11 @@ export function FeatureRequestModal({ onClose }: FeatureRequestModalProps) {
     setIsSubmitting(true)
 
     try {
-      const response = await fetch('http://localhost:3001/api/feature-request', {
+      const apiUrl = import.meta.env.PROD 
+        ? 'https://fm-turbo-production.up.railway.app/api/feature-request'  // Railway Production URL
+        : 'http://localhost:3001/api/feature-request';                      // Development URL
+
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
