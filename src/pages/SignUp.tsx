@@ -133,7 +133,7 @@ export default function SignUp() {
     // Testimonial rotation
     const interval = setInterval(() => {
       setActiveTestimonial((prev) => (prev + 1) % testimonials.length)
-    }, 2000) // Rotate every 2 seconds
+    }, 4000) // Rotate every 4 seconds
 
     return () => {
       fadeObserver.disconnect()
@@ -394,79 +394,55 @@ export default function SignUp() {
       {/* Testimonials Section - Coral */}
       <section className="py-24 px-4 bg-[#E94E1B] text-[#F5F0E8]">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-4xl md:text-6xl font-bold mb-12 tracking-tight text-center animate-on-scroll">
+          <h2 className="text-4xl md:text-6xl font-bold mb-16 tracking-tight text-center animate-on-scroll">
             What Creators Are Saying
           </h2>
-          <div className="relative h-[400px] overflow-hidden">
-            <div className="absolute inset-0 flex items-center justify-center">
-              {testimonials.map((testimonial, index) => {
-                // Calculate position relative to active testimonial
-                const position = ((index - activeTestimonial + testimonials.length) % testimonials.length);
-                const isVisible = position <= 2;
-                
-                // Calculate x-offset based on position
-                let translateX = '100%';
-                let scale = '0.8';
-                let opacity = '0.3';
-                let zIndex = '0';
-                
-                if (position === 0) {
-                  translateX = '-100%';
-                  scale = '0.8';
-                  opacity = '0.3';
-                  zIndex = '1';
-                } else if (position === 1) {
-                  translateX = '0';
-                  scale = '1';
-                  opacity = '1';
-                  zIndex = '2';
-                } else if (position === 2) {
-                  translateX = '100%';
-                  scale = '0.8';
-                  opacity = '0.3';
-                  zIndex = '1';
-                }
-
-                return (
-                  <div
-                    key={index}
-                    className={`absolute w-full max-w-xl transition-all duration-500 ${!isVisible ? 'opacity-0' : ''}`}
-                    style={{
-                      transform: `translateX(${translateX}) scale(${scale})`,
-                      opacity,
-                      zIndex,
-                    }}
-                  >
-                    <div className="bg-[#F5F0E8] rounded-lg p-8 h-full flex flex-col items-center justify-center text-black">
-                      <img
-                        src={testimonial.image}
-                        alt={testimonial.name}
-                        className="w-20 h-20 rounded-full mb-6"
-                      />
-                      <p className="text-xl mb-6 italic text-black/80">"{testimonial.text}"</p>
-                      <div className="mt-auto">
-                        <p className="font-semibold text-lg text-black">{testimonial.name}</p>
-                        <p className="text-black/60">{testimonial.role}</p>
-                      </div>
+          <div className="max-w-xl mx-auto relative h-[220px] overflow-hidden">
+            {testimonials.map((testimonial, index) => {
+              return (
+                <div
+                  key={index}
+                  className={`absolute w-full transition-all duration-700 transform ${
+                    index === activeTestimonial 
+                      ? 'translate-x-0 opacity-100' 
+                      : index < activeTestimonial 
+                        ? '-translate-x-full opacity-0' 
+                        : 'translate-x-full opacity-0'
+                  }`}
+                >
+                  <div className="bg-[#F5F0E8] rounded-lg p-6 h-full flex flex-col items-center justify-center text-black">
+                    <img
+                      src={testimonial.image}
+                      alt={testimonial.name}
+                      className="w-16 h-auto object-contain mb-4"
+                    />
+                    <p className="text-lg mb-4 italic text-black/80">"{testimonial.text}"</p>
+                    <div className="mt-auto">
+                      <p className="font-semibold text-lg text-black">{testimonial.name}</p>
+                      <p className="text-black/60">{testimonial.role}</p>
                     </div>
                   </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-6">
+            <div className="flex items-center justify-center gap-2">
+              {testimonials.map((testimonial, index) => {
+                return (
+                  <button
+                    key={index}
+                    onClick={() => setActiveTestimonial(index)}
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      index === activeTestimonial
+                        ? 'bg-[#F5F0E8] w-4'
+                        : 'bg-[#F5F0E8]/30'
+                    } mx-1`}
+                    aria-label={`Go to testimonial ${index + 1}`}
+                  />
                 );
               })}
             </div>
-          </div>
-          <div className="flex justify-center gap-2 mt-8">
-            {testimonials.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setActiveTestimonial(index)}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  index === activeTestimonial
-                    ? 'bg-[#F5F0E8] w-4'
-                    : 'bg-[#F5F0E8]/30'
-                }`}
-                aria-label={`Go to testimonial ${index + 1}`}
-              />
-            ))}
           </div>
         </div>
       </section>
