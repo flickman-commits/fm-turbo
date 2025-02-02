@@ -574,8 +574,8 @@ export default function SignUp() {
             <div className={`grid ${currentTier.price === 'FREE' ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'} gap-8`}>
               {PRICE_COMPARISONS[currentTier.price].map((comparison, index) => (
                 <div key={index} className={`text-center ${currentTier.price === 'FREE' ? 'mx-auto' : ''}`}>
-                  <div className="text-4xl sm:text-6xl mb-4">{comparison.emoji}</div>
-                  <div className="font-medium text-black text-xl sm:text-2xl">{comparison.item}</div>
+                  <div className="h-24 flex items-center justify-center mb-2" dangerouslySetInnerHTML={{ __html: comparison.emoji }} />
+                  {comparison.item && <div className="font-medium text-black text-xl sm:text-2xl">{comparison.item}</div>}
                   <div className="text-[#E94E1B] font-medium mt-1">{comparison.price}</div>
                 </div>
               ))}

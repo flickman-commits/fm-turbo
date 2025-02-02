@@ -13,14 +13,14 @@ export const PRICE_COMPARISONS: TierComparisons = {
     { item: 'Everything', price: 'Priceless', emoji: '✨' }
   ],
   10: [
-    { item: 'Adobe Lightroom', price: '$10/mo', emoji: '🎨' },
-    { item: 'Spotify Premium', price: '$11/mo', emoji: '🎵' },
-    { item: 'Netflix', price: '$15/mo', emoji: '🎥' }
+    { item: '', price: '$10/mo', emoji: '<img src="/lightroom-logo.png" alt="Adobe Lightroom" class="h-[84px] w-auto object-contain mx-auto" />' },
+    { item: '', price: '$11/mo', emoji: '<img src="/spotify-logo.png" alt="Spotify Premium" class="h-[84px] w-auto object-contain mx-auto" />' },
+    { item: '', price: '$15/mo', emoji: '<img src="/netflix-logo.png" alt="Netflix" class="h-[84px] w-auto object-contain mx-auto" />' }
   ],
   20: [
-    { item: 'Dropbox Pro', price: '$20/mo', emoji: '☁️' },
-    { item: 'Honeybook', price: '$40/mo', emoji: '📊' },
-    { item: 'Squarespace', price: '$23/mo', emoji: '🌐' }
+    { item: '', price: '$20/mo', emoji: '<img src="/dropbox-logo.png" alt="Dropbox" class="h-[84px] w-auto object-contain mx-auto" />' },
+    { item: '', price: '$40/mo', emoji: '<img src="/honeybook-logo.png" alt="Honeybook" class="h-[67px] w-auto object-contain mx-auto" />' },
+    { item: '', price: '$23/mo', emoji: '<img src="/squarespace-logo.png" alt="Squarespace" class="h-[84px] w-auto object-contain mx-auto" />' }
   ],
   '¯\\_(ツ)_/¯': [
     { item: 'Full Frame Lens', price: '$800', emoji: '🔭' },

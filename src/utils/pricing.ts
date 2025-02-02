@@ -7,28 +7,28 @@ export interface PricingTier {
 
 export const PRICING_TIERS: PricingTier[] = [
   {
-    maxUsers: 10,
+    maxUsers: 100,
     price: 'FREE',
-    name: 'First 10 users',
+    name: 'First 100 users',
     position: 8 // Position for FREE tier
   },
   {
-    maxUsers: 100,
+    maxUsers: 200,
     price: 10,
-    name: 'Users 11-100',
+    name: 'Users 101-200',
     position: 35 // Position for $10 tier
   },
   {
     maxUsers: 500,
     price: 20,
-    name: 'Users 101-500',
+    name: 'Users 201-500',
     position: 62 // Position for $20 tier
   },
   {
     maxUsers: Infinity,
-    price: '¯\\_(ツ)_/¯',
-    name: 'after beta',
-    position: 89 // Position for after beta
+    price: 30,
+    name: 'Users 501+',
+    position: 89 // Position for final tier
   }
 ];
 
