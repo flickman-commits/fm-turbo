@@ -428,7 +428,7 @@ export default function SignUp() {
           </div>
           <div className="mt-6">
             <div className="flex items-center justify-center gap-2">
-              {testimonials.map((testimonial, index) => {
+              {testimonials.map((_, index) => {
                 return (
                   <button
                     key={index}
