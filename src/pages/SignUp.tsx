@@ -150,35 +150,36 @@ export default function SignUp() {
   return (
     <main className="min-h-screen bg-[#F5F0E8] overflow-x-hidden">
       {/* Hero Section - Beige */}
-      <section className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden bg-[#F5F0E8]">
+      <section className="min-h-screen flex flex-col items-center px-4 relative overflow-hidden bg-[#F5F0E8]">
+        <div className="w-full h-[20vh]"></div>
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-6xl md:text-8xl font-bold mb-6 text-black tracking-tight animate-on-scroll">
             Turbocharge Your Creative Business
           </h1>
-          <p className="text-lg md:text-2xl mb-12 text-black/80 tracking-tight max-w-3xl mx-auto animate-on-scroll">
+          <p className="text-lg md:text-2xl mb-16 text-black/80 tracking-tight max-w-2xl mx-auto animate-on-scroll">
             Transform hours of business tasks into seconds. Built specifically for freelance creatives who want to focus on what they do best.
           </p>
           
-          <div className="mb-12 animate-on-scroll">
+          <div className="mb-8 animate-on-scroll">
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-4">
-              <div className="flex -space-x-2 mb-4 sm:mb-0">
+              <div className="flex -space-x-3 mb-2 sm:mb-0">
                 <img 
                   src="/profile-pic-1.jpg" 
                   alt="Creator profile" 
-                  className="w-8 h-8 rounded-full border-2 border-[#F5F0E8] object-cover relative z-30"
+                  className="w-10 h-10 rounded-full border-2 border-[#F5F0E8] object-cover relative z-30"
                 />
                 <img 
                   src="/profile-pic-2.jpg" 
                   alt="Creator profile" 
-                  className="w-8 h-8 rounded-full border-2 border-[#F5F0E8] object-cover relative z-20"
+                  className="w-10 h-10 rounded-full border-2 border-[#F5F0E8] object-cover relative z-20"
                 />
                 <img 
                   src="/profile-pic-3.jpg" 
                   alt="Creator profile" 
-                  className="w-8 h-8 rounded-full border-2 border-[#F5F0E8] object-cover relative z-10"
+                  className="w-10 h-10 rounded-full border-2 border-[#F5F0E8] object-cover relative z-10"
                 />
               </div>
-              <div className="text-base sm:text-lg font-medium text-black text-center sm:text-left">
+              <div className="text-sm sm:text-base font-medium text-black text-center sm:text-left ml-1">
                 TRUSTED BY <HeroCounter end={CURRENT_USER_COUNT} duration={2000} /> CREATORS AND COUNTING...
               </div>
             </div>
@@ -186,7 +187,7 @@ export default function SignUp() {
 
           <button
             onClick={handleGetStarted}
-            className="inline-flex items-center justify-center h-[48px] px-6 sm:px-8 py-2 text-base sm:text-lg font-medium text-[#F5F0E8] bg-black rounded-full hover:bg-[#E94E1B] transition-colors animate-on-scroll mb-16 w-full sm:w-auto"
+            className="inline-flex items-center justify-center h-[48px] px-6 sm:px-8 py-2 text-base sm:text-lg font-medium text-[#F5F0E8] bg-black rounded-full hover:bg-[#E94E1B] transition-colors animate-on-scroll mb-8 w-[280px]"
           >
             Start Free Trial
           </button>
@@ -195,13 +196,13 @@ export default function SignUp() {
             <div className="text-sm font-bold text-[#E94E1B]/60 mb-8 tracking-tight">
               TRUSTED BY CREATORS FROM
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 sm:gap-8 items-center justify-items-center">
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-4 sm:gap-8 items-center justify-items-center">
               <img src="/times-logo.png" alt="Times" className="h-12 sm:h-18 opacity-30" />
               <img src="/times-logo.png" alt="Times" className="h-12 sm:h-18 opacity-30" />
               <img src="/times-logo.png" alt="Times" className="h-12 sm:h-18 opacity-30" />
-              <img src="/times-logo.png" alt="Times" className="h-12 sm:h-18 opacity-30" />
-              <img src="/times-logo.png" alt="Times" className="h-12 sm:h-18 opacity-30" />
-              <img src="/times-logo.png" alt="Times" className="h-12 sm:h-18 opacity-30" />
+              <img src="/times-logo.png" alt="Times" className="hidden md:block h-12 sm:h-18 opacity-30" />
+              <img src="/times-logo.png" alt="Times" className="hidden md:block h-12 sm:h-18 opacity-30" />
+              <img src="/times-logo.png" alt="Times" className="hidden md:block h-12 sm:h-18 opacity-30" />
             </div>
           </div>
         </div>
@@ -576,12 +577,14 @@ export default function SignUp() {
                   </div>
                 </div>
 
-                <button
-                  onClick={handleGetStarted}
-                  className="w-full inline-flex items-center justify-center h-[48px] px-6 sm:px-8 py-2 text-base sm:text-lg font-medium text-[#F5F0E8] bg-black rounded-full hover:bg-[#29ABE2] transition-colors"
-                >
-                  Start Free Trial
-                </button>
+                <div className="flex justify-center">
+                  <button
+                    onClick={handleGetStarted}
+                    className="w-[280px] inline-flex items-center justify-center h-[48px] px-6 sm:px-8 py-2 text-base sm:text-lg font-medium text-[#F5F0E8] bg-black rounded-full hover:bg-[#29ABE2] transition-colors"
+                  >
+                    Start Free Trial
+                  </button>
+                </div>
                 <p className="text-xs sm:text-sm text-black/60 mt-4 text-center">
                   7-day free trial • Lock in this price forever
                 </p>
@@ -616,7 +619,7 @@ export default function SignUp() {
           </p>
           <button
             onClick={handleGetStarted}
-            className="inline-flex items-center justify-center h-[48px] px-6 sm:px-8 py-2 text-base sm:text-lg font-medium text-black bg-[#F5F0E8] rounded-full hover:bg-[#29ABE2] hover:text-[#F5F0E8] transition-colors animate-on-scroll w-full sm:w-auto"
+            className="inline-flex items-center justify-center h-[48px] px-6 sm:px-8 py-2 text-base sm:text-lg font-medium text-black bg-[#F5F0E8] rounded-full hover:bg-[#29ABE2] hover:text-[#F5F0E8] transition-colors animate-on-scroll w-[280px]"
           >
             Start Free Trial
           </button>
@@ -635,7 +638,7 @@ export default function SignUp() {
               <img 
                 src="/fm-logo.png" 
                 alt="Flickman Media Logo" 
-                className="h-6 sm:h-9 w-auto [filter:brightness(0)_saturate(100%)_invert(100%)_sepia(0%)_saturate(0%)_hue-rotate(0deg)_brightness(100%)_contrast(100%)]" 
+                className="h-12 sm:h-9 w-auto [filter:brightness(0)_saturate(100%)_invert(100%)_sepia(0%)_saturate(0%)_hue-rotate(0deg)_brightness(100%)_contrast(100%)]" 
               />
             </a>
           </div>
