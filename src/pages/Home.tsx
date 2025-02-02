@@ -4,9 +4,11 @@ import { TaskModal } from '@/components/TaskModal'
 import { TrendingAudioButton } from '@/components/ui/trending-audio-button'
 import { links } from '@/config/links'
 import { CreditsCounter } from '@/components/CreditsCounter'
+import { FeatureRequestModal } from '@/components/FeatureRequestModal'
 
 export default function Home() {
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null)
+  const [showFeatureRequest, setShowFeatureRequest] = useState(false)
 
   const handleTaskSelect = (task: TaskType) => {
     setSelectedTask(task)
@@ -25,6 +27,15 @@ export default function Home() {
     <main className="min-h-screen flex flex-col items-center px-4 py-12 bg-[#F5F0E8]">
       <div className="fixed top-0 right-0 p-4 z-50">
         <CreditsCounter />
+      </div>
+
+      <div className="fixed top-0 left-0 p-4 z-50">
+        <button
+          onClick={() => setShowFeatureRequest(true)}
+          className="text-sm font-medium text-black border border-black/20 hover:border-black rounded-full px-4 py-2 transition-colors"
+        >
+          Request Feature
+        </button>
       </div>
 
       <div className="w-full max-w-3xl mx-auto">
@@ -101,6 +112,12 @@ export default function Home() {
         <TaskModal
           taskType={selectedTask}
           onClose={() => setSelectedTask(null)}
+        />
+      )}
+
+      {showFeatureRequest && (
+        <FeatureRequestModal
+          onClose={() => setShowFeatureRequest(false)}
         />
       )}
     </main>
