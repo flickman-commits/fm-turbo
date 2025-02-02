@@ -3,6 +3,7 @@ import { TaskType } from '@/types/tasks'
 import { TaskModal } from '@/components/TaskModal'
 import { TrendingAudioButton } from '@/components/ui/trending-audio-button'
 import { links } from '@/config/links'
+import { CreditsCounter } from '@/components/CreditsCounter'
 
 export default function Home() {
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null)
@@ -22,6 +23,10 @@ export default function Home() {
 
   return (
     <main className="min-h-screen flex flex-col items-center px-4 py-12 bg-[#F5F0E8]">
+      <div className="fixed top-0 right-0 p-4 z-50">
+        <CreditsCounter />
+      </div>
+
       <div className="w-full max-w-3xl mx-auto">
         <h1 className="text-4xl md:text-7xl font-bold mb-12 text-black tracking-tight text-center">
           What would you like to create today?
