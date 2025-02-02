@@ -14,7 +14,8 @@ const allowedOrigins = [
   'https://fm-turbo.vercel.app',        // Production frontend
   'https://www.fm-turbo.vercel.app',    // Production frontend with www
   'https://flickman.media',             // Additional domain
-  'https://www.flickman.media'          // Additional domain with www
+  'https://www.flickman.media',         // Additional domain with www
+  'https://turbo.flickman.media'        // Actual production domain
 ];
 
 app.use(cors({
