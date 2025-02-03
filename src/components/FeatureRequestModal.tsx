@@ -32,8 +32,6 @@ export function FeatureRequestModal({ onClose }: FeatureRequestModalProps) {
 
       const response = await fetch(apiUrl, {
         method: 'POST',
-        mode: 'cors',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
