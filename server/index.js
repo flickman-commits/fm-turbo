@@ -15,23 +15,33 @@ const allowedOrigins = [
   'https://www.fm-turbo.vercel.app',    // Production frontend with www
   'https://flickman.media',             // Additional domain
   'https://www.flickman.media',         // Additional domain with www
-  'https://turbo.flickman.media'        // Actual production domain
+  'https://turbo.flickman.media',       // Actual production domain
+  'null',                              // Handle requests from mobile browsers
+  undefined                            // Handle requests without origin
 ];
 
 app.use(cors({
   origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
+    console.log('Incoming request origin:', origin); // Log all incoming origins
     
-    if (allowedOrigins.indexOf(origin) === -1) {
-      console.log('Blocked origin:', origin); // Add logging for debugging
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) {
+      console.log('Request has no origin - allowing access');
+      return callback(null, true);
     }
-    console.log('Allowed origin:', origin); // Add logging for debugging
-    return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      console.log('Allowed origin:', origin);
+      return callback(null, true);
+    }
+    
+    console.log('Blocked origin:', origin);
+    const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+    return callback(new Error(msg), false);
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'OPTIONS'],  // Explicitly allow methods
+  allowedHeaders: ['Content-Type']      // Explicitly allow headers
 }));
 
 app.use(express.json());
