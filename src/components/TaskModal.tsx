@@ -607,7 +607,7 @@ export function TaskModal({
                         />
                       )
                     case 'copy':
-  return (
+                      return (
                         <button
                           key="copy"
                           onClick={() => handleAction(action)}
@@ -629,62 +629,58 @@ export function TaskModal({
         return (
           <>
             <div className="flex-shrink-0 flex justify-end p-4 md:p-6 pb-4 border-b border-black">
-          <button
-            type="button"
-            onClick={handleFillTestData}
+              <button
+                type="button"
+                onClick={handleFillTestData}
                 className="text-sm text-black/80 hover:text-black hover:bg-[#29ABE2]/10 px-2 py-1 rounded-md transition-colors"
-          >
-            Fill Test Data
-          </button>
-        </div>
+              >
+                Fill Test Data
+              </button>
+            </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1">
-          <div className="flex-1 overflow-y-auto">
-            <div className="p-4 md:p-6">
-              <div className="space-y-4">
-                {config.fields.map((field) => (
-                  <div key={field.id} className="space-y-2">
+            <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1">
+              <div className="flex-1 overflow-y-auto">
+                <div className="p-4 md:p-6">
+                  <div className="space-y-4">
+                    {config.fields.map((field) => (
+                      <div key={field.id} className="space-y-2">
                         <Label htmlFor={field.id} className="text-sm font-medium text-black">
-                      {field.label}
-                    </Label>
-                    {field.type === 'textarea' ? (
-                      <textarea
-                        id={field.id}
+                          {field.label}
+                        </Label>
+                        {field.type === 'textarea' ? (
+                          <textarea
+                            id={field.id}
                             className="flex min-h-[100px] w-full rounded-md border border-black bg-[#F5F0E8] px-3 py-2 text-sm text-black placeholder:text-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#29ABE2] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        placeholder={field.placeholder}
+                            placeholder={field.placeholder}
                             value={typeof formData[field.id] === 'string' ? formData[field.id] as string : ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
-                      />
-                    ) : field.type === 'file' ? (
+                            onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
+                          />
+                        ) : field.type === 'file' ? (
                           <div className="space-y-2">
                             <div className="relative flex items-center">
-                        <input
-                          id={field.id}
-                          type="file"
-                                accept=".json"
+                              <input
+                                type="file"
+                                id={field.id}
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0]
+                                  if (file) {
+                                    const reader = new FileReader()
+                                    reader.onload = (e) => {
+                                      setFormData(prev => ({
+                                        ...prev,
+                                        [field.id]: typeof e.target?.result === 'string' ? e.target.result : ''
+                                      }))
+                                    }
+                                    setSelectedFileName(file.name)
+                                    if (taskType === 'proposal' && field.id === 'discoveryTranscript') {
+                                      reader.readAsText(file)
+                                    } else {
+                                      reader.readAsText(file)
+                                    }
+                                  }
+                                }}
                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0]
-                            if (file) {
-                              setSelectedFileName(file.name)
-                              const reader = new FileReader()
-                              reader.onload = (event) => {
-                                      try {
-                                        const jsonContent = JSON.parse(event.target?.result as string)
-                                        const formattedJson = JSON.stringify(jsonContent, null, 2)
-                                        setFormData(prev => ({ ...prev, [field.id]: formattedJson }))
-                                      } catch (error) {
-                                        console.error('Failed to parse JSON file:', error)
-                                        toast.error('Invalid JSON file format')
-                                      }
-                              }
-                              reader.readAsText(file)
-                            } else {
-                              setSelectedFileName('')
-                                    setFormData(prev => ({ ...prev, [field.id]: '' }))
-                            }
-                          }}
-                        />
+                              />
                               <div className="flex h-10 w-full rounded-md border border-black bg-[#F5F0E8] text-sm text-black">
                                 <div className="flex items-center px-3 border-r border-black">
                                   Choose File
@@ -694,6 +690,11 @@ export function TaskModal({
                                 </div>
                               </div>
                             </div>
+                            {taskType === 'proposal' && field.id === 'discoveryTranscript' && (
+                              <p className="text-sm text-gray-500">
+                                Please upload a JSON file containing the discovery call transcript. The file should include participant information, conversation details, and key points.
+                              </p>
+                            )}
                           </div>
                         ) : field.type === 'buttonSelect' ? (
                           <div className="flex items-center gap-2 p-1 bg-[#F5F0E8]/50 rounded-full border-2 border-black">
@@ -711,7 +712,7 @@ export function TaskModal({
                                 {option.label}
                               </button>
                             ))}
-                      </div>
+                          </div>
                         ) : field.type === 'select' ? (
                           <select
                             id={field.id}
@@ -725,42 +726,42 @@ export function TaskModal({
                               </option>
                             ))}
                           </select>
-                    ) : (
-                      <input
-                        id={field.id}
-                        type={field.type}
+                        ) : (
+                          <input
+                            id={field.id}
+                            type={field.type}
                             className="flex h-10 w-full rounded-md border border-black bg-[#F5F0E8] px-3 py-2 text-sm text-black placeholder:text-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#29ABE2] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        placeholder={field.placeholder}
+                            placeholder={field.placeholder}
                             value={typeof formData[field.id] === 'string' ? formData[field.id] as string : ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
-                      />
-                    )}
+                            onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
+                          />
+                        )}
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
-          </div>
 
               <div className="flex-shrink-0 border-t border-black bg-[#F5F0E8] p-4 md:p-6 mt-auto">
-            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-2">
-              <button
-                type="button"
-                onClick={onClose}
+                <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-2">
+                  <button
+                    type="button"
+                    onClick={onClose}
                     className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-black hover:text-[#F5F0E8] bg-[#F5F0E8] border-2 border-black rounded-full hover:bg-[#E94E1B] transition-colors disabled:opacity-50"
-                disabled={isLoading}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
+                    disabled={isLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
                     className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-[#F5F0E8] bg-black hover:bg-[#29ABE2] rounded-full transition-colors disabled:opacity-50 disabled:hover:bg-black"
-                disabled={isLoading || !isFormValid()}
-              >
-                {isLoading ? 'Generating...' : 'Generate'}
-              </button>
-            </div>
-          </div>
-        </form>
+                    disabled={isLoading || !isFormValid()}
+                  >
+                    {isLoading ? 'Generating...' : 'Generate'}
+                  </button>
+                </div>
+              </div>
+            </form>
           </>
         )
     }

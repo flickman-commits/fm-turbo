@@ -42,7 +42,7 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
       { id: 'clientName', label: 'Client Name', type: 'text', placeholder: 'Enter client name' },
       { id: 'deliveryDate', label: 'Delivery Date', type: 'date', placeholder: 'Select delivery date' },
       { id: 'budget', label: 'Budget', type: 'text', placeholder: 'Enter budget range' },
-      { id: 'discoveryTranscript', label: 'Discovery Call Transcript', type: 'file', placeholder: 'Upload your discovery call transcript (JSON)' },
+      { id: 'discoveryTranscript', label: 'Discovery Call Transcript (JSON)', type: 'file', placeholder: 'Upload your discovery call transcript (must be in JSON format)' },
       { id: 'requirements', label: 'Special Requirements', type: 'textarea', placeholder: 'Enter any special requirements or notes' }
     ]
   },
