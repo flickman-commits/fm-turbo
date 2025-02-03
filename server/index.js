@@ -10,22 +10,39 @@ const port = process.env.PORT || 3001;
 
 // CORS configuration
 const allowedOrigins = [
-  'http://localhost:5173',
-  'https://turbo.flickman.media',
-  'https://flickman.media',
-  'https://www.flickman.media'
+  'http://localhost:5173',              // Local development
+  'https://turbo.flickman.media',       // Production domain
+  'https://flickman.media',             // Additional domain
+  'https://www.flickman.media',         // Additional domain with www
+  'https://fm-turbo-nz1x.vercel.app'   // Vercel preview URL
 ];
+
+// Function to validate if origin is a Vercel preview URL
+const isVercelPreviewUrl = (origin) => {
+  return origin && (
+    origin.endsWith('.vercel.app') ||    // Vercel preview/deployment URLs
+    origin.includes('-git-')             // Vercel branch deployments
+  );
+};
 
 app.use(cors({
   origin: function(origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin) {
       return callback(null, true);
     }
+
+    // Allow if origin is in whitelist or is a Vercel preview URL
+    if (allowedOrigins.includes(origin) || isVercelPreviewUrl(origin)) {
+      console.log('Allowed origin:', origin);
+      return callback(null, true);
+    }
+
     console.log('Blocked origin:', origin);
-    return callback(null, false);
+    return callback(new Error('Not allowed by CORS'));
   },
-  methods: ['GET', 'POST', 'OPTIONS']
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type']
 }));
 
 app.use(express.json());
