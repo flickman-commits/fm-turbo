@@ -249,7 +249,10 @@ export function TaskModal({
       setFormData(testData[taskType])
       setSelectedFileName('discovery-call-transcript.json')
     } else {
-      setFormData(testData[taskType])
+      setFormData({
+        ...testData[taskType],
+        familiarity: 'neverMet',
+      })
     }
   }
 
