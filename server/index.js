@@ -26,23 +26,10 @@ const isVercelPreviewUrl = (origin) => {
 };
 
 app.use(cors({
-  origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) {
-      return callback(null, true);
-    }
-
-    // Allow if origin is in whitelist or is a Vercel preview URL
-    if (allowedOrigins.includes(origin) || isVercelPreviewUrl(origin)) {
-      console.log('Allowed origin:', origin);
-      return callback(null, true);
-    }
-
-    console.log('Blocked origin:', origin);
-    return callback(new Error('Not allowed by CORS'));
-  },
+  origin: '*', // Allow all origins for now
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type']
+  allowedHeaders: ['Content-Type', 'Accept'],
+  optionsSuccessStatus: 200
 }));
 
 app.use(express.json());

@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { TaskType } from '@/types/tasks'
 import { TaskModal } from '@/components/TaskModal'
+import { FeatureRequestModal } from '@/components/FeatureRequestModal'
 import { links } from '@/config/links'
 import { Layout } from '@/components/Layout'
 
 export default function Home() {
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null)
+  const [showFeatureModal, setShowFeatureModal] = useState(false)
 
   const handleTaskSelect = (task: TaskType) => {
     setSelectedTask(task)
@@ -92,10 +94,24 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Feature Request Button - Fixed Position */}
+      <button
+        onClick={() => setShowFeatureModal(true)}
+        className="fixed bottom-8 right-8 h-12 px-6 font-medium text-[#F5F0E8] bg-black hover:bg-[#E94E1B] rounded-full transition-colors whitespace-nowrap shadow-lg z-10"
+      >
+        Submit Feature Request
+      </button>
+
       {selectedTask && (
         <TaskModal
           taskType={selectedTask}
           onClose={() => setSelectedTask(null)}
+        />
+      )}
+
+      {showFeatureModal && (
+        <FeatureRequestModal
+          onClose={() => setShowFeatureModal(false)}
         />
       )}
     </Layout>

@@ -4,7 +4,16 @@ interface RequestBody {
   feedback?: string;
 }
 
-export async function POST(req: Request) {
+export default async function handler(req: Request) {
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  }
+
   try {
     const body = await req.json() as RequestBody;
     const { type, description, feedback } = body;

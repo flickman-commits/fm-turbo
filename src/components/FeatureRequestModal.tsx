@@ -26,10 +26,11 @@ export function FeatureRequestModal({ onClose }: FeatureRequestModalProps) {
     setIsSubmitting(true)
 
     try {
-      const response = await fetch('/api/feature-request', {
+      const response = await fetch('https://fm-turbo-production.up.railway.app/api/feature-request', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify({
           type: requestType,
@@ -39,6 +40,8 @@ export function FeatureRequestModal({ onClose }: FeatureRequestModalProps) {
       })
 
       if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Server response:', errorData);
         throw new Error('Failed to submit request')
       }
 
