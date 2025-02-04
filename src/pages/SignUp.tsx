@@ -2,7 +2,6 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { links } from '@/config/links'
 import { PRICING_TIERS, getCurrentPricingTier, getSliderPosition } from '@/utils/pricing'
 import { PRICE_COMPARISONS } from '@/utils/priceComparisons'
-import { Input } from '@/components/ui/input'
 
 // This can be updated when we get new user counts
 export const CURRENT_USER_COUNT = 3
@@ -103,7 +102,7 @@ export default function SignUp() {
       const time = new Date().toLocaleTimeString()
 
       // Send to Google Sheets
-      const response = await fetch('https://script.google.com/macros/s/AKfycbxCvoevTYrwn8VzrMxh6lmqIn35xhI-Q2xA3MbyA64O3mDrJeA0SjtEzcHGey4SWXUlHA/exec', {
+      await fetch('https://script.google.com/macros/s/AKfycbxCvoevTYrwn8VzrMxh6lmqIn35xhI-Q2xA3MbyA64O3mDrJeA0SjtEzcHGey4SWXUlHA/exec', {
         method: 'POST',
         mode: 'no-cors',
         headers: {
