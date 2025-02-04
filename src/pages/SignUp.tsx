@@ -77,31 +77,6 @@ const AnimatedCounter = ({ end, duration = 1000, start = false }: { end: number;
   return <span>{count}</span>
 }
 
-const HeroCounter = ({ end, duration = 1000 }: { end: number; duration?: number }) => {
-  const [count, setCount] = useState(0)
-
-  useEffect(() => {
-    const steps = 60
-    const increment = end / steps
-    const stepDuration = duration / steps
-    let current = 0
-
-    const timer = setInterval(() => {
-      current += increment
-      if (current >= end) {
-        setCount(end)
-        clearInterval(timer)
-      } else {
-        setCount(Math.floor(current))
-      }
-    }, stepDuration)
-
-    return () => clearInterval(timer)
-  }, [end, duration])
-
-  return <span>{count}</span>
-}
-
 export default function SignUp() {
   const [activeTestimonial, setActiveTestimonial] = useState(0)
   const [isPricingVisible, setIsPricingVisible] = useState(false)
