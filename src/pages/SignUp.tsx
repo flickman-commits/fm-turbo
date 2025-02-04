@@ -4,7 +4,7 @@ import { PRICING_TIERS, getCurrentPricingTier, getSliderPosition } from '@/utils
 import { PRICE_COMPARISONS } from '@/utils/priceComparisons'
 
 // This can be updated when we get new user counts
-export const CURRENT_USER_COUNT = 1
+export const CURRENT_USER_COUNT = 3
 
 // Toast component
 const Toast = ({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) => {
@@ -13,8 +13,10 @@ const Toast = ({ message, type, onClose }: { message: string; type: 'success' | 
       onClose()
     }, 5000)
 
-    return () => clearTimeout(timer)
-  }, [onClose])
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [onClose, message])
 
   return (
     <div 
@@ -201,6 +203,31 @@ export default function SignUp() {
             Transform hours of business tasks into seconds. Built specifically for freelance creatives who want to focus on what they do best.
           </p>
           
+          <div className="mb-8 animate-on-scroll">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-4">
+              <div className="flex -space-x-3 mb-2 sm:mb-0">
+                <img 
+                  src="/profile-pic-1.jpg" 
+                  alt="Creator profile" 
+                  className="w-10 h-10 rounded-full border-2 border-[#F5F0E8] object-cover relative z-30"
+                />
+                <img 
+                  src="/profile-pic-2.jpg" 
+                  alt="Creator profile" 
+                  className="w-10 h-10 rounded-full border-2 border-[#F5F0E8] object-cover relative z-20"
+                />
+                <img 
+                  src="/profile-pic-3.jpg" 
+                  alt="Creator profile" 
+                  className="w-10 h-10 rounded-full border-2 border-[#F5F0E8] object-cover relative z-10"
+                />
+              </div>
+              <div className="text-sm sm:text-base font-medium text-black text-center sm:text-left ml-1">
+                TRUSTED BY <AnimatedCounter end={3} duration={2000} start={true} /> CREATORS AND COUNTING...
+              </div>
+            </div>
+          </div>
+
           <div className="mb-12 animate-on-scroll">
             <h3 className="text-xl font-semibold mb-6 text-[#E94E1B]">
               Beta Launching Friday, February 7th
@@ -475,7 +502,7 @@ export default function SignUp() {
 
               <div className="bg-black/5 rounded-xl p-4 mb-12 inline-block hover:bg-[#00A651]/10 transition-colors">
                 <div className="text-base sm:text-lg font-medium text-black flex items-center gap-2">
-                  Users: <AnimatedCounter end={1} duration={1000} start={isPricingVisible} />
+                  Users: <AnimatedCounter end={3} duration={1000} start={isPricingVisible} />
                 </div>
               </div>
 
@@ -594,7 +621,7 @@ export default function SignUp() {
             <div className={`grid ${currentTier.price === 'FREE' ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'} gap-8`}>
               {PRICE_COMPARISONS[currentTier.price].map((comparison, index) => (
                 <div key={index} className={`text-center ${currentTier.price === 'FREE' ? 'mx-auto' : ''}`}>
-                  <div className="h-24 flex items-center justify-center mb-2" dangerouslySetInnerHTML={{ __html: comparison.emoji }} />
+                  <div className="h-24 flex items-center justify-center mb-2 text-4xl" dangerouslySetInnerHTML={{ __html: comparison.emoji }} />
                   {comparison.item && <div className="font-medium text-black text-xl sm:text-2xl">{comparison.item}</div>}
                   <div className="text-[#E94E1B] font-medium mt-1">{comparison.price}</div>
                 </div>
@@ -665,6 +692,7 @@ export default function SignUp() {
 
       {toast && (
         <Toast
+          key={toast.message}
           message={toast.message}
           type={toast.type}
           onClose={() => setToast(null)}
