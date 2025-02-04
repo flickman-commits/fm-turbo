@@ -21,27 +21,71 @@ export default function Profile() {
           </div>
 
           <div className="p-6 bg-white rounded-xl border-2 border-black">
-            <h2 className="text-xl font-semibold mb-4">Vimeo Connection</h2>
-            {user?.vimeoConnected ? (
+            <h2 className="text-xl font-semibold mb-4">Integrations</h2>
+            <div className="space-y-6">
+              {/* Vimeo Integration */}
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-black/60">Status</p>
-                  <p className="font-medium text-[#00A651]">Connected</p>
+                <div className="flex items-center gap-3">
+                  <img 
+                    src="/vimeo-icon.png" 
+                    alt="Vimeo" 
+                    className="w-8 h-8 object-contain"
+                  />
+                  <div>
+                    <p className="font-medium">Vimeo</p>
+                    <p className="text-sm text-black/60">Connect your portfolio videos</p>
+                  </div>
                 </div>
-                <button className="px-4 py-2 text-sm font-medium text-black hover:text-[#E94E1B] transition-colors">
-                  Disconnect
-                </button>
+                {user?.vimeoConnected ? (
+                  <div className="flex items-center gap-4">
+                    <p className="font-medium text-[#00A651]">Connected</p>
+                    <button className="px-4 py-2 text-sm font-medium text-black hover:text-[#E94E1B] transition-colors">
+                      Disconnect
+                    </button>
+                  </div>
+                ) : (
+                  <button className="px-6 py-2 text-sm font-medium text-[#F5F0E8] bg-black hover:bg-[#29ABE2] rounded-full transition-colors">
+                    Connect
+                  </button>
+                )}
               </div>
-            ) : (
-              <div className="text-center">
-                <p className="text-black/60 mb-4">
-                  Connect your Vimeo account to include portfolio videos in your proposals
-                </p>
+
+              {/* Notion Integration */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <img 
+                    src="/notion.svg" 
+                    alt="Notion" 
+                    className="w-8 h-8 object-contain"
+                  />
+                  <div>
+                    <p className="font-medium">Notion</p>
+                    <p className="text-sm text-black/60">Sync your documents</p>
+                  </div>
+                </div>
                 <button className="px-6 py-2 text-sm font-medium text-[#F5F0E8] bg-black hover:bg-[#29ABE2] rounded-full transition-colors">
-                  Connect Vimeo
+                  Coming Soon
                 </button>
               </div>
-            )}
+
+              {/* Slack Integration */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <img 
+                    src="/slack-logo.png" 
+                    alt="Slack" 
+                    className="w-8 h-8 object-contain"
+                  />
+                  <div>
+                    <p className="font-medium">Slack</p>
+                    <p className="text-sm text-black/60">Get notifications</p>
+                  </div>
+                </div>
+                <button className="px-6 py-2 text-sm font-medium text-[#F5F0E8] bg-black hover:bg-[#29ABE2] rounded-full transition-colors">
+                  Coming Soon
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Coming Soon Features */}

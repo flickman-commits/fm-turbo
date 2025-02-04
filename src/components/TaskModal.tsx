@@ -16,6 +16,7 @@ import { creditsManager } from '@/utils/credits'
 import { useUser } from '@/contexts/UserContext'
 import { getRelevantVideos } from '@/services/db'
 import { PortfolioVideoSelector } from '@/components/PortfolioVideoSelector'
+import { links } from '@/config/links'
 
 type ViewState = 'input' | 'loading' | 'result'
 
@@ -149,6 +150,9 @@ The general structure of the video is going to be as follows:
 - talk about why Sana labs chose to work at the Malin (using the design forward approach of the malin and sana labs as the segway into that section)
 
 We shouldn't cut between speakers too often, the minimum would be 10 seconds of a speaker before showing the next`
+  },
+  trendingAudios: {
+    // This is a placeholder for the new task type
   }
 }
 
@@ -326,7 +330,11 @@ export function TaskModal({
     }
   }
 
-  const handleAction = (action: TaskActionConfig) => {
+  const handleAction = async (action: TaskActionConfig) => {
+    if (action.type === 'download') {
+      window.open(links.trendingAudios, '_blank', 'noopener,noreferrer')
+      return
+    }
     switch (action.type) {
       case 'gmail':
         handleGmailCompose()
@@ -478,7 +486,46 @@ export function TaskModal({
     )
   }
 
+  const getTaskTitle = () => {
+    switch (taskType) {
+      case 'proposal':
+        return 'Content Proposal'
+      case 'outreach':
+        return 'Outreach Message'
+      case 'runOfShow':
+        return 'Run of Show'
+      case 'budget':
+        return 'Production Budget'
+      case 'contractorBrief':
+        return 'Contractor Brief'
+      case 'timelineFromTranscript':
+        return 'Timeline from Transcript'
+      case 'trendingAudios':
+        return 'Trending Audios'
+      default:
+        return ''
+    }
+  }
+
   const renderContent = () => {
+    if (taskType === 'trendingAudios') {
+      return (
+        <div className="p-6">
+          <p className="text-black/60 mb-6">
+            Every week we update this link with the 10 most trending audios on social media, ready for download.
+          </p>
+          <div className="flex justify-end">
+            <button
+              onClick={() => handleAction(taskActionConfigs.trendingAudios[0])}
+              className="px-6 py-2 text-sm font-medium text-[#F5F0E8] bg-black hover:bg-[#29ABE2] rounded-full transition-colors"
+            >
+              Download Now
+            </button>
+          </div>
+        </div>
+      )
+    }
+
     switch (viewState) {
       case 'loading':
         return <LoadingOverlay />
@@ -785,11 +832,7 @@ export function TaskModal({
     <DottedDialog
       open={true}
       onOpenChange={onClose}
-      title={viewState === 'result' && result ? `Your ${
-        result.taskType === 'runOfShow' ? 'Run of Show' : 
-        result.taskType === 'contractorBrief' ? 'Contractor Brief' :
-        result.taskType.charAt(0).toUpperCase() + result.taskType.slice(1)
-      }` : config.title}
+      title={viewState === 'result' && result ? `Your ${getTaskTitle()}` : config.title}
       description={viewState === 'result' ? 'View and share your generated content' : config.description}
     >
       <div className="flex flex-col h-full overflow-hidden relative bg-[#F5F0E8]">
