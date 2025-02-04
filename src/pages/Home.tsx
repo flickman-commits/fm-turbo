@@ -97,7 +97,8 @@ export default function Home() {
       {/* Feature Request Button - Fixed Position */}
       <button
         onClick={() => setShowFeatureModal(true)}
-        className="fixed bottom-8 right-8 h-12 px-6 font-medium text-[#F5F0E8] bg-black hover:bg-[#E94E1B] rounded-full transition-colors whitespace-nowrap shadow-lg z-10"
+        className="fixed bottom-safe right-4 h-10 px-4 font-medium text-black bg-[#F5F0E8] hover:bg-black hover:text-[#F5F0E8] border border-black rounded-full transition-colors whitespace-nowrap z-10 text-sm"
+        style={{ marginBottom: 'env(safe-area-inset-bottom, 16px)' }}
       >
         Submit Feature Request
       </button>
