@@ -108,38 +108,6 @@ async function updateServerCount(count: number) {
   }
 }
 
-async function fetchUserCount() {
-  try {
-    console.log('Frontend: Starting to fetch user count')
-    const response = await fetch(`${GOOGLE_SHEET_URL}?action=getCount`)
-    console.log('Frontend: Response status:', response.status)
-    
-    const responseText = await response.text()
-    console.log('Frontend: Raw response:', responseText)
-    
-    if (!responseText.trim()) {
-      console.log('Frontend: Empty response, using server count')
-      return getServerCount()
-    }
-    
-    const data = JSON.parse(responseText)
-    console.log('Frontend: Parsed data:', data)
-    
-    // Check if data.count exists and is a number
-    if (typeof data.count === 'number') {
-      // Update the server with the new count
-      await updateServerCount(data.count)
-      return data.count
-    } else {
-      console.error('Frontend: Invalid data structure:', data)
-      return getServerCount()
-    }
-  } catch (error) {
-    console.error('Frontend: Error fetching user count:', error)
-    return getServerCount()
-  }
-}
-
 export default function SignUp() {
   // Start with 10 as a fallback to indicate we're waiting for the server count
   const [usersAtLaunch, setUsersAtLaunch] = useState<number>(10)
