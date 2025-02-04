@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { links } from '@/config/links'
 import { PRICING_TIERS, getCurrentPricingTier, getSliderPosition } from '@/utils/pricing'
 import { PRICE_COMPARISONS } from '@/utils/priceComparisons'
+import { Input } from '@/components/ui/input'
 
 // This can be updated when we get new user counts
 export const CURRENT_USER_COUNT = 3
@@ -212,16 +213,15 @@ export default function SignUp() {
               onSubmit={handleEmailSubmit}
               className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto"
             >
-              <input
+              <Input
                 type="email"
                 name="email_address"
                 placeholder="Leave email to get notified of drop"
-                className="flex-1 h-12 sm:h-[48px] px-4 rounded-full border-2 border-black bg-white text-black placeholder-black/40 focus:outline-none focus:border-[#E94E1B] transition-colors"
                 required
               />
               <button
                 type="submit"
-                className="h-12 sm:h-[48px] px-6 font-medium text-[#F5F0E8] bg-black hover:bg-[#E94E1B] rounded-full transition-colors whitespace-nowrap"
+                className="h-[48px] px-6 font-medium text-[#F5F0E8] bg-black hover:bg-[#E94E1B] rounded-full transition-colors whitespace-nowrap"
               >
                 Get Notified
               </button>
@@ -569,16 +569,16 @@ export default function SignUp() {
                   onSubmit={handleEmailSubmit}
                   className="flex flex-col gap-3"
                 >
-                  <input
+                  <Input
                     type="email"
                     name="email_address"
                     placeholder="Leave email to get notified of drop"
-                    className="w-full h-12 sm:h-[48px] px-4 rounded-full border-2 border-black bg-white text-black placeholder-black/40 focus:outline-none focus:border-[#E94E1B] transition-colors"
+                    className="!border-[#F5F0E8] !bg-transparent !text-[#F5F0E8] placeholder:!text-[#F5F0E8]/40"
                     required
                   />
                   <button
                     type="submit"
-                    className="w-full h-12 sm:h-[48px] px-6 font-medium text-[#F5F0E8] bg-black hover:bg-[#E94E1B] rounded-full transition-colors"
+                    className="w-full h-[48px] px-6 font-medium text-black bg-[#F5F0E8] hover:bg-[#E94E1B] hover:text-[#F5F0E8] rounded-full transition-colors"
                   >
                     Get Notified
                   </button>
@@ -625,16 +625,16 @@ export default function SignUp() {
               onSubmit={handleEmailSubmit}
               className="flex flex-col sm:flex-row gap-3 justify-center"
             >
-              <input
+              <Input
                 type="email"
                 name="email_address"
                 placeholder="Leave email to get notified of drop"
-                className="flex-1 h-12 sm:h-[48px] px-4 rounded-full border-2 border-[#F5F0E8] bg-transparent text-[#F5F0E8] placeholder-[#F5F0E8]/40 focus:outline-none focus:border-[#E94E1B] transition-colors"
+                className="!border-[#F5F0E8] !bg-transparent !text-[#F5F0E8] placeholder:!text-[#F5F0E8]/40"
                 required
               />
               <button
                 type="submit"
-                className="h-12 sm:h-[48px] px-6 font-medium text-black bg-[#F5F0E8] hover:bg-[#E94E1B] hover:text-[#F5F0E8] rounded-full transition-colors whitespace-nowrap"
+                className="h-[48px] px-6 font-medium text-black bg-[#F5F0E8] hover:bg-[#E94E1B] hover:text-[#F5F0E8] rounded-full transition-colors whitespace-nowrap"
               >
                 Get Notified
               </button>
