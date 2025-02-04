@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { links } from '@/config/links'
 import { PRICING_TIERS, getCurrentPricingTier, getSliderPosition } from '@/utils/pricing'
 import { PRICE_COMPARISONS } from '@/utils/priceComparisons'
@@ -10,18 +10,13 @@ export const CURRENT_USER_COUNT = 3
 // Toast component
 const Toast = ({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) => {
   useEffect(() => {
-    const timer = setTimeout(() => {
-      onClose()
-    }, 5000)
-
-    return () => {
-      clearTimeout(timer)
-    }
-  }, [onClose, message])
+    const timer = setTimeout(onClose, 5000)
+    return () => clearTimeout(timer)
+  }, [onClose]) // Only re-run if onClose changes
 
   return (
     <div 
-      className={`fixed bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full shadow-lg text-[#F5F0E8] font-medium 
+      className={`fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-md px-6 py-3 rounded-full shadow-lg text-[#F5F0E8] font-medium text-center
         ${type === 'success' ? 'bg-[#00A651]' : 'bg-[#E94E1B]'}
         animate-in fade-in slide-in-from-bottom-4 duration-300`}
     >
@@ -84,6 +79,11 @@ export default function SignUp() {
   const pricingSliderRef = useRef<HTMLDivElement>(null)
   const currentTier = getCurrentPricingTier(CURRENT_USER_COUNT)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+
+  // Create a stable onClose callback using useCallback
+  const handleToastClose = useCallback(() => {
+    setToast(null)
+  }, [])
 
   useEffect(() => {
     // Initialize intersection observer for fade-in animations
@@ -573,12 +573,12 @@ export default function SignUp() {
                     type="email"
                     name="email_address"
                     placeholder="Leave email to get notified of drop"
-                    className="!border-[#F5F0E8] !bg-transparent !text-[#F5F0E8] placeholder:!text-[#F5F0E8]/40"
+                    className="!border-black !bg-white !text-black placeholder:!text-black/40"
                     required
                   />
                   <button
                     type="submit"
-                    className="w-full h-[48px] px-6 font-medium text-black bg-[#F5F0E8] hover:bg-[#E94E1B] hover:text-[#F5F0E8] rounded-full transition-colors"
+                    className="w-full h-[48px] px-6 font-medium text-[#F5F0E8] bg-black hover:bg-[#E94E1B] rounded-full transition-colors"
                   >
                     Get Notified
                   </button>
@@ -667,10 +667,9 @@ export default function SignUp() {
 
       {toast && (
         <Toast
-          key={toast.message}
           message={toast.message}
           type={toast.type}
-          onClose={() => setToast(null)}
+          onClose={handleToastClose}
         />
       )}
     </main>
