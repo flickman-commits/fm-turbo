@@ -111,5 +111,10 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
       { id: 'tone', label: 'Tone of Video', type: 'text', placeholder: 'Desired tone or style of the video' },
       { id: 'additionalNotes', label: 'Additional Notes', type: 'textarea', placeholder: 'Please provide as much detail as possible about what you want to achieve with this video, including any specific moments or themes you want to highlight' }
     ]
+  },
+  trendingAudios: {
+    title: 'Trending Audios',
+    description: 'Download the latest trending audio tracks for your content.',
+    fields: []
   }
 } 

@@ -72,11 +72,17 @@ Let me know if you have any questions. Looking forward to working with you!`,
 2. Identify the most impactful and relevant segments based on the video's purpose and tone
 3. Create a detailed timeline showing which parts of the transcript should be used
 4. Highlight the specific sections of the transcript that should be included
-5. Format your response in clean, well-structured markdown with clear timecodes and explanations for each segment selection`
+5. Format your response in clean, well-structured markdown with clear timecodes and explanations for each segment selection`,
+  
+  trendingAudios: '' // No prompt needed for trending audios
 }
 
 // User prompts for different task types
 export const getUserPrompt = (taskType: TaskType, formData: FormData): string => {
+  if (taskType === 'trendingAudios') {
+    return '' // No prompt needed for trending audios
+  }
+
   switch (taskType) {
     case 'contractorBrief':
       return `Create a contractor brief email following this exact format and style:
