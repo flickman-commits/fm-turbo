@@ -14,7 +14,7 @@ export interface Video {
 }
 
 export interface FormDataWithWeather {
-  [key: string]: FormDataValue | WeatherData | Video[] | undefined
+  [key: string]: FormDataValue | WeatherData | undefined
   weather?: WeatherData
   location?: string
   address?: string

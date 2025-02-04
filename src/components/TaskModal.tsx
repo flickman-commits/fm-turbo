@@ -11,7 +11,7 @@ import { NotionButton } from '@/components/ui/notion-button'
 import ReactMarkdown from 'react-markdown'
 import type { Components } from 'react-markdown'
 import OpenAI from 'openai'
-import { FormDataWithWeather } from '@/types/forms'
+import { FormDataWithWeather, Video } from '@/types/forms'
 import { creditsManager } from '@/utils/credits'
 import { useUser } from '@/contexts/UserContext'
 import { getRelevantVideos } from '@/services/db'
@@ -54,64 +54,44 @@ Sunday, December 8th - Miami, FL (Shoot):
     numberOfDays: '2'
   },
   proposal: {
-    projectType: 'Corporate Brand Video',
-    clientName: 'TechCorp Inc.',
+    projectType: 'US Creative Partner',
+    clientName: 'Oanda',
     deliveryDate: '2024-06-15',
     budget: '$50,000',
-    discoveryTranscript: JSON.stringify({
-      participants: {
-        client: "Sarah Chen",
-        role: "Head of Marketing",
-        company: "TechCorp Inc.",
-        interviewer: "Matt Flickman"
+    discoveryTranscript: '/discovery-call-transcript.json',
+    requirements: 'Full video production setup with localized content for US market, professional crew, and high-end equipment for corporate brand video. Focus on creating content that resonates with US traders while maintaining global brand standards.',
+    portfolioVideos: [
+      {
+        id: '1042629726',
+        title: '"Tax Optimization" | Evergreen Wealth',
+        description: 'A professional corporate video showcasing financial expertise and complex topics in an engaging way.',
+        url: 'https://vimeo.com/1042629726',
+        thumbnail: null,
+        views: 0,
+        likes: 0,
+        projectType: 'corporate'
       },
-      date: "2024-01-15",
-      duration: "45 minutes",
-      conversation: [
-        {
-          speaker: "client",
-          text: "We're looking to create a series of videos that showcase our company culture and attract top talent."
-        },
-        {
-          speaker: "interviewer",
-          text: "That's great! Can you tell me more about what makes your company culture unique?"
-        },
-        {
-          speaker: "client",
-          text: "Well, we're a tech company but we have a really strong focus on work-life balance and professional development. We have flexible working hours, regular team building events, and a mentorship program. We also have a beautiful office space that we'd love to showcase."
-        },
-        {
-          speaker: "interviewer",
-          text: "Sounds perfect. What's your timeline looking like for this project?"
-        },
-        {
-          speaker: "client",
-          text: "We'd like to have this ready by mid-June as we're planning a big recruitment push in Q3. We're thinking maybe 2-3 videos, each around 2-3 minutes long."
-        },
-        {
-          speaker: "interviewer",
-          text: "And do you have any specific elements you'd like to highlight in these videos?"
-        },
-        {
-          speaker: "client",
-          text: "Yes, definitely want to show our team collaboration, our office space, maybe some interviews with current employees about why they love working here. We also have some unique perks like our rooftop garden and game room that would be great to feature."
-        }
-      ],
-      keyPoints: [
-        "Company culture focus",
-        "Work-life balance",
-        "Professional development",
-        "Office space showcase",
-        "Team collaboration",
-        "Employee testimonials"
-      ],
-      timeline: {
-        deadline: "2024-06-15",
-        deliverables: "2-3 videos",
-        videoDuration: "2-3 minutes each"
+      {
+        id: '1030922649',
+        title: '"Join Us" | Regeneration.VC',
+        description: 'Flickman Media filmed & edited an event recap of ReAssembly 2024 -- a 2-day climate week conference that brought together visionaries and changemakers in the climate world.',
+        url: 'https://vimeo.com/1030922649',
+        thumbnail: null,
+        views: 0,
+        likes: 0,
+        projectType: 'corporate'
+      },
+      {
+        id: '926038873',
+        title: '"Celebrating 20 Years" | Lure Fishbar',
+        description: 'A brand-focused video that effectively tells the story of an established business while maintaining professionalism and engagement.',
+        url: 'https://vimeo.com/926038873',
+        thumbnail: null,
+        views: 0,
+        likes: 0,
+        projectType: 'brand'
       }
-    }, null, 2),
-    requirements: 'Full video production setup, professional crew, and high-end equipment for corporate brand video'
+    ]
   },
   outreach: {
     recipientName: 'Linnea Schuessler',
@@ -252,6 +232,9 @@ export function TaskModal({
         toast.error('Failed to load transcript file')
         setFormData(testData[taskType])
       }
+    } else if (taskType === 'proposal') {
+      setFormData(testData[taskType])
+      setSelectedFileName('discovery-call-transcript.json')
     } else {
       setFormData(testData[taskType])
     }

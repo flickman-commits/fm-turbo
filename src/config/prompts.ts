@@ -1,24 +1,25 @@
 import { TaskType } from '@/types/tasks'
 import { WeatherData } from '@/services/location'
-import { Video } from '@/types/forms'
+import { Video, FormDataValue } from '@/types/forms'
 
 interface FormData {
-  [key: string]: string | WeatherData | Video[] | undefined;
-  weather?: WeatherData;
-  googleMapsLink?: string;
-  location?: string;
-  address?: string;
-  shootDate?: string;
-  crewMembers?: string;
-  callTimes?: string;
-  schedule?: string;
-  discoveryTranscript?: string;
-  recipientName?: string;
-  company?: string;
-  role?: string;
-  familiarity?: string;
-  keyPoints?: string;
-  portfolioVideos?: Video[];
+  [key: string]: FormDataValue | WeatherData | undefined
+  weather?: WeatherData
+  googleMapsLink?: string
+  location?: string
+  address?: string
+  shootDate?: string
+  crewMembers?: string
+  callTimes?: string
+  schedule?: string
+  discoveryTranscript?: string
+  recipientName?: string
+  company?: string
+  role?: string
+  familiarity?: string
+  keyPoints?: string
+  portfolioVideos?: Video[]
+  requirements?: string
 }
 
 // System prompts for different task types
@@ -60,27 +61,7 @@ Let me know if you have any questions. Looking forward to working with you!`,
 - For "Just Met": Reference your recent meeting/interaction, be warmer and more familiar while maintaining professionalism.
 - For "I Know Them": Be friendly and casual, leverage your existing relationship while still being professional.`,
   
-  proposal: `You are an expert video production assistant helping to generate professional content for Flickman Media. Create a detailed video content proposal that includes clear sections for project overview, production approach, technical requirements, timeline, and budget breakdown.
-
-When portfolio videos are provided, you MUST incorporate them into the proposal in a dedicated "Portfolio Examples" section. For each video:
-1. Create a subsection with the video's title as a heading
-2. Include the video URL for easy reference
-3. Explain how this specific project demonstrates our expertise in areas relevant to the client's needs
-4. Use the video's description to highlight our role (e.g., "Produced, filmed, and edited by Flickman Media")
-5. Connect specific aspects of the video to the client's requirements from their discovery call
-
-The portfolio examples should be carefully selected based on:
-- Project type matching (corporate, brand, product videos)
-- Similar technical requirements
-- Comparable scope and scale
-- Relevant industry experience
-
-Make sure to reference these examples throughout the proposal where relevant, not just in the portfolio section. For example:
-- In the production approach, reference similar techniques used in portfolio examples
-- In the technical requirements, mention equipment and setups proven successful in similar projects
-- When discussing timeline and deliverables, refer to comparable projects we've completed
-
-Format all video references consistently using markdown links: [Video Title](URL)`,
+  proposal: `You are an expoert salesman at a Flickman Media, a video production company. Your role is to take in information from discovery calls, online research, and provided data about a potential client and then to create an effective content proposal to our potential clients.`,
   
   runOfShow: `You are a senior producer at Flickman Media who's in charge of creating the run of show for an upcoming video shoot. You are very thorough and detailed, you are also very concise.`,
   
@@ -152,7 +133,28 @@ ${formData.portfolioVideos.map(video => `- ${video.title}
   Project Type: ${video.projectType}`).join('\n')}`
         : '';
 
-      return `Create a comprehensive video production proposal based on the following discovery call transcript and project details. Make sure to naturally incorporate our portfolio examples to demonstrate our expertise and capabilities.
+      return `Create a detailed video content proposal based on the following discovery call transcript, project detials, and array of portfolio videos. Make sure that it includes clear sections for the objectives of the project, our content strategy & approach, deliverables involved with the projcet, timeline of the project, visual references, investment (which means how much the client will have to invest in the project), and terms. Make sure to incorporate our portfolio examples to demonstrate our expertise and capabilities in the visual references section.
+
+For the visual refernces section, choose the best 3 videos from the provided array of portfolio videos. 
+
+The portfolio examples should be carefully selected based on:
+- Project type matching (corporate, brand, product videos)
+- Similar technical requirements
+- Comparable scope and scale
+- Relevant industry experience
+
+When portfolio videos are provided, you MUST incorporate them into the proposal in a dedicated "Visual References" section. For each video:
+1. Use the video's title as a heading (and make that title clickable to the video URL for easy reference)
+2. Explain how this specific project demonstrates our expertise in areas relevant to the client's needs
+3. Use the video's description to highlight our role (e.g., "Produced, filmed, and edited by Flickman Media")
+4. Connect specific aspects of the video to the client's requirements from their discovery call
+
+Make sure to reference these examples throughout the proposal where relevant, not just in the portfolio section. For example:
+- In the production approach, reference similar techniques used in portfolio examples
+- In the technical requirements, mention equipment and setups proven successful in similar projects
+- When discussing timeline and deliverables, refer to comparable projects we've completed
+
+Format all video references consistently using markdown links: [Video Title](URL)
 
 Discovery Call Transcript:
 ${formData.discoveryTranscript || ''}
@@ -164,7 +166,11 @@ Project Details:
 - Budget: ${formData.budget || ''}
 - Special Requirements: ${formData.requirements || ''}${portfolioSection}
 
-When incorporating portfolio examples, explain specifically how each example demonstrates our capability to deliver similar results for this project. Focus on the aspects most relevant to the client's needs.
+Portfolio Videos:
+${formData.portfolioVideos?.map(video => `- ${video.title}
+  URL: ${video.url}
+  Description: ${video.description || 'Not available'}
+  Project Type: ${video.projectType}`).join('\n') || ''}
 
 Format your response in clean, well-structured markdown with appropriate headers and lists.`
 
