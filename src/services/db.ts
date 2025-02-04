@@ -1,4 +1,6 @@
 import { PrismaClient } from '@prisma/client'
+import { Video } from '@/types/forms'
+import { videos } from '@/services/videoDatabase'
 
 // Handle both browser and Node.js environments
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined }
@@ -89,19 +91,17 @@ export async function syncUserVideos(userId: string, videos: VideoData[]) {
   return Promise.all(upsertPromises)
 }
 
-export async function getRelevantVideos(userId: string, projectType: string, limit = 3) {
-  return prisma.video.findMany({
-    where: {
-      userId,
-      isPublic: true,
-      categories: {
-        has: projectType.toLowerCase()
-      }
-    },
-    orderBy: [
-      { views: 'desc' },
-      { likes: 'desc' }
-    ],
-    take: limit
+export async function getRelevantVideos(userId: string, projectType: string): Promise<Video[]> {
+  // Filter videos by project type
+  const relevantVideos = videos.filter(video => video.projectType === projectType)
+  
+  // Sort by views and likes
+  relevantVideos.sort((a, b) => {
+    const aScore = a.views + a.likes
+    const bScore = b.views + b.likes
+    return bScore - aScore
   })
+  
+  // Return top 3 videos
+  return relevantVideos.slice(0, 3)
 } 

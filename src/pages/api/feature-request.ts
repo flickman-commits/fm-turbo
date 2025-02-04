@@ -42,9 +42,14 @@ export async function POST(req: Request) {
     }
 
     // Send to Slack
-    const SLACK_WEBHOOK_URL = import.meta.env.SLACK_WEBHOOK_URL || process.env.SLACK_WEBHOOK_URL;
+    const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL;
     if (!SLACK_WEBHOOK_URL) {
-      throw new Error('Slack webhook URL not configured');
+      return new Response(JSON.stringify({ error: 'Slack webhook URL not configured' }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
     }
     
     const response = await fetch(SLACK_WEBHOOK_URL, {

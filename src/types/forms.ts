@@ -10,7 +10,14 @@ export interface Video {
   thumbnail: string | null
   views: number
   likes: number
+  tags?: string[]
+  categories?: string[]
+  isPublic?: boolean
+  userId?: string
   projectType: string
+  createdAt?: Date
+  updatedAt?: Date
+  vimeoId?: string
 }
 
 export interface FormDataWithWeather {
@@ -30,4 +37,5 @@ export interface FormDataWithWeather {
   budget?: string
   discoveryTranscript?: string
   requirements?: string
+  googleMapsLink?: string
 } 

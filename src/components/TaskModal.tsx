@@ -192,6 +192,15 @@ const LoadingOverlay = () => {
   )
 }
 
+const defaultWeather = {
+  sunrise: '7:15 AM',
+  sunset: '4:30 PM',
+  temperature: 45,
+  conditions: 'partly cloudy',
+  high: 50,
+  low: 40
+}
+
 export function TaskModal({
   taskType,
   onClose,
@@ -265,14 +274,7 @@ export function TaskModal({
           } catch (weatherError) {
             console.error('Weather data error:', weatherError)
             toast.error('Using default sunrise/sunset times')
-            updatedFormData.weather = {
-              sunrise: '7:15 AM',
-              sunset: '4:30 PM',
-              temperature: 45,
-              conditions: 'partly cloudy',
-              high: 50,
-              low: 40
-            }
+            updatedFormData.weather = defaultWeather
           }
         } catch (error) {
           console.error('Error with location services:', error)
@@ -288,11 +290,8 @@ export function TaskModal({
           }
         } catch (error) {
           console.error('Failed to fetch relevant videos:', error)
-          // Continue without portfolio videos if fetch fails
         }
       }
-
-      setFormData(updatedFormData)
 
       const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
         {
@@ -414,6 +413,22 @@ export function TaskModal({
     }
   }
 
+  const handleFieldChange = (fieldId: string, value: string | Video[]) => {
+    if (Array.isArray(value)) {
+      // Handle Video[] type
+      setFormData(prev => ({
+        ...prev,
+        [fieldId]: value as Video[]
+      }))
+    } else {
+      // Handle string type
+      setFormData(prev => ({
+        ...prev,
+        [fieldId]: value
+      }))
+    }
+  }
+
   const markdownComponents: Components = {
     h1: (props) => <h1 className="text-2xl font-bold mb-4 text-black" {...props} />,
     h2: (props) => <h2 className="text-xl font-bold mb-3 text-black" {...props} />,
@@ -529,14 +544,7 @@ export function TaskModal({
                         } catch (weatherError) {
                           console.error('Weather data error:', weatherError);
                           toast.error('Using default sunrise/sunset times');
-                          updatedFormData.weather = {
-                            sunrise: '7:15 AM',
-                            sunset: '4:30 PM',
-                            temperature: 45,
-                            conditions: 'partly cloudy',
-                            high: 50,
-                            low: 40
-                          };
+                          updatedFormData.weather = defaultWeather;
                         }
                       } catch (error) {
                         console.error('Error with location services:', error);
@@ -651,7 +659,7 @@ export function TaskModal({
                               <PortfolioVideoSelector
                                 projectType={formData.projectType as string || ''}
                                 userId={user.id}
-                                onSelect={(videos) => setFormData(prev => ({ ...prev, [field.id]: videos }))}
+                                onSelect={(videos) => handleFieldChange(field.id, videos)}
                               />
                             ) : (
                               <div className="text-center py-6 text-black/60">
@@ -665,7 +673,7 @@ export function TaskModal({
                             className="flex min-h-[100px] w-full rounded-md border border-black bg-[#F5F0E8] px-3 py-2 text-sm text-black placeholder:text-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#29ABE2] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             placeholder={field.placeholder}
                             value={typeof formData[field.id] === 'string' ? formData[field.id] as string : ''}
-                            onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
+                            onChange={(e) => handleFieldChange(field.id, e.target.value)}
                           />
                         ) : field.type === 'file' ? (
                           <div className="space-y-2">
@@ -679,10 +687,7 @@ export function TaskModal({
                                   if (file) {
                                     const reader = new FileReader()
                                     reader.onload = (e) => {
-                                      setFormData(prev => ({
-                                        ...prev,
-                                        [field.id]: typeof e.target?.result === 'string' ? e.target.result : ''
-                                      }))
+                                      handleFieldChange(field.id, typeof e.target?.result === 'string' ? e.target.result : '')
                                     }
                                     setSelectedFileName(file.name)
                                     reader.readAsText(file)
@@ -716,7 +721,7 @@ export function TaskModal({
                                     ? 'bg-black text-[#F5F0E8]'
                                     : 'text-black hover:bg-[#29ABE2] hover:text-[#F5F0E8]'
                                 }`}
-                                onClick={() => setFormData(prev => ({ ...prev, [field.id]: option.value }))}
+                                onClick={() => handleFieldChange(field.id, option.value)}
                               >
                                 {option.label}
                               </button>
@@ -727,7 +732,7 @@ export function TaskModal({
                             id={field.id}
                             className="flex h-10 w-full rounded-md border border-black bg-[#F5F0E8] px-3 py-2 text-sm text-black placeholder:text-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#29ABE2] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             value={typeof formData[field.id] === 'string' ? formData[field.id] as string : field.options?.find(opt => opt.default)?.value || ''}
-                            onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
+                            onChange={(e) => handleFieldChange(field.id, e.target.value)}
                           >
                             {field.options?.map((option) => (
                               <option key={option.value} value={option.value}>
@@ -742,7 +747,7 @@ export function TaskModal({
                             className="flex h-10 w-full rounded-md border border-black bg-[#F5F0E8] px-3 py-2 text-sm text-black placeholder:text-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#29ABE2] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             placeholder={field.placeholder}
                             value={typeof formData[field.id] === 'string' ? formData[field.id] as string : ''}
-                            onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
+                            onChange={(e) => handleFieldChange(field.id, e.target.value)}
                           />
                         )}
                       </div>

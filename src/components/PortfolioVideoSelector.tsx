@@ -1,15 +1,6 @@
 import { useState, useEffect } from 'react';
+import { Video } from '@/types/forms';
 import { getRelevantVideos } from '@/services/db';
-
-interface Video {
-  id: string;
-  title: string;
-  description: string | null;
-  url: string;
-  thumbnail: string | null;
-  views: number;
-  likes: number;
-}
 
 interface PortfolioVideoSelectorProps {
   projectType: string;
@@ -19,93 +10,58 @@ interface PortfolioVideoSelectorProps {
 
 export function PortfolioVideoSelector({ projectType, userId, onSelect }: PortfolioVideoSelectorProps) {
   const [videos, setVideos] = useState<Video[]>([]);
-  const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadVideos = async () => {
+    const fetchVideos = async () => {
+      if (!projectType || !userId) return;
+
+      setLoading(true);
+      setError(null);
+
       try {
-        setIsLoading(true);
         const relevantVideos = await getRelevantVideos(userId, projectType);
         setVideos(relevantVideos);
+        onSelect(relevantVideos);
       } catch (error) {
-        console.error('Failed to load portfolio videos:', error);
+        console.error('Failed to fetch videos:', error);
+        setError('Failed to fetch videos');
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
-    if (projectType && userId) {
-      loadVideos();
-    }
-  }, [projectType, userId]);
+    fetchVideos();
+  }, [projectType, userId, onSelect]);
 
-  const handleVideoToggle = (videoId: string) => {
-    const newSelected = new Set(selectedVideos);
-    if (newSelected.has(videoId)) {
-      newSelected.delete(videoId);
-    } else if (newSelected.size < 3) {
-      newSelected.add(videoId);
-    }
-    setSelectedVideos(newSelected);
-    onSelect(videos.filter(v => newSelected.has(v.id)));
-  };
+  if (loading) {
+    return <div className="text-center py-6 text-black/60">Loading videos...</div>;
+  }
 
-  if (isLoading) {
-    return (
-      <div className="animate-pulse space-y-4">
-        {[1, 2, 3].map(i => (
-          <div key={i} className="h-24 bg-black/5 rounded-lg"></div>
-        ))}
-      </div>
-    );
+  if (error) {
+    return <div className="text-center py-6 text-red-500">{error}</div>;
   }
 
   if (videos.length === 0) {
-    return (
-      <div className="text-center py-6 text-black/60">
-        No relevant portfolio videos found. Connect your Vimeo account to include examples in your proposals.
-      </div>
-    );
+    return <div className="text-center py-6 text-black/60">No relevant videos found</div>;
   }
 
   return (
     <div className="space-y-4">
-      <div className="text-sm text-black/60 mb-2">
-        Select up to 3 relevant examples to include in your proposal
-      </div>
-      {videos.map(video => (
-        <div
-          key={video.id}
-          className={`flex items-center gap-4 p-4 rounded-lg border-2 transition-colors cursor-pointer ${
-            selectedVideos.has(video.id)
-              ? 'border-[#29ABE2] bg-[#29ABE2]/5'
-              : 'border-black/10 hover:border-black/20'
-          }`}
-          onClick={() => handleVideoToggle(video.id)}
-        >
+      {videos.map((video) => (
+        <div key={video.id} className="flex items-center gap-4 p-4 bg-black/5 rounded-lg">
           {video.thumbnail && (
-            <div className="w-32 h-20 bg-black/5 rounded overflow-hidden flex-shrink-0">
-              <img
-                src={video.thumbnail}
-                alt={video.title}
-                className="w-full h-full object-cover"
-              />
-            </div>
+            <img 
+              src={video.thumbnail} 
+              alt={video.title} 
+              className="w-24 h-16 object-cover rounded"
+            />
           )}
-          <div className="flex-1 min-w-0">
-            <h4 className="font-medium text-black truncate">{video.title}</h4>
+          <div className="flex-1">
+            <h3 className="font-medium text-black">{video.title}</h3>
             {video.description && (
-              <p className="text-sm text-black/60 line-clamp-2">{video.description}</p>
-            )}
-            <div className="flex items-center gap-4 mt-1 text-sm text-black/40">
-              <span>{video.views.toLocaleString()} views</span>
-              <span>{video.likes.toLocaleString()} likes</span>
-            </div>
-          </div>
-          <div className="w-6 h-6 rounded-full border-2 border-black/20 flex items-center justify-center flex-shrink-0">
-            {selectedVideos.has(video.id) && (
-              <div className="w-3 h-3 rounded-full bg-[#29ABE2]"></div>
+              <p className="text-sm text-black/60">{video.description}</p>
             )}
           </div>
         </div>
