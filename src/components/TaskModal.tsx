@@ -293,6 +293,9 @@ export function TaskModal({
         }
       ]
 
+      console.log('OpenAI API system prompt:', systemPrompts[taskType]);
+      console.log('OpenAI API user prompt:', getUserPrompt(taskType, updatedFormData));
+
       const response = await createChatCompletion(messages)
       
       if (!response) {
