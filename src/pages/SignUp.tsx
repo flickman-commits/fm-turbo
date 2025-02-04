@@ -3,9 +3,6 @@ import { links } from '@/config/links'
 import { PRICING_TIERS, getCurrentPricingTier, getSliderPosition } from '@/utils/pricing'
 import { PRICE_COMPARISONS } from '@/utils/priceComparisons'
 
-// This can be updated when we get new user counts
-export const CURRENT_USER_COUNT = 3
-
 // Toast component
 const Toast = ({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) => {
   useEffect(() => {
@@ -72,12 +69,44 @@ const AnimatedCounter = ({ end, duration = 1000, start = false }: { end: number;
   return <span>{count}</span>
 }
 
+const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbz-rhqVPss4bBAhslZNmpso6Co9_K03co1hl6XCxFIsIXKMOzCbrxcqcfP4OJ7GWFoDPQ/exec'
+
+async function fetchUserCount() {
+  try {
+    console.log('Frontend: Starting to fetch user count')
+    const response = await fetch(`${GOOGLE_SHEET_URL}?action=getCount`)
+    console.log('Frontend: Response status:', response.status)
+    
+    const responseText = await response.text()
+    console.log('Frontend: Raw response:', responseText)
+    
+    if (!responseText.trim()) {
+      console.log('Frontend: Empty response, using default count')
+      return 3
+    }
+    
+    const data = JSON.parse(responseText)
+    console.log('Frontend: Parsed data:', data)
+    
+    // Check if data.count exists and is a number
+    if (typeof data.count === 'number') {
+      return data.count
+    } else {
+      console.error('Frontend: Invalid data structure:', data)
+      return 3
+    }
+  } catch (error) {
+    console.error('Frontend: Error fetching user count:', error)
+    return 3
+  }
+}
+
 export default function SignUp() {
   const [activeTestimonial, setActiveTestimonial] = useState(0)
   const [isPricingVisible, setIsPricingVisible] = useState(false)
   const pricingSliderRef = useRef<HTMLDivElement>(null)
   const topRef = useRef<HTMLDivElement>(null)
-  const currentTier = getCurrentPricingTier(CURRENT_USER_COUNT)
+  const [userCount, setUserCount] = useState(3)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -130,6 +159,24 @@ export default function SignUp() {
       setIsSubmitting(false)
     }
   }
+
+  useEffect(() => {
+    // Fetch user count when component mounts
+    const updateUserCount = async () => {
+      const count = await fetchUserCount()
+      setUserCount(count)
+    }
+    
+    updateUserCount()
+
+    // Set up an interval to refresh the count periodically (every 5 minutes)
+    const interval = setInterval(updateUserCount, 5 * 60 * 1000)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  // Replace all instances of CURRENT_USER_COUNT with userCount
+  const currentTier = getCurrentPricingTier(userCount)
 
   useEffect(() => {
     // Initialize intersection observer for fade-in animations
@@ -209,7 +256,7 @@ export default function SignUp() {
                 />
               </div>
               <div className="text-sm sm:text-base font-medium text-black text-center sm:text-left ml-1">
-                TRUSTED BY <AnimatedCounter end={3} duration={2000} start={true} /> CREATORS AND COUNTING...
+                TRUSTED BY <AnimatedCounter end={userCount} duration={2000} start={true} /> CREATORS AND COUNTING...
               </div>
             </div>
           </div>
@@ -352,9 +399,17 @@ export default function SignUp() {
       {/* Purpose-Built Section - Beige */}
       <section className="py-24 px-4 bg-[#F5F0E8]">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-4xl md:text-6xl font-bold mb-12 tracking-tight text-center text-black animate-on-scroll">
+          <h2 className="text-[3.25rem] md:text-6xl font-bold mb-12 tracking-tight text-center text-black animate-on-scroll">
             Purpose-Built for Creatives
           </h2>
+          <div className="max-w-2xl mx-auto text-center mb-16">
+            <p className="text-2xl md:text-3xl font-bold mb-4 text-[#E94E1B]">
+              AI won't take your job. But someone using it will.
+            </p>
+            <p className="text-xl md:text-2xl text-black/80">
+              Be the one using it... not the one being replaced by it.
+            </p>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
@@ -367,6 +422,11 @@ export default function SignUp() {
               <tbody>
                 <tr className="border-b border-[#E94E1B]/20">
                   <td className="py-4 px-6 text-[#E94E1B]">Pre-defined tasks that are relevant to your business</td>
+                  <td className="py-4 px-6 text-center text-[#E94E1B]">✓</td>
+                  <td className="py-4 px-6 text-center text-[#E94E1B]">✗</td>
+                </tr>
+                <tr className="border-b border-[#E94E1B]/20">
+                  <td className="py-4 px-6 text-[#E94E1B]">Integrations with softwares you use (Vimeo, Dropbox, etc.)</td>
                   <td className="py-4 px-6 text-center text-[#E94E1B]">✓</td>
                   <td className="py-4 px-6 text-center text-[#E94E1B]">✗</td>
                 </tr>
@@ -431,34 +491,36 @@ export default function SignUp() {
           <h2 className="text-4xl md:text-6xl font-bold mb-16 tracking-tight text-center animate-on-scroll">
             What Creators Are Saying
           </h2>
-          <div className="max-w-xl mx-auto relative h-[220px] overflow-hidden">
-            {testimonials.map((testimonial, index) => {
-              return (
-                <div
-                  key={index}
-                  className={`absolute w-full transition-all duration-700 transform ${
-                    index === activeTestimonial 
-                      ? 'translate-x-0 opacity-100' 
-                      : index < activeTestimonial 
-                        ? '-translate-x-full opacity-0' 
-                        : 'translate-x-full opacity-0'
-                  }`}
-                >
-                  <div className="bg-[#F5F0E8] rounded-lg p-6 h-full flex flex-col items-center justify-center text-black">
-                    <img
-                      src={testimonial.image}
-                      alt={testimonial.name}
-                      className="w-16 h-auto object-contain mb-4"
-                    />
-                    <p className="text-lg mb-4 italic text-black/80">"{testimonial.text}"</p>
-                    <div className="mt-auto">
-                      <p className="font-semibold text-lg text-black">{testimonial.name}</p>
-                      <p className="text-black/60">{testimonial.role}</p>
+          <div className="max-w-xl mx-auto">
+            <div className="relative min-h-[300px]">
+              {testimonials.map((testimonial, index) => {
+                return (
+                  <div
+                    key={index}
+                    className={`absolute inset-0 transition-all duration-700 transform ${
+                      index === activeTestimonial 
+                        ? 'translate-x-0 opacity-100 pointer-events-auto' 
+                        : index < activeTestimonial 
+                          ? '-translate-x-full opacity-0 pointer-events-none' 
+                          : 'translate-x-full opacity-0 pointer-events-none'
+                    }`}
+                  >
+                    <div className="bg-[#F5F0E8] rounded-lg p-8 h-full flex flex-col items-center justify-center text-black">
+                      <img
+                        src={testimonial.image}
+                        alt={testimonial.name}
+                        className="w-16 h-auto object-contain mb-4"
+                      />
+                      <p className="text-lg mb-4 italic text-black/80">"{testimonial.text}"</p>
+                      <div className="mt-auto">
+                        <p className="font-semibold text-lg text-black">{testimonial.name}</p>
+                        <p className="text-black/60">{testimonial.role}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
           <div className="mt-6">
             <div className="flex items-center justify-center gap-2">
@@ -499,7 +561,7 @@ export default function SignUp() {
 
               <div className="bg-black/5 rounded-xl p-4 mb-12 inline-block hover:bg-[#00A651]/10 transition-colors">
                 <div className="text-base sm:text-lg font-medium text-black flex items-center gap-2">
-                  Users: <AnimatedCounter end={3} duration={1000} start={isPricingVisible} />
+                  Users: <AnimatedCounter end={userCount} duration={1000} start={isPricingVisible} />
                 </div>
               </div>
 
@@ -508,7 +570,7 @@ export default function SignUp() {
                   <div 
                     className="absolute -top-2 w-4 h-4 bg-[#29ABE2] rounded-full transition-all duration-1000 -translate-x-1/2" 
                     style={{ 
-                      left: isPricingVisible ? `${getSliderPosition(CURRENT_USER_COUNT)}%` : '0%',
+                      left: isPricingVisible ? `${getSliderPosition(userCount)}%` : '0%',
                     }}
                   />
                 </div>
