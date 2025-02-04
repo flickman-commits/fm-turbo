@@ -13,6 +13,9 @@ import type { Components } from 'react-markdown'
 import OpenAI from 'openai'
 import { FormDataWithWeather } from '@/types/forms'
 import { creditsManager } from '@/utils/credits'
+import { useUser } from '@/contexts/UserContext'
+import { getRelevantVideos } from '@/services/db'
+import { PortfolioVideoSelector } from '@/components/PortfolioVideoSelector'
 
 type ViewState = 'input' | 'loading' | 'result'
 
@@ -216,6 +219,7 @@ export function TaskModal({
   taskType: TaskType
   onClose: () => void
 }) {
+  const { user } = useUser()
   const [formData, setFormData] = useState<FormDataWithWeather>({})
   const [viewState, setViewState] = useState<ViewState>('input')
   const [result, setResult] = useState<TaskResult | null>(null)
@@ -268,11 +272,9 @@ export function TaskModal({
       
       if (taskType === 'runOfShow' && typeof formData.address === 'string' && typeof formData.shootDate === 'string') {
         try {
-          // Get Google Maps link
           const googleMapsLink = await getGoogleMapsLink(formData.address)
           updatedFormData.googleMapsLink = googleMapsLink
 
-          // Try to get weather data, but use fallbacks if it fails
           try {
             console.log('Fetching weather data for:', formData.address)
             const weatherData = await getWeatherData(formData.address, formData.shootDate)
@@ -292,6 +294,18 @@ export function TaskModal({
         } catch (error) {
           console.error('Error with location services:', error)
           updatedFormData.googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.address)}`
+        }
+      }
+
+      if (taskType === 'proposal' && user && formData.projectType) {
+        try {
+          const relevantVideos = await getRelevantVideos(user.id, formData.projectType as string)
+          if (relevantVideos.length > 0) {
+            updatedFormData.portfolioVideos = relevantVideos
+          }
+        } catch (error) {
+          console.error('Failed to fetch relevant videos:', error)
+          // Continue without portfolio videos if fetch fails
         }
       }
 
@@ -647,7 +661,22 @@ export function TaskModal({
                         <Label htmlFor={field.id} className="text-sm font-medium text-black">
                           {field.label}
                         </Label>
-                        {field.type === 'textarea' ? (
+                        {field.type === 'portfolioSelector' ? (
+                          <div className="space-y-2">
+                            <Label htmlFor={field.id}>{field.label}</Label>
+                            {user ? (
+                              <PortfolioVideoSelector
+                                projectType={formData.projectType as string || ''}
+                                userId={user.id}
+                                onSelect={(videos) => setFormData(prev => ({ ...prev, [field.id]: videos }))}
+                              />
+                            ) : (
+                              <div className="text-center py-6 text-black/60">
+                                Please sign in to include portfolio videos in your proposal
+                              </div>
+                            )}
+                          </div>
+                        ) : field.type === 'textarea' ? (
                           <textarea
                             id={field.id}
                             className="flex min-h-[100px] w-full rounded-md border border-black bg-[#F5F0E8] px-3 py-2 text-sm text-black placeholder:text-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#29ABE2] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -661,6 +690,7 @@ export function TaskModal({
                               <input
                                 type="file"
                                 id={field.id}
+                                accept={field.accept}
                                 onChange={(e) => {
                                   const file = e.target.files?.[0]
                                   if (file) {
@@ -672,11 +702,7 @@ export function TaskModal({
                                       }))
                                     }
                                     setSelectedFileName(file.name)
-                                    if (taskType === 'proposal' && field.id === 'discoveryTranscript') {
-                                      reader.readAsText(file)
-                                    } else {
-                                      reader.readAsText(file)
-                                    }
+                                    reader.readAsText(file)
                                   }
                                 }}
                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"

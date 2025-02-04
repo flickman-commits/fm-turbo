@@ -1,8 +1,9 @@
 import { TaskType } from '@/types/tasks'
 import { WeatherData } from '@/services/location'
+import { Video } from '@/types/forms'
 
 interface FormData {
-  [key: string]: string | WeatherData | undefined;
+  [key: string]: string | WeatherData | Video[] | undefined;
   weather?: WeatherData;
   googleMapsLink?: string;
   location?: string;
@@ -17,6 +18,7 @@ interface FormData {
   role?: string;
   familiarity?: string;
   keyPoints?: string;
+  portfolioVideos?: Video[];
 }
 
 // System prompts for different task types
@@ -58,7 +60,27 @@ Let me know if you have any questions. Looking forward to working with you!`,
 - For "Just Met": Reference your recent meeting/interaction, be warmer and more familiar while maintaining professionalism.
 - For "I Know Them": Be friendly and casual, leverage your existing relationship while still being professional.`,
   
-  proposal: `You are an expert video production assistant helping to generate professional content for Flickman Media. Create a detailed video content proposal that includes clear sections for project overview, production approach, technical requirements, timeline, and budget breakdown.`,
+  proposal: `You are an expert video production assistant helping to generate professional content for Flickman Media. Create a detailed video content proposal that includes clear sections for project overview, production approach, technical requirements, timeline, and budget breakdown.
+
+When portfolio videos are provided, you MUST incorporate them into the proposal in a dedicated "Portfolio Examples" section. For each video:
+1. Create a subsection with the video's title as a heading
+2. Include the video URL for easy reference
+3. Explain how this specific project demonstrates our expertise in areas relevant to the client's needs
+4. Use the video's description to highlight our role (e.g., "Produced, filmed, and edited by Flickman Media")
+5. Connect specific aspects of the video to the client's requirements from their discovery call
+
+The portfolio examples should be carefully selected based on:
+- Project type matching (corporate, brand, product videos)
+- Similar technical requirements
+- Comparable scope and scale
+- Relevant industry experience
+
+Make sure to reference these examples throughout the proposal where relevant, not just in the portfolio section. For example:
+- In the production approach, reference similar techniques used in portfolio examples
+- In the technical requirements, mention equipment and setups proven successful in similar projects
+- When discussing timeline and deliverables, refer to comparable projects we've completed
+
+Format all video references consistently using markdown links: [Video Title](URL)`,
   
   runOfShow: `You are a senior producer at Flickman Media who's in charge of creating the run of show for an upcoming video shoot. You are very thorough and detailed, you are also very concise.`,
   
@@ -122,19 +144,27 @@ ${formData.familiarity === 'justMet' ? 'Make sure to reference your recent meeti
 ${formData.familiarity === 'knowThem' ? 'Use a more casual, friendly tone that reflects your existing relationship.' : ''}`
 
     case 'proposal':
-      return `You are an expert video production assistant helping to generate professional content for Flickman Media. Create a detailed video content proposal that includes clear sections for project overview, production approach, technical requirements, timeline, and budget breakdown.
+      const portfolioSection = formData.portfolioVideos?.length
+        ? `\nRelevant Portfolio Examples:
+${formData.portfolioVideos.map(video => `- ${video.title}
+  URL: ${video.url}
+  Description: ${video.description || 'Not available'}
+  Project Type: ${video.projectType}`).join('\n')}`
+        : '';
 
-This is transcript from the discovery call that I had with the client -- please use this as a reference to what the client is expecting to see in the proposal, the objectives of the project, and any other relevant info to this project:
+      return `Create a comprehensive video production proposal based on the following discovery call transcript and project details. Make sure to naturally incorporate our portfolio examples to demonstrate our expertise and capabilities.
 
+Discovery Call Transcript:
 ${formData.discoveryTranscript || ''}
 
-Based on the discovery call transcript and the following details, create a comprehensive proposal:
+Project Details:
+- Type: ${formData.projectType || ''}
+- Client: ${formData.clientName || ''}
+- Delivery Date: ${formData.deliveryDate || ''}
+- Budget: ${formData.budget || ''}
+- Special Requirements: ${formData.requirements || ''}${portfolioSection}
 
-Project Type: ${formData.projectType || ''}
-Client: ${formData.clientName || ''}
-Delivery Date: ${formData.deliveryDate || ''}
-Budget: ${formData.budget || ''}
-Special Requirements: ${formData.requirements || ''}
+When incorporating portfolio examples, explain specifically how each example demonstrates our capability to deliver similar results for this project. Focus on the aspects most relevant to the client's needs.
 
 Format your response in clean, well-structured markdown with appropriate headers and lists.`
 

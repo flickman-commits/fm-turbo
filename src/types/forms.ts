@@ -1,51 +1,33 @@
 import { WeatherData } from '@/services/location'
 
-type FormDataValue = string | WeatherData | undefined;
+export type FormDataValue = string | string[] | Video[] | undefined
 
-interface FormDataBase {
-  [key: string]: FormDataValue;
-  location?: string;
-  address?: string;
-  shootDate?: string;
-  crewMembers?: string;
-  callTimes?: string;
-  schedule?: string;
-  googleMapsLink?: string;
-  weather?: WeatherData;
-  contractorName?: string;
-  contractorEmail?: string;
-  client?: string;
-  startDate?: string;
-  endDate?: string;
-  pointOfContact?: string;
-  contactEmail?: string;
-  contactPhone?: string;
-  role?: string;
-  dailyRate?: string;
-  numberOfDays?: string;
-  projectType?: string;
-  clientName?: string;
-  deliveryDate?: string;
-  budget?: string;
-  requirements?: string;
-  recipientName?: string;
-  subject?: string;
-  company?: string;
-  keyPoints?: string;
-  eventType?: string;
-  productionDays?: string;
-  crewSize?: string;
-  equipmentNeeds?: string;
-  editingHours?: string;
-  profitMargin?: string;
-  additionalCosts?: string;
-  purpose?: string;
-  length?: string;
-  tone?: string;
-  additionalNotes?: string;
-  transcriptFile?: string;
+export interface Video {
+  id: string
+  title: string
+  description: string | null
+  url: string
+  thumbnail: string | null
+  views: number
+  likes: number
+  projectType: string
 }
 
-export interface FormDataWithWeather extends FormDataBase {
-  weather?: WeatherData;
+export interface FormDataWithWeather {
+  [key: string]: FormDataValue | WeatherData | Video[] | undefined
+  weather?: WeatherData
+  location?: string
+  address?: string
+  shootDate?: string
+  crewMembers?: string
+  callTimes?: string
+  schedule?: string
+  transcriptFile?: string
+  portfolioVideos?: Video[]
+  projectType?: string
+  clientName?: string
+  deliveryDate?: string
+  budget?: string
+  discoveryTranscript?: string
+  requirements?: string
 } 

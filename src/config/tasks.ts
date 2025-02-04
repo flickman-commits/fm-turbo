@@ -3,8 +3,9 @@ import { TaskType } from '@/types/tasks'
 export interface FormField {
   id: string
   label: string
-  type: 'text' | 'textarea' | 'date' | 'number' | 'file' | 'select' | 'buttonSelect'
+  type: 'text' | 'textarea' | 'date' | 'number' | 'file' | 'select' | 'buttonSelect' | 'portfolioSelector'
   placeholder: string
+  accept?: string
   options?: { value: string; label: string; default?: boolean }[]
 }
 
@@ -42,7 +43,13 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
       { id: 'clientName', label: 'Client Name', type: 'text', placeholder: 'Enter client name' },
       { id: 'deliveryDate', label: 'Delivery Date', type: 'date', placeholder: 'Select delivery date' },
       { id: 'budget', label: 'Budget', type: 'text', placeholder: 'Enter budget range' },
-      { id: 'discoveryTranscript', label: 'Discovery Call Transcript (JSON)', type: 'file', placeholder: 'Upload your discovery call transcript (must be in JSON format)' },
+      { 
+        id: 'discoveryTranscript', 
+        label: 'Discovery Call Transcript (JSON)', 
+        type: 'file', 
+        placeholder: 'Upload your discovery call transcript',
+        accept: '.json,application/json'
+      },
       { id: 'requirements', label: 'Special Requirements', type: 'textarea', placeholder: 'Enter any special requirements or notes' }
     ]
   },
@@ -91,7 +98,13 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
     title: 'Your Timeline from Transcript',
     description: 'Create the most effective timeline based off your transcript and project goals.',
     fields: [
-      { id: 'transcriptFile', label: 'Transcript File', type: 'file', placeholder: 'Upload your transcript file (txt)' },
+      { 
+        id: 'transcriptFile', 
+        label: 'Transcript File', 
+        type: 'file', 
+        placeholder: 'Upload your transcript file',
+        accept: '.txt,text/plain'
+      },
       { id: 'clientName', label: 'Client Name', type: 'text', placeholder: 'Enter client name' },
       { id: 'purpose', label: 'Purpose of Video', type: 'textarea', placeholder: 'What is the main purpose or goal of this video?' },
       { id: 'length', label: 'Length of Video', type: 'text', placeholder: 'Desired final video length' },
