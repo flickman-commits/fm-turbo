@@ -14,12 +14,28 @@ interface PerplexityResponse {
   }
 }
 
-export async function queryPerplexity(prompt: string): Promise<string> {
+export async function queryPerplexity(recipientName: string, companyName: string): Promise<string> {
   if (!PERPLEXITY_API_KEY) {
     throw new Error('Perplexity API key not found in environment variables')
   }
 
+  const prompt = `Research the following person and their company: \nName: ${recipientName} \nCompany: ${companyName} \nProvide a concise summary including any news announcements about the company, educational background, location, connections, and other relevant details. Include links to sources where applicable. If no relevant data is found, return 'Couldn't find any relevant data.'`
+
   try {
+    console.log('Sending request to Perplexity with payload:', {
+      model: 'sonar-pro',
+      messages: [
+        {
+          role: 'system',
+          content: 'Be precise and concise.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ]
+    })
+
     const response = await fetch(PERPLEXITY_API_URL, {
       method: 'POST',
       headers: {
@@ -27,11 +43,11 @@ export async function queryPerplexity(prompt: string): Promise<string> {
         'Authorization': `Bearer ${PERPLEXITY_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'mixtral-8x7b-instruct',
+        model: 'sonar-pro',
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful research assistant.'
+            content: 'Be precise and concise.'
           },
           {
             role: 'user',

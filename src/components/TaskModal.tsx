@@ -17,6 +17,7 @@ import { useUser } from '@/contexts/UserContext'
 import { getRelevantVideos } from '@/services/db'
 import { PortfolioVideoSelector } from '@/components/PortfolioVideoSelector'
 import { links } from '@/config/links'
+import { queryPerplexity } from '@/services/perplexity'
 
 type ViewState = 'input' | 'loading' | 'result'
 
@@ -256,6 +257,8 @@ export function TaskModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    console.log('Submit initiated for task type:', taskType)
+
     if (creditsManager.getCredits() <= 0) {
       toast.error('No credits remaining. Please upgrade your plan.')
       return
@@ -266,36 +269,19 @@ export function TaskModal({
     try {
       const updatedFormData: FormDataWithWeather = { ...formData }
       
-      if (taskType === 'runOfShow' && typeof formData.address === 'string' && typeof formData.shootDate === 'string') {
+      if (taskType === 'outreach' && typeof formData.recipientName === 'string' && typeof formData.company === 'string') {
+        console.log('Initiating Perplexity API call for:', formData.recipientName, formData.company)
         try {
-          const googleMapsLink = await getGoogleMapsLink(formData.address)
-          updatedFormData.googleMapsLink = googleMapsLink
-
-          try {
-            console.log('Fetching weather data for:', formData.address)
-            const weatherData = await getWeatherData(formData.address, formData.shootDate)
-            updatedFormData.weather = weatherData
-          } catch (weatherError) {
-            console.error('Weather data error:', weatherError)
-            toast.error('Using default sunrise/sunset times')
-            updatedFormData.weather = defaultWeather
-          }
+          const research = await queryPerplexity(formData.recipientName, formData.company)
+          updatedFormData.perplexityResearch = String(research)
+          console.log('Perplexity research result:', research)
         } catch (error) {
-          console.error('Error with location services:', error)
-          updatedFormData.googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.address)}`
+          console.error('Perplexity research error:', error)
+          updatedFormData.perplexityResearch = "Couldn't find any relevant data"
         }
       }
 
-      if (taskType === 'proposal' && user && formData.projectType) {
-        try {
-          const relevantVideos = await getRelevantVideos(user.id, formData.projectType as string)
-          if (relevantVideos.length > 0) {
-            updatedFormData.portfolioVideos = relevantVideos
-          }
-        } catch (error) {
-          console.error('Failed to fetch relevant videos:', error)
-        }
-      }
+      console.log('Preparing to send request to OpenAI with updated form data:', updatedFormData)
 
       const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
         {
@@ -314,11 +300,14 @@ export function TaskModal({
         throw new Error('Failed to generate content')
       }
 
+      console.log('Received response from OpenAI:', response)
+
       creditsManager.useCredit()
 
       const newResult = {
         content: response.content || '',
         taskType,
+        research: String(updatedFormData.perplexityResearch)
       }
       
       setResult(newResult)
@@ -531,7 +520,6 @@ export function TaskModal({
         return <LoadingOverlay />
       case 'result':
         if (!result) return null
-        const actions = taskActionConfigs[result.taskType] || []
         return (
           <div className="flex flex-col h-full overflow-hidden">
             <div className="flex-shrink-0 px-6 pt-8 pb-6 border-b border-black flex justify-between items-center">
@@ -546,13 +534,18 @@ export function TaskModal({
             <div className="flex-1 overflow-y-auto">
               <div className="p-4 md:p-6">
                 <div className="prose prose-sm max-w-none bg-[#F5F0E8] text-black prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-p:text-black prose-p:mb-4 prose-ul:list-disc prose-ul:pl-6 prose-li:mb-1 prose-pre:bg-black/5 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto prose-code:text-black prose-code:bg-transparent prose-strong:font-bold">
-                  {result.taskType === 'outreach' && formData.subject ? (
+                  {result.taskType === 'outreach' ? (
                     <>
                       <div className="mb-6">
-                        <strong>Subject Line:</strong> {typeof formData.subject === 'string' ? formData.subject : ''}
+                        <strong>Research Summary:</strong>
+                        <div className="mt-2">
+                          <ReactMarkdown components={markdownComponents}>
+                            {result.research}
+                          </ReactMarkdown>
+                        </div>
                       </div>
                       <div>
-                        <strong>Body:</strong>
+                        <strong>Outreach Message:</strong>
                         <div className="mt-2">
                           <ReactMarkdown components={markdownComponents}>
                             {result.content}
@@ -636,7 +629,7 @@ export function TaskModal({
                 Regenerate
               </button>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-2">
-                {actions.map((action) => {
+                {taskActionConfigs[result.taskType]?.map((action) => {
                   switch (action.type) {
                     case 'gmail':
                       return (

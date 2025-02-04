@@ -34,6 +34,9 @@ app.use(cors({
 
 app.use(express.json());
 
+// In-memory storage for user count (will persist as long as server is running)
+let currentUserCount = 23;
+
 // Feature request endpoint
 app.post('/api/feature-request', async (req, res) => {
   try {
@@ -97,6 +100,21 @@ app.post('/api/feature-request', async (req, res) => {
   } catch (error) {
     console.error('Error processing feature request:', error);
     res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+});
+
+// Add these new endpoints
+app.get('/api/user-count', (req, res) => {
+  res.json({ count: currentUserCount });
+});
+
+app.post('/api/user-count', (req, res) => {
+  const { count } = req.body;
+  if (typeof count === 'number' && count > 0) {
+    currentUserCount = count;
+    res.json({ success: true, count: currentUserCount });
+  } else {
+    res.status(400).json({ success: false, message: 'Invalid count value' });
   }
 });
 

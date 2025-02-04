@@ -42,7 +42,19 @@ const testimonials = [
   }
 ];
 
-const AnimatedCounter = ({ end, duration = 1000, start = false }: { end: number; duration?: number; start: boolean }) => {
+// This is our source of truth that will be updated by the fetch
+let CURRENT_USER_COUNT = 23
+
+const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbz-rhqVPss4bBAhslZNmpso6Co9_K03co1hl6XCxFIsIXKMOzCbrxcqcfP4OJ7GWFoDPQ/exec'
+
+// Server URL - always use production since we're using Railway
+const SERVER_URL = 'https://fm-turbo-production.up.railway.app'
+
+const AnimatedCounter = ({ end, duration = 1000, start = false }: { 
+  end: number; 
+  duration?: number; 
+  start: boolean;
+}) => {
   const [count, setCount] = useState(0)
 
   useEffect(() => {
@@ -69,7 +81,32 @@ const AnimatedCounter = ({ end, duration = 1000, start = false }: { end: number;
   return <span>{count}</span>
 }
 
-const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbz-rhqVPss4bBAhslZNmpso6Co9_K03co1hl6XCxFIsIXKMOzCbrxcqcfP4OJ7GWFoDPQ/exec'
+// Get the initial count from our server
+async function getServerCount() {
+  try {
+    const response = await fetch(`${SERVER_URL}/api/user-count`)
+    const data = await response.json()
+    return data.count
+  } catch (error) {
+    console.error('Error fetching server count:', error)
+    return null // Return null instead of fallback number
+  }
+}
+
+// Update the server count
+async function updateServerCount(count: number) {
+  try {
+    await fetch(`${SERVER_URL}/api/user-count`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ count })
+    })
+  } catch (error) {
+    console.error('Error updating server count:', error)
+  }
+}
 
 async function fetchUserCount() {
   try {
@@ -81,8 +118,8 @@ async function fetchUserCount() {
     console.log('Frontend: Raw response:', responseText)
     
     if (!responseText.trim()) {
-      console.log('Frontend: Empty response, using default count')
-      return 3
+      console.log('Frontend: Empty response, using server count')
+      return getServerCount()
     }
     
     const data = JSON.parse(responseText)
@@ -90,25 +127,42 @@ async function fetchUserCount() {
     
     // Check if data.count exists and is a number
     if (typeof data.count === 'number') {
+      // Update the server with the new count
+      await updateServerCount(data.count)
       return data.count
     } else {
       console.error('Frontend: Invalid data structure:', data)
-      return 3
+      return getServerCount()
     }
   } catch (error) {
     console.error('Frontend: Error fetching user count:', error)
-    return 3
+    return getServerCount()
   }
 }
 
 export default function SignUp() {
+  // Start with 10 as a fallback to indicate we're waiting for the server count
+  const [usersAtLaunch, setUsersAtLaunch] = useState<number>(10)
+  const [isCountLoaded, setIsCountLoaded] = useState(false)
+  
   const [activeTestimonial, setActiveTestimonial] = useState(0)
   const [isPricingVisible, setIsPricingVisible] = useState(false)
   const pricingSliderRef = useRef<HTMLDivElement>(null)
   const topRef = useRef<HTMLDivElement>(null)
-  const [userCount, setUserCount] = useState(3)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Fetch the initial count from server
+  useEffect(() => {
+    const fetchInitialCount = async () => {
+      const count = await getServerCount()
+      if (count !== null) {
+        setUsersAtLaunch(count)
+        setIsCountLoaded(true)
+      }
+    }
+    fetchInitialCount()
+  }, [])
 
   // Create a stable onClose callback using useCallback
   const handleToastClose = useCallback(() => {
@@ -160,23 +214,8 @@ export default function SignUp() {
     }
   }
 
-  useEffect(() => {
-    // Fetch user count when component mounts
-    const updateUserCount = async () => {
-      const count = await fetchUserCount()
-      setUserCount(count)
-    }
-    
-    updateUserCount()
-
-    // Set up an interval to refresh the count periodically (every 5 minutes)
-    const interval = setInterval(updateUserCount, 5 * 60 * 1000)
-
-    return () => clearInterval(interval)
-  }, [])
-
-  // Replace all instances of CURRENT_USER_COUNT with userCount
-  const currentTier = getCurrentPricingTier(userCount)
+  // Use CURRENT_USER_COUNT for live updates (pricing tier, etc)
+  const currentTier = getCurrentPricingTier(CURRENT_USER_COUNT)
 
   useEffect(() => {
     // Initialize intersection observer for fade-in animations
@@ -256,7 +295,11 @@ export default function SignUp() {
                 />
               </div>
               <div className="text-sm sm:text-base font-medium text-black text-center sm:text-left ml-1">
-                TRUSTED BY <AnimatedCounter end={userCount} duration={2000} start={true} /> CREATORS AND COUNTING...
+                TRUSTED BY <AnimatedCounter 
+                  end={usersAtLaunch || 10} 
+                  duration={2000} 
+                  start={isCountLoaded}
+                />{' '}CREATORS AND COUNTING...
               </div>
             </div>
           </div>
@@ -561,7 +604,11 @@ export default function SignUp() {
 
               <div className="bg-black/5 rounded-xl p-4 mb-12 inline-block hover:bg-[#00A651]/10 transition-colors">
                 <div className="text-base sm:text-lg font-medium text-black flex items-center gap-2">
-                  Users: <AnimatedCounter end={userCount} duration={1000} start={isPricingVisible} />
+                  Users: <AnimatedCounter 
+                    end={usersAtLaunch || 10} 
+                    duration={1000} 
+                    start={isCountLoaded && isPricingVisible}
+                  />
                 </div>
               </div>
 
@@ -570,7 +617,7 @@ export default function SignUp() {
                   <div 
                     className="absolute -top-2 w-4 h-4 bg-[#29ABE2] rounded-full transition-all duration-1000 -translate-x-1/2" 
                     style={{ 
-                      left: isPricingVisible ? `${getSliderPosition(userCount)}%` : '0%',
+                      left: isPricingVisible && isCountLoaded ? `${getSliderPosition(usersAtLaunch || 10)}%` : '0%',
                     }}
                   />
                 </div>

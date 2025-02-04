@@ -3,6 +3,7 @@ export type TaskType = 'runOfShow' | 'contractorBrief' | 'outreach' | 'proposal'
 export interface TaskResult {
   taskType: TaskType
   content: string
+  research?: string
 }
 
 export type TaskAction = 'gmail' | 'notion' | 'copy' | 'download'

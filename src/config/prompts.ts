@@ -20,6 +20,7 @@ interface FormData {
   keyPoints?: string
   portfolioVideos?: Video[]
   requirements?: string
+  perplexityResearch?: string
 }
 
 // System prompts for different task types
