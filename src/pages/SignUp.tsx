@@ -305,7 +305,11 @@ export default function SignUp() {
             </p>
             <div className="bg-[#F5F0E8]/10 rounded-xl p-8 backdrop-blur-sm">
               <div className="aspect-video rounded-lg bg-[#F5F0E8]/5 flex items-center justify-center">
-                <p className="text-[#F5F0E8]/60">Video Demo Coming Soon</p>
+                <iframe src="https://www.loom.com/embed/18b2d5ac39a747f5b2db007cf2f2c879" 
+                        frameBorder="0" 
+                        allowFullScreen 
+                        className="w-full h-full rounded-lg">
+                </iframe>
               </div>
             </div>
           </div>

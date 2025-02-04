@@ -542,7 +542,7 @@ export function TaskModal({
               <div className="p-4 md:p-6">
                 <div className="prose prose-sm max-w-none bg-[#F5F0E8] text-black prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-p:text-black prose-p:mb-4 prose-ul:list-disc prose-ul:pl-6 prose-li:mb-1 prose-pre:bg-black/5 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto prose-code:text-black prose-code:bg-transparent prose-strong:font-bold">
                   <div className="mb-6">
-                    <strong>Research Summary:</strong>
+                    <strong className="text-xl font-bold">Research Summary</strong>
                     <div className="mt-2">
                       <ReactMarkdown components={markdownComponents}>
                         {formattedResearch}
@@ -550,7 +550,7 @@ export function TaskModal({
                     </div>
                   </div>
                   <div>
-                    <strong>Outreach Message:</strong>
+                    <strong className="text-xl font-bold">Outreach Message</strong>
                     <div className="mt-2">
                       <ReactMarkdown components={markdownComponents}>
                         {formattedMessage}
