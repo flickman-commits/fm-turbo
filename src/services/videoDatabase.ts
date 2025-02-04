@@ -193,6 +193,10 @@ export const videos: Video[] = [
   }
 ]
 
+export function getVideosByProjectType(projectType: string): Video[] {
+  return videos.filter(video => video.projectType === projectType)
+}
+
 function determineProjectType(title: string, description: string = ''): string {
   const content = (title + ' ' + description).toLowerCase()
   
