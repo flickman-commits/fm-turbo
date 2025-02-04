@@ -519,7 +519,7 @@ export function TaskModal({
         return <LoadingOverlay />
       case 'result':
         if (!result) return null
-        const formattedResearch = result.research ? result.research.replace(/(https?:\/\/\S+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>') : 'No research data available.'
+        const formattedResearch = result.research || 'No research data available.'
         const formattedMessage = result.content.replace(/(https?:\/\/\S+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>')
         return (
           <div className="flex flex-col h-full overflow-hidden">
