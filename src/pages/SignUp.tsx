@@ -29,33 +29,21 @@ const Toast = ({ message, type, onClose }: { message: string; type: 'success' | 
 
 const testimonials = [
   {
-    name: "Sarah Johnson",
-    role: "Freelance Photographer",
-    text: "Turbo has completely transformed how I handle my production schedules. What used to take hours now takes minutes.",
+    name: "Your Name Here",
+    role: "Your Role",
+    text: "These aren't real because we don't have any users yet... Maybe your testimonial will go here!",
     image: "/fm-logo.png"
   },
   {
-    name: "Michael Chen",
-    role: "Video Director",
-    text: "The run of show generator is a game-changer. My crew always knows exactly what's happening and when.",
+    name: "Your Name Here",
+    role: "Your Role",
+    text: "These aren't real because we don't have any users yet... Maybe your testimonial will go here!",
     image: "/fm-logo.png"
   },
   {
-    name: "Emma Davis",
-    role: "Production Manager",
-    text: "I can't imagine going back to manual scheduling. Turbo has saved me countless hours of work.",
-    image: "/fm-logo.png"
-  },
-  {
-    name: "James Wilson",
-    role: "Creative Director",
-    text: "The attention to detail in the generated documents is impressive. It's like having a professional assistant.",
-    image: "/fm-logo.png"
-  },
-  {
-    name: "Lisa Rodriguez",
-    role: "Event Photographer",
-    text: "From call sheets to schedules, everything is perfectly formatted and professional. My clients love it.",
+    name: "Your Name Here",
+    role: "Your Role",
+    text: "These aren't real because we don't have any users yet... Maybe your testimonial will go here!",
     image: "/fm-logo.png"
   }
 ];
@@ -164,11 +152,6 @@ export default function SignUp() {
     }
   }, [isPricingVisible])
 
-  const handleGetStarted = (e: React.MouseEvent) => {
-    e.preventDefault();
-    window.location.href = 'https://buy.stripe.com/bIY03Zg215Y40TucMO';
-  };
-
   // Add form submission handler
   const handleEmailSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -218,31 +201,6 @@ export default function SignUp() {
             Transform hours of business tasks into seconds. Built specifically for freelance creatives who want to focus on what they do best.
           </p>
           
-          <div className="mb-8 animate-on-scroll">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-4">
-              <div className="flex -space-x-3 mb-2 sm:mb-0">
-                <img 
-                  src="/profile-pic-1.jpg" 
-                  alt="Creator profile" 
-                  className="w-10 h-10 rounded-full border-2 border-[#F5F0E8] object-cover relative z-30"
-                />
-                <img 
-                  src="/profile-pic-2.jpg" 
-                  alt="Creator profile" 
-                  className="w-10 h-10 rounded-full border-2 border-[#F5F0E8] object-cover relative z-20"
-                />
-                <img 
-                  src="/profile-pic-3.jpg" 
-                  alt="Creator profile" 
-                  className="w-10 h-10 rounded-full border-2 border-[#F5F0E8] object-cover relative z-10"
-                />
-              </div>
-              <div className="text-sm sm:text-base font-medium text-black text-center sm:text-left ml-1">
-                TRUSTED BY <HeroCounter end={1} duration={2000} /> CREATORS AND COUNTING...
-              </div>
-            </div>
-          </div>
-
           <div className="mb-12 animate-on-scroll">
             <h3 className="text-xl font-semibold mb-6 text-[#E94E1B]">
               Beta Launching Friday, February 7th
@@ -266,20 +224,6 @@ export default function SignUp() {
                 Get Notified
               </button>
             </form>
-          </div>
-
-          <div className="animate-on-scroll">
-            <div className="text-sm font-bold text-[#E94E1B]/60 mb-8 tracking-tight">
-              TRUSTED BY CREATORS FROM
-            </div>
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-4 sm:gap-8 items-center justify-items-center">
-              <img src="/times-logo.png" alt="Times" className="h-12 sm:h-18 opacity-30" />
-              <img src="/times-logo.png" alt="Times" className="h-12 sm:h-18 opacity-30" />
-              <img src="/times-logo.png" alt="Times" className="h-12 sm:h-18 opacity-30" />
-              <img src="/times-logo.png" alt="Times" className="hidden md:block h-12 sm:h-18 opacity-30" />
-              <img src="/times-logo.png" alt="Times" className="hidden md:block h-12 sm:h-18 opacity-30" />
-              <img src="/times-logo.png" alt="Times" className="hidden md:block h-12 sm:h-18 opacity-30" />
-            </div>
           </div>
         </div>
       </section>
@@ -448,16 +392,6 @@ export default function SignUp() {
                 <h3 className="text-xl font-semibold text-[#E94E1B]">The Quality Question</h3>
                 <p>Generic AI tools don't understand the nuances of creative work.</p>
               </div>
-              <div className="mt-8">
-                <a 
-                  href="https://loom.com/share/folder/1e6008374a5c4d4c862d760843a0b1de"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-lg font-medium text-black bg-[#F5F0E8] rounded-full hover:bg-[#29ABE2] hover:text-[#F5F0E8] transition-colors whitespace-nowrap"
-                >
-                  Watch live product development calls
-                </a>
-              </div>
             </div>
             <div className="relative h-64 md:h-auto animate-on-scroll">
               {/* TODO: Add supporting image/video */}
@@ -541,7 +475,7 @@ export default function SignUp() {
 
               <div className="bg-black/5 rounded-xl p-4 mb-12 inline-block hover:bg-[#00A651]/10 transition-colors">
                 <div className="text-base sm:text-lg font-medium text-black flex items-center gap-2">
-                  Beta Users: <AnimatedCounter end={1} duration={1000} start={isPricingVisible} />
+                  Users: <AnimatedCounter end={1} duration={1000} start={isPricingVisible} />
                 </div>
               </div>
 
