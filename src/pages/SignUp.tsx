@@ -45,8 +45,6 @@ const testimonials = [
 // This is our source of truth that will be updated by the fetch
 let CURRENT_USER_COUNT = 23
 
-const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbz-rhqVPss4bBAhslZNmpso6Co9_K03co1hl6XCxFIsIXKMOzCbrxcqcfP4OJ7GWFoDPQ/exec'
-
 // Server URL - always use production since we're using Railway
 const SERVER_URL = 'https://fm-turbo-production.up.railway.app'
 
@@ -90,21 +88,6 @@ async function getServerCount() {
   } catch (error) {
     console.error('Error fetching server count:', error)
     return null // Return null instead of fallback number
-  }
-}
-
-// Update the server count
-async function updateServerCount(count: number) {
-  try {
-    await fetch(`${SERVER_URL}/api/user-count`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ count })
-    })
-  } catch (error) {
-    console.error('Error updating server count:', error)
   }
 }
 
