@@ -41,7 +41,7 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
     fields: [
       { id: 'projectType', label: 'Project Type', type: 'text', placeholder: 'Corporate Video, Brand Story, etc.' },
       { id: 'clientName', label: 'Client Name', type: 'text', placeholder: 'Enter client name' },
-      { id: 'deliveryDate', label: 'Delivery Date', type: 'date', placeholder: 'Select delivery date' },
+      { id: 'timelineInfo', label: 'Timeline Info', type: 'text', placeholder: 'Enter any info regarding timeline (ex: event takes place Jan 7th, final deliverables needed by Feb 10th, etc.)' },
       { id: 'budget', label: 'Budget', type: 'text', placeholder: 'Enter budget range' },
       { 
         id: 'discoveryTranscript', 

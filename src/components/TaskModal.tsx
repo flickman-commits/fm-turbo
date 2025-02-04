@@ -57,7 +57,7 @@ Sunday, December 8th - Miami, FL (Shoot):
   proposal: {
     projectType: 'US Creative Partner',
     clientName: 'Oanda',
-    deliveryDate: '2024-06-15',
+    timelineInfo: 'Event filming on Jan 7th 2024, rough cut needed by Jan 21st, final deliverables by Feb 10th 2024',
     budget: '$50,000',
     discoveryTranscript: '/discovery-call-transcript.json',
     requirements: 'Full video production setup with localized content for US market, professional crew, and high-end equipment for corporate brand video. Focus on creating content that resonates with US traders while maintaining global brand standards.',

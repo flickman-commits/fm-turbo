@@ -21,6 +21,7 @@ interface FormData {
   portfolioVideos?: Video[]
   requirements?: string
   perplexityResearch?: string
+  timelineInfo?: string
 }
 
 // System prompts for different task types
@@ -179,7 +180,7 @@ ${formData.discoveryTranscript || ''}
 Project Details:
 - Type: ${formData.projectType || ''}
 - Client: ${formData.clientName || ''}
-- Delivery Date: ${formData.deliveryDate || ''}
+- Timeline: ${formData.timelineInfo || ''}
 - Budget: ${formData.budget || ''}
 - Special Requirements: ${formData.requirements || ''}${portfolioSection}
 
