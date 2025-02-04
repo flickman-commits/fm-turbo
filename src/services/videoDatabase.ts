@@ -197,44 +197,7 @@ export function getVideosByProjectType(projectType: string): Video[] {
   return videos.filter(video => video.projectType === projectType)
 }
 
-function determineProjectType(title: string, description: string = ''): string {
-  const content = (title + ' ' + description).toLowerCase()
-  
-  // Product videos
-  if (content.includes('product') || 
-      content.includes('huel') || 
-      content.includes('moon pod') || 
-      content.includes('ketone') ||
-      content.includes('jam chat') ||
-      content.includes('farm field')) {
-    return 'product'
-  }
-  
-  // Corporate videos
-  if (content.includes('corporate') || 
-      content.includes('wealth') || 
-      content.includes('optimization') || 
-      content.includes('meeting') ||
-      content.includes('company') ||
-      content.includes('conference')) {
-    return 'corporate'
-  }
-  
-  // Brand videos
-  if (content.includes('brand') || 
-      content.includes('story') || 
-      content.includes('celebrating') || 
-      content.includes('culture') ||
-      content.includes('lifestyle') ||
-      content.includes('showroom') ||
-      content.includes('hotels')) {
-    return 'brand'
-  }
-  
-  return 'other'
-}
-
-export async function getRelevantVideos(userId: string, projectType: string): Promise<Video[]> {
+export async function getRelevantVideos(projectType: string): Promise<Video[]> {
   // Filter videos by project type
   const relevantVideos = videos
     .filter(video => {

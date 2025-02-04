@@ -43,6 +43,36 @@ export default function Profile() {
               </div>
             )}
           </div>
+
+          {/* Coming Soon Features */}
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold mb-6 text-black">Coming Soon Features</h2>
+            <div className="space-y-4">
+              <div className="p-6 bg-white rounded-xl border-2 border-black/20">
+                <div className="flex items-start gap-4">
+                  <div className="bg-[#E94E1B]/10 rounded-lg p-3">
+                    <span className="text-2xl">🔗</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2">Connect Your Data</h3>
+                    <p className="text-black/60">Integrate with your favorite tools and services to streamline your workflow</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 bg-white rounded-xl border-2 border-black/20">
+                <div className="flex items-start gap-4">
+                  <div className="bg-[#E94E1B]/10 rounded-lg p-3">
+                    <span className="text-2xl">⚙️</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2">Customize How You Like Things Done</h3>
+                    <p className="text-black/60">Personalize your experience with custom templates and preferences</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </Layout>
