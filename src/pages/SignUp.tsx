@@ -77,13 +77,60 @@ export default function SignUp() {
   const [activeTestimonial, setActiveTestimonial] = useState(0)
   const [isPricingVisible, setIsPricingVisible] = useState(false)
   const pricingSliderRef = useRef<HTMLDivElement>(null)
+  const topRef = useRef<HTMLDivElement>(null)
   const currentTier = getCurrentPricingTier(CURRENT_USER_COUNT)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Create a stable onClose callback using useCallback
   const handleToastClose = useCallback(() => {
     setToast(null)
   }, [])
+
+  const scrollToTop = () => {
+    topRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const handleEmailSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+
+    try {
+      const form = e.currentTarget
+      const formData = new FormData(form)
+      const email = formData.get('email_address')
+      const date = new Date().toLocaleDateString()
+      const time = new Date().toLocaleTimeString()
+
+      // Send to Google Sheets
+      const response = await fetch('https://script.google.com/macros/s/AKfycbxCvoevTYrwn8VzrMxh6lmqIn35xhI-Q2xA3MbyA64O3mDrJeA0SjtEzcHGey4SWXUlHA/exec', {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          date,
+          time
+        })
+      })
+
+      form.reset()
+      setToast({
+        message: 'Thanks for signing up! We\'ll notify you when we launch.',
+        type: 'success'
+      })
+    } catch (error) {
+      console.error('Error submitting form:', error)
+      setToast({
+        message: 'Something went wrong. Please try again.',
+        type: 'error'
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   useEffect(() => {
     // Initialize intersection observer for fade-in animations
@@ -130,47 +177,11 @@ export default function SignUp() {
     }
   }, [isPricingVisible])
 
-  // Add form submission handler
-  const handleEmailSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const form = e.currentTarget
-    const email = new FormData(form).get('email_address')
-
-    try {
-      const response = await fetch('https://app.kit.com/forms/7643778/subscriptions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email_address: email,
-          fields: {}
-        })
-      })
-
-      if (response.ok) {
-        form.reset()
-        setToast({
-          message: 'Thanks for signing up! We\'ll notify you when we launch.',
-          type: 'success'
-        })
-      } else {
-        throw new Error('Failed to submit')
-      }
-    } catch (error) {
-      console.error('Error submitting form:', error)
-      setToast({
-        message: 'Something went wrong. Please try again.',
-        type: 'error'
-      })
-    }
-  }
-
   return (
     <main className="min-h-screen bg-[#F5F0E8] overflow-x-hidden relative">
       {/* Hero Section - Beige */}
       <section className="min-h-screen flex flex-col items-center px-4 relative overflow-hidden bg-[#F5F0E8]">
-        <div className="w-full h-[20vh]"></div>
+        <div className="w-full h-[20vh]" ref={topRef}></div>
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-6xl md:text-8xl font-bold mb-6 text-black tracking-tight animate-on-scroll">
             Turbocharge Your Creative Business
@@ -211,20 +222,32 @@ export default function SignUp() {
             
             <form 
               onSubmit={handleEmailSubmit}
-              className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto"
+              className="max-w-md mx-auto"
             >
-              <Input
-                type="email"
-                name="email_address"
-                placeholder="Leave email to get notified of drop"
-                required
-              />
-              <button
-                type="submit"
-                className="h-[48px] px-6 font-medium text-[#F5F0E8] bg-black hover:bg-[#E94E1B] rounded-full transition-colors whitespace-nowrap"
-              >
-                Get Notified
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1">
+                  <input 
+                    className="h-[48px] px-4 rounded-full bg-white border border-black/10 w-full focus:outline-none focus:ring-2 focus:ring-[#E94E1B] transition-all" 
+                    name="email_address" 
+                    type="email"
+                    placeholder="Leave email to get notified of drop" 
+                    required 
+                  />
+                </div>
+                <button 
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="h-[48px] px-6 font-medium text-[#F5F0E8] bg-black hover:bg-[#E94E1B] rounded-full transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <div className="flex items-center justify-center">
+                      <div className="w-5 h-5 border-2 border-[#F5F0E8] border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  ) : (
+                    'Get Notified'
+                  )}
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -565,27 +588,17 @@ export default function SignUp() {
                   </div>
                 </div>
 
-                <form 
-                  onSubmit={handleEmailSubmit}
-                  className="flex flex-col gap-3"
-                >
-                  <Input
-                    type="email"
-                    name="email_address"
-                    placeholder="Leave email to get notified of drop"
-                    className="!border-black !bg-white !text-black placeholder:!text-black/40"
-                    required
-                  />
+                <div className="w-full text-center">
                   <button
-                    type="submit"
+                    onClick={scrollToTop}
                     className="w-full h-[48px] px-6 font-medium text-[#F5F0E8] bg-black hover:bg-[#E94E1B] rounded-full transition-colors"
                   >
-                    Get Notified
+                    Get Notified of Beta Launch
                   </button>
-                </form>
-                <p className="text-xs sm:text-sm text-black/60 mt-4 text-center">
-                  Get early access • Lock in this price forever
-                </p>
+                  <p className="text-xs sm:text-sm text-black/60 mt-4">
+                    Get early access • Lock in this price forever
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -616,29 +629,13 @@ export default function SignUp() {
             Join the creators who are saving time and growing their business with Turbo.
           </p>
           
-          <div className="max-w-md mx-auto animate-on-scroll">
-            <h3 className="text-xl font-semibold mb-6 text-[#E94E1B]">
-              Beta Launching Friday, February 7th
-            </h3>
-            
-            <form 
-              onSubmit={handleEmailSubmit}
-              className="flex flex-col sm:flex-row gap-3 justify-center"
+          <div className="max-w-md mx-auto w-full">
+            <button
+              onClick={scrollToTop}
+              className="w-full h-[48px] px-6 font-medium text-black bg-[#F5F0E8] hover:bg-[#E94E1B] hover:text-[#F5F0E8] rounded-full transition-colors"
             >
-              <Input
-                type="email"
-                name="email_address"
-                placeholder="Leave email to get notified of drop"
-                className="!border-[#F5F0E8] !bg-transparent !text-[#F5F0E8] placeholder:!text-[#F5F0E8]/40"
-                required
-              />
-              <button
-                type="submit"
-                className="h-[48px] px-6 font-medium text-black bg-[#F5F0E8] hover:bg-[#E94E1B] hover:text-[#F5F0E8] rounded-full transition-colors whitespace-nowrap"
-              >
-                Get Notified
-              </button>
-            </form>
+              Get Notified of Beta Launch
+            </button>
           </div>
         </div>
       </section>
