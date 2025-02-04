@@ -46,7 +46,7 @@ export default function Profile() {
 
           {/* Coming Soon Features */}
           <div className="mt-12">
-            <h2 className="text-2xl font-bold mb-6 text-black">Coming Soon Features</h2>
+            <h2 className="text-2xl font-bold mb-6 text-black">Coming Soon</h2>
             <div className="space-y-4">
               <div className="p-6 bg-white rounded-xl border-2 border-black/20">
                 <div className="flex items-start gap-4">

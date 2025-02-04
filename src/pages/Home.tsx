@@ -4,9 +4,11 @@ import { TaskModal } from '@/components/TaskModal'
 import { TrendingAudioButton } from '@/components/ui/trending-audio-button'
 import { links } from '@/config/links'
 import { Layout } from '@/components/Layout'
+import { FeatureRequestModal } from '@/components/FeatureRequestModal'
 
 export default function Home() {
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null)
+  const [showFeatureRequest, setShowFeatureRequest] = useState(false)
 
   const handleTaskSelect = (task: TaskType) => {
     setSelectedTask(task)
@@ -93,10 +95,32 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Request Feature Button - Desktop */}
+      <button
+        onClick={() => setShowFeatureRequest(true)}
+        className="fixed bottom-8 right-8 hidden md:block text-sm font-medium text-black border border-black/20 hover:border-black rounded-full px-4 py-2 transition-colors z-50"
+      >
+        Request Feature
+      </button>
+
+      {/* Request Feature Button - Mobile */}
+      <button
+        onClick={() => setShowFeatureRequest(true)}
+        className="fixed bottom-20 right-4 md:hidden text-sm font-medium text-black border border-black/20 hover:border-black rounded-full px-4 py-2 transition-colors z-50"
+      >
+        Request Feature
+      </button>
+
       {selectedTask && (
         <TaskModal
           taskType={selectedTask}
           onClose={() => setSelectedTask(null)}
+        />
+      )}
+
+      {showFeatureRequest && (
+        <FeatureRequestModal
+          onClose={() => setShowFeatureRequest(false)}
         />
       )}
     </Layout>
