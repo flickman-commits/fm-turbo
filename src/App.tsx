@@ -1,6 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import Home from '@/pages/Home'
+import History from '@/pages/History'
+import Profile from '@/pages/Profile'
+import Settings from '@/pages/Settings'
 import SignUp from '@/pages/SignUp'
 import { UserProvider } from '@/contexts/UserContext'
 
@@ -18,6 +21,9 @@ export default function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/history" element={<History />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="/sign-up" element={<SignUp />} />
         </Routes>
         <Toaster 

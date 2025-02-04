@@ -1,5 +1,6 @@
 // This file contains links that can be easily updated without code changes
 export const links = {
-  trendingAudios: "https://www.dropbox.com/scl/fo/h9ngl1vtm5dktl2romgiv/APZ2Hz_rfoyVNMo-MRUCDKY?rlkey=ewnigcqpe3gwopf6584wvst58&st=d431hkvc&dl=0",
-  flickmanMedia: "https://www.flickman.media/"
-} 
+  trendingAudios: 'https://www.dropbox.com/scl/fo/8aqk1lzk0qqc5zxvqwm4k/h?rlkey=aqxvxvxvxvxvxvxvxvxvxvxvx&dl=0',
+  flickmanMedia: 'https://flickmanmedia.com',
+  stripe: 'https://buy.stripe.com/bIY03Zg215Y40TucMO'
+} as const 
