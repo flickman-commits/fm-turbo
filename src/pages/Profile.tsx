@@ -40,7 +40,7 @@ export default function Profile() {
             <div className="space-y-6">
               <div className="flex items-center gap-4">
                 <img 
-                  src="/fm-logo" 
+                  src="/fm-logo.png" 
                   alt="Company Logo" 
                   className="w-16 h-16 object-contain border border-black/10 rounded-lg"
                 />

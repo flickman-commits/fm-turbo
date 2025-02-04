@@ -79,11 +79,9 @@ Let me know if you have any questions. Looking forward to working with you!`,
 
 // User prompts for different task types
 export const getUserPrompt = (taskType: TaskType, formData: FormData): string => {
-  if (taskType === 'trendingAudios') {
-    return '' // No prompt needed for trending audios
-  }
-
   switch (taskType) {
+    case 'trendingAudios':
+      return '' // No prompt needed for trending audios
     case 'contractorBrief':
       return `Create a contractor brief email following this exact format and style:
 
