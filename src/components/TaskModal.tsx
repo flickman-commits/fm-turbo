@@ -520,6 +520,8 @@ export function TaskModal({
         return <LoadingOverlay />
       case 'result':
         if (!result) return null
+        const formattedResearch = result.research ? result.research.replace(/(https?:\/\/\S+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>') : 'No research data available.'
+        const formattedMessage = result.content.replace(/(https?:\/\/\S+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>')
         return (
           <div className="flex flex-col h-full overflow-hidden">
             <div className="flex-shrink-0 px-6 pt-8 pb-6 border-b border-black flex justify-between items-center">
@@ -534,30 +536,22 @@ export function TaskModal({
             <div className="flex-1 overflow-y-auto">
               <div className="p-4 md:p-6">
                 <div className="prose prose-sm max-w-none bg-[#F5F0E8] text-black prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-p:text-black prose-p:mb-4 prose-ul:list-disc prose-ul:pl-6 prose-li:mb-1 prose-pre:bg-black/5 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto prose-code:text-black prose-code:bg-transparent prose-strong:font-bold">
-                  {result.taskType === 'outreach' ? (
-                    <>
-                      <div className="mb-6">
-                        <strong>Research Summary:</strong>
-                        <div className="mt-2">
-                          <ReactMarkdown components={markdownComponents}>
-                            {result.research}
-                          </ReactMarkdown>
-                        </div>
-                      </div>
-                      <div>
-                        <strong>Outreach Message:</strong>
-                        <div className="mt-2">
-                          <ReactMarkdown components={markdownComponents}>
-                            {result.content}
-                          </ReactMarkdown>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <ReactMarkdown components={markdownComponents}>
-                      {result.content}
-                    </ReactMarkdown>
-                  )}
+                  <div className="mb-6">
+                    <strong>Research Summary:</strong>
+                    <div className="mt-2">
+                      <ReactMarkdown components={markdownComponents}>
+                        {formattedResearch}
+                      </ReactMarkdown>
+                    </div>
+                  </div>
+                  <div>
+                    <strong>Outreach Message:</strong>
+                    <div className="mt-2">
+                      <ReactMarkdown components={markdownComponents}>
+                        {formattedMessage}
+                      </ReactMarkdown>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

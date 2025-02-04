@@ -19,7 +19,8 @@ export async function queryPerplexity(recipientName: string, companyName: string
     throw new Error('Perplexity API key not found in environment variables')
   }
 
-  const prompt = `Research the following person and their company: \nName: ${recipientName} \nCompany: ${companyName} \nProvide a concise summary including any news announcements about the company, educational background, location, connections, and other relevant details. Include links to sources where applicable. If no relevant data is found, return 'Couldn't find any relevant data.'`
+  const prompt = `Research the following person and their company: \nName: ${recipientName} \nCompany: ${companyName} \n
+  Provide a concise bullet-pointed list of informatoin including any news announcements about the company, educational background of our prospect, location of our prospect, and other relevant details for us to create our outreach message with. After the bulleted list, create a section called "Sources" and place the urls to the source links underneath that. If no relevant data is found, return 'Couldn't find any relevant data.'`
 
   try {
     console.log('Sending request to Perplexity with payload:', {

@@ -126,6 +126,11 @@ Role: ${formData.role}
 Familiarity Level: ${formData.familiarity}
 Key Points: ${formData.keyPoints}
 
+Research Summary:
+${formData.perplexityResearch || 'No additional research available.'}
+
+Use the research summary to tailor the message to the recipient's background and company context.
+
 ${formData.familiarity === 'justMet' ? 'Make sure to reference your recent meeting/interaction in a natural way.' : ''}
 ${formData.familiarity === 'knowThem' ? 'Use a more casual, friendly tone that reflects your existing relationship.' : ''}`
 
