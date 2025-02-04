@@ -4,7 +4,7 @@ import { PRICING_TIERS, getCurrentPricingTier, getSliderPosition } from '@/utils
 import { PRICE_COMPARISONS } from '@/utils/priceComparisons'
 
 // This can be updated when we get new user counts
-export const CURRENT_USER_COUNT = 112
+export const CURRENT_USER_COUNT = 1
 
 const testimonials = [
   {
@@ -180,17 +180,30 @@ export default function SignUp() {
                 />
               </div>
               <div className="text-sm sm:text-base font-medium text-black text-center sm:text-left ml-1">
-                TRUSTED BY <HeroCounter end={CURRENT_USER_COUNT} duration={2000} /> CREATORS AND COUNTING...
+                TRUSTED BY <HeroCounter end={1} duration={2000} /> CREATORS AND COUNTING...
               </div>
             </div>
           </div>
 
-          <button
-            onClick={handleGetStarted}
-            className="inline-flex items-center justify-center h-[48px] px-6 sm:px-8 py-2 text-base sm:text-lg font-medium text-[#F5F0E8] bg-black rounded-full hover:bg-[#E94E1B] transition-colors animate-on-scroll mb-8 w-[280px]"
-          >
-            Start Free Trial
-          </button>
+          <div className="mb-12 animate-on-scroll">
+            <h3 className="text-xl font-semibold mb-6 text-[#E94E1B]">
+              Beta Launching Friday, February 7th
+            </h3>
+            
+            <form className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
+              <input
+                type="email"
+                placeholder="Leave email to get notified of drop"
+                className="flex-1 h-[48px] px-4 rounded-full border-2 border-black bg-white text-black placeholder-black/40 focus:outline-none focus:border-[#E94E1B] transition-colors"
+              />
+              <button
+                type="submit"
+                className="h-[48px] px-6 font-medium text-[#F5F0E8] bg-black hover:bg-[#E94E1B] rounded-full transition-colors whitespace-nowrap"
+              >
+                Get Notified
+              </button>
+            </form>
+          </div>
 
           <div className="animate-on-scroll">
             <div className="text-sm font-bold text-[#E94E1B]/60 mb-8 tracking-tight">
@@ -451,21 +464,21 @@ export default function SignUp() {
       <section className="py-12 sm:py-24 px-4 bg-[#F5F0E8]">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-[1fr,400px] gap-8">
-            {/* Left Column - Pricing Info */}
+            {/* Left Column - Beta Info */}
             <div className="text-center md:text-left">
               <h2 className="text-4xl sm:text-5xl md:text-7xl font-bold mb-6 text-black tracking-tight">
-                Simple, Transparent Pricing
+                Join the Beta
               </h2>
               <p className="text-lg sm:text-xl mb-8 text-black/80">
-                We're keeping it simple—get all Turbo features for one monthly price.
+                Be one of the first to try Turbo and help shape its future.
               </p>
               <p className="text-base sm:text-lg mb-12 text-black/80">
-                We want to reward early customers, so the price you pay today is locked in for life.
+                Early beta users will get special perks and pricing when we launch.
               </p>
 
               <div className="bg-black/5 rounded-xl p-4 mb-12 inline-block hover:bg-[#00A651]/10 transition-colors">
                 <div className="text-base sm:text-lg font-medium text-black flex items-center gap-2">
-                  Current Users: <AnimatedCounter end={CURRENT_USER_COUNT} duration={1000} start={isPricingVisible} />
+                  Beta Users: <AnimatedCounter end={1} duration={1000} start={isPricingVisible} />
                 </div>
               </div>
 
@@ -506,10 +519,10 @@ export default function SignUp() {
               </div>
             </div>
 
-            {/* Right Column - Pricing Card */}
+            {/* Right Column - Beta Signup Card */}
             <div className="md:sticky md:top-8 mt-16 md:mt-0">
               <div className="bg-white rounded-xl p-6 sm:p-8 shadow-lg">
-                <h3 className="text-xl sm:text-2xl font-bold mb-4 text-black">Current Price</h3>
+                <h3 className="text-xl sm:text-2xl font-bold mb-4 text-black">Beta Access</h3>
                 <div className="text-4xl sm:text-6xl font-bold text-black mb-8">
                   {typeof currentTier.price === 'number' ? (
                     <>
@@ -521,7 +534,7 @@ export default function SignUp() {
                 </div>
                 
                 <div className="mb-8">
-                  <h4 className="text-base sm:text-lg font-semibold mb-4 text-black">Tasks Included:</h4>
+                  <h4 className="text-base sm:text-lg font-semibold mb-4 text-black">Features Included:</h4>
                   <div className="grid grid-cols-1 gap-3">
                     <div className="flex items-start gap-3">
                       <span className="text-[#00A651]">✓</span>
@@ -553,16 +566,21 @@ export default function SignUp() {
                   </div>
                 </div>
 
-                <div className="flex justify-center">
+                <form className="flex flex-col gap-3">
+                  <input
+                    type="email"
+                    placeholder="Leave email to get notified of drop"
+                    className="w-full h-[48px] px-4 rounded-full border-2 border-black bg-white text-black placeholder-black/40 focus:outline-none focus:border-[#E94E1B] transition-colors"
+                  />
                   <button
-                    onClick={handleGetStarted}
-                    className="w-[280px] inline-flex items-center justify-center h-[48px] px-6 sm:px-8 py-2 text-base sm:text-lg font-medium text-[#F5F0E8] bg-black rounded-full hover:bg-[#29ABE2] transition-colors"
+                    type="submit"
+                    className="w-full h-[48px] px-6 font-medium text-[#F5F0E8] bg-black hover:bg-[#E94E1B] rounded-full transition-colors"
                   >
-                    Start Free Trial
+                    Get Notified
                   </button>
-                </div>
+                </form>
                 <p className="text-xs sm:text-sm text-black/60 mt-4 text-center">
-                  7-day free trial • Lock in this price forever
+                  Get early access • Lock in this price forever
                 </p>
               </div>
             </div>
@@ -591,14 +609,28 @@ export default function SignUp() {
             Ready to Turbocharge Your Creative Business?
           </h2>
           <p className="text-base sm:text-xl mb-8 opacity-80 max-w-2xl mx-auto animate-on-scroll">
-            Join thousands of creators who are saving time and growing their business with Turbo.
+            Join the creators who are saving time and growing their business with Turbo.
           </p>
-          <button
-            onClick={handleGetStarted}
-            className="inline-flex items-center justify-center h-[48px] px-6 sm:px-8 py-2 text-base sm:text-lg font-medium text-black bg-[#F5F0E8] rounded-full hover:bg-[#29ABE2] hover:text-[#F5F0E8] transition-colors animate-on-scroll w-[280px]"
-          >
-            Start Free Trial
-          </button>
+          
+          <div className="max-w-md mx-auto animate-on-scroll">
+            <h3 className="text-xl font-semibold mb-6 text-[#E94E1B]">
+              Beta Launching Friday, February 7th
+            </h3>
+            
+            <form className="flex flex-col sm:flex-row gap-3 justify-center">
+              <input
+                type="email"
+                placeholder="Leave email to get notified of drop"
+                className="flex-1 h-[48px] px-4 rounded-full border-2 border-[#F5F0E8] bg-transparent text-[#F5F0E8] placeholder-[#F5F0E8]/40 focus:outline-none focus:border-[#E94E1B] transition-colors"
+              />
+              <button
+                type="submit"
+                className="h-[48px] px-6 font-medium text-black bg-[#F5F0E8] hover:bg-[#E94E1B] hover:text-[#F5F0E8] rounded-full transition-colors whitespace-nowrap"
+              >
+                Get Notified
+              </button>
+            </form>
+          </div>
         </div>
       </section>
 
