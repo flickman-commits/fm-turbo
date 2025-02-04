@@ -6,6 +6,27 @@ import { PRICE_COMPARISONS } from '@/utils/priceComparisons'
 // This can be updated when we get new user counts
 export const CURRENT_USER_COUNT = 1
 
+// Toast component
+const Toast = ({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose()
+    }, 5000)
+
+    return () => clearTimeout(timer)
+  }, [onClose])
+
+  return (
+    <div 
+      className={`fixed bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full shadow-lg text-[#F5F0E8] font-medium 
+        ${type === 'success' ? 'bg-[#00A651]' : 'bg-[#E94E1B]'}
+        animate-in fade-in slide-in-from-bottom-4 duration-300`}
+    >
+      {message}
+    </div>
+  )
+}
+
 const testimonials = [
   {
     name: "Sarah Johnson",
@@ -96,6 +117,7 @@ export default function SignUp() {
   const [isPricingVisible, setIsPricingVisible] = useState(false)
   const pricingSliderRef = useRef<HTMLDivElement>(null)
   const currentTier = getCurrentPricingTier(CURRENT_USER_COUNT)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
   useEffect(() => {
     // Initialize intersection observer for fade-in animations
@@ -147,8 +169,44 @@ export default function SignUp() {
     window.location.href = 'https://buy.stripe.com/bIY03Zg215Y40TucMO';
   };
 
+  // Add form submission handler
+  const handleEmailSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const form = e.currentTarget
+    const email = new FormData(form).get('email_address')
+
+    try {
+      const response = await fetch('https://app.kit.com/forms/7643778/subscriptions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email_address: email,
+          fields: {}
+        })
+      })
+
+      if (response.ok) {
+        form.reset()
+        setToast({
+          message: 'Thanks for signing up! We\'ll notify you when we launch.',
+          type: 'success'
+        })
+      } else {
+        throw new Error('Failed to submit')
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error)
+      setToast({
+        message: 'Something went wrong. Please try again.',
+        type: 'error'
+      })
+    }
+  }
+
   return (
-    <main className="min-h-screen bg-[#F5F0E8] overflow-x-hidden">
+    <main className="min-h-screen bg-[#F5F0E8] overflow-x-hidden relative">
       {/* Hero Section - Beige */}
       <section className="min-h-screen flex flex-col items-center px-4 relative overflow-hidden bg-[#F5F0E8]">
         <div className="w-full h-[20vh]"></div>
@@ -190,11 +248,16 @@ export default function SignUp() {
               Beta Launching Friday, February 7th
             </h3>
             
-            <form className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
+            <form 
+              onSubmit={handleEmailSubmit}
+              className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto"
+            >
               <input
                 type="email"
+                name="email_address"
                 placeholder="Leave email to get notified of drop"
                 className="flex-1 h-[48px] px-4 rounded-full border-2 border-black bg-white text-black placeholder-black/40 focus:outline-none focus:border-[#E94E1B] transition-colors"
+                required
               />
               <button
                 type="submit"
@@ -566,11 +629,16 @@ export default function SignUp() {
                   </div>
                 </div>
 
-                <form className="flex flex-col gap-3">
+                <form 
+                  onSubmit={handleEmailSubmit}
+                  className="flex flex-col gap-3"
+                >
                   <input
                     type="email"
+                    name="email_address"
                     placeholder="Leave email to get notified of drop"
                     className="w-full h-[48px] px-4 rounded-full border-2 border-black bg-white text-black placeholder-black/40 focus:outline-none focus:border-[#E94E1B] transition-colors"
+                    required
                   />
                   <button
                     type="submit"
@@ -617,11 +685,16 @@ export default function SignUp() {
               Beta Launching Friday, February 7th
             </h3>
             
-            <form className="flex flex-col sm:flex-row gap-3 justify-center">
+            <form 
+              onSubmit={handleEmailSubmit}
+              className="flex flex-col sm:flex-row gap-3 justify-center"
+            >
               <input
                 type="email"
+                name="email_address"
                 placeholder="Leave email to get notified of drop"
                 className="flex-1 h-[48px] px-4 rounded-full border-2 border-[#F5F0E8] bg-transparent text-[#F5F0E8] placeholder-[#F5F0E8]/40 focus:outline-none focus:border-[#E94E1B] transition-colors"
+                required
               />
               <button
                 type="submit"
@@ -655,6 +728,14 @@ export default function SignUp() {
           </div>
         </div>
       </footer>
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </main>
   )
 }
