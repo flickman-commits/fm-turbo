@@ -17,7 +17,6 @@ import { useUser } from '@/contexts/UserContext'
 import { PortfolioVideoSelector } from '@/components/PortfolioVideoSelector'
 import { links } from '@/config/links'
 import { queryPerplexity } from '@/services/perplexity'
-import { getOutreachUserPrompt } from '@/config/outreachPrompt'
 import { getOutreachSystemPrompt } from '@/config/outreachPrompt'
 
 type ViewState = 'input' | 'loading' | 'result'
