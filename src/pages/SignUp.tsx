@@ -398,7 +398,7 @@ export default function SignUp() {
       <section className="py-24 px-4 bg-[#F5F0E8]">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-[3.25rem] md:text-6xl font-bold mb-12 tracking-tight text-center text-black animate-on-scroll">
-            Purpose-Built for Creatives
+            Specifically Built for Freelance Creatives
           </h2>
           <div className="max-w-2xl mx-auto text-center mb-16">
             <p className="text-2xl md:text-3xl font-bold mb-4 text-[#E94E1B]">
@@ -458,26 +458,29 @@ export default function SignUp() {
       <section className="py-24 px-4 bg-black text-[#F5F0E8]">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-5xl md:text-7xl font-bold mb-12 tracking-tight animate-on-scroll">
-            We Get It Because We Live It
+            We Understand Your Problems Because We Have Them Too
           </h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="space-y-6 animate-on-scroll">
+          <div className="space-y-8 animate-on-scroll">
+            <div className="flex items-start gap-6 p-6 rounded-lg bg-[#F5F0E8]/5 hover:bg-[#F5F0E8]/10 transition-colors">
+              <div className="text-5xl">🎨</div>
               <div className="space-y-2">
                 <h3 className="text-xl font-semibold text-[#29ABE2]">The Creative's Dilemma</h3>
-                <p>You didn't become a creative to spend hours on proposals and budgets.</p>
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-[#00A651]">The Time Trap</h3>
-                <p>Every hour spent on admin is an hour not spent creating.</p>
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-[#E94E1B]">The Quality Question</h3>
-                <p>Generic AI tools don't understand the nuances of creative work.</p>
+                <p>You didn't become a creative to spend hours on proposals and budgets. Save that for the finance bros.</p>
               </div>
             </div>
-            <div className="relative h-64 md:h-auto animate-on-scroll">
-              {/* TODO: Add supporting image/video */}
-              <div className="absolute inset-0 bg-[#F5F0E8]/10 rounded-lg"></div>
+            <div className="flex items-start gap-6 p-6 rounded-lg bg-[#F5F0E8]/5 hover:bg-[#F5F0E8]/10 transition-colors">
+              <div className="text-5xl">⏰</div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-semibold text-[#00A651]">The Time Trap</h3>
+                <p>Every hour spent on admin is an hour not spent creating. Free up your time by automating repeatable tasks.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-6 p-6 rounded-lg bg-[#F5F0E8]/5 hover:bg-[#F5F0E8]/10 transition-colors">
+              <div className="text-5xl">🤖</div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-semibold text-[#E94E1B]">Generic AI Tools Suck</h3>
+                <p>You've been using ChatGPT but it can't seem to make anything useful. They don't understand the nuances of creative work.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -667,18 +670,20 @@ export default function SignUp() {
           </div>
 
           {/* Price Comparisons Section */}
-          <div className="mt-16 bg-white rounded-xl p-6 sm:p-8 shadow-lg">
-            <h4 className="text-xl sm:text-2xl font-bold mb-8 text-black text-center">Less Expensive Than:</h4>
-            <div className={`grid ${currentTier.price === 'FREE' ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'} gap-8`}>
-              {PRICE_COMPARISONS[currentTier.price].map((comparison, index) => (
-                <div key={index} className={`text-center ${currentTier.price === 'FREE' ? 'mx-auto' : ''}`}>
-                  <div className="h-24 flex items-center justify-center mb-2 text-4xl" dangerouslySetInnerHTML={{ __html: comparison.emoji }} />
-                  {comparison.item && <div className="font-medium text-black text-xl sm:text-2xl">{comparison.item}</div>}
-                  <div className="text-[#E94E1B] font-medium mt-1">{comparison.price}</div>
-                </div>
-              ))}
+          {currentTier.price !== 'FREE' && (
+            <div className="mt-16 bg-white rounded-xl p-6 sm:p-8 shadow-lg">
+              <h4 className="text-xl sm:text-2xl font-bold mb-8 text-black text-center">Less Expensive Than:</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+                {PRICE_COMPARISONS[currentTier.price].map((comparison, index) => (
+                  <div key={index} className="text-center">
+                    <div className="h-24 flex items-center justify-center mb-2 text-4xl" dangerouslySetInnerHTML={{ __html: comparison.emoji }} />
+                    {comparison.item && <div className="font-medium text-black text-xl sm:text-2xl">{comparison.item}</div>}
+                    <div className="text-[#E94E1B] font-medium mt-1">{comparison.price}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </section>
 
