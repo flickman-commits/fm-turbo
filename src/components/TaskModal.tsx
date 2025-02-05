@@ -378,7 +378,7 @@ export function TaskModal({
 
       console.log('Preparing to send request to OpenAI with updated form data:', updatedFormData)
 
-      const userInfo = getUserInfoFromLocalStorage();
+      const userInfo: UserInfo | null = getUserInfoFromLocalStorage();
       if (!userInfo) {
         toast.error('User information is required. Please complete your profile.')
         setViewState('input')
