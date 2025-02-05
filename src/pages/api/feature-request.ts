@@ -1,23 +1,29 @@
-import { NextApiRequest, NextApiResponse } from 'next'
-
 interface FeatureRequest {
   type: 'bug' | 'feature'
   description: string
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function handler(req: Request) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' })
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
   }
 
   try {
-    const { type, description } = req.body as FeatureRequest
+    const body = await req.json() as FeatureRequest
+    const { type, description } = body
 
     if (!type || !description) {
-      return res.status(400).json({ message: 'Missing required fields' })
+      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
     }
 
     const emoji = type === 'bug' ? '🐛' : '✨'
@@ -55,9 +61,19 @@ export default async function handler(
       throw new Error('Failed to send message to Slack')
     }
 
-    return res.status(200).json({ message: 'Request submitted successfully' })
+    return new Response(JSON.stringify({ message: 'Request submitted successfully' }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
   } catch (error) {
     console.error('Error handling feature request:', error)
-    return res.status(500).json({ message: 'Internal server error' })
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
   }
 } 
