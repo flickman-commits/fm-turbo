@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { TaskType, TaskResult, taskActionConfigs, TaskActionConfig } from '@/types/tasks'
 import { taskConfigs, FormField } from '@/config/tasks'
-import { getSystemPrompts, getUserPrompt, getUserInfoFromLocalStorage } from '@/config/prompts'
+import { getSystemPrompts, getUserPrompt, getUserInfoFromLocalStorage, UserInfo } from '@/config/prompts'
 import { DottedDialog } from '@/components/ui/dotted-dialog-wrapper'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/components/ui/rainbow-toast'
@@ -379,6 +379,12 @@ export function TaskModal({
       console.log('Preparing to send request to OpenAI with updated form data:', updatedFormData)
 
       const userInfo = getUserInfoFromLocalStorage();
+      if (!userInfo) {
+        toast.error('User information is required. Please complete your profile.')
+        setViewState('input')
+        return
+      }
+
       const messages: OpenAI.Chat.ChatCompletionMessageParam[] = taskType === 'outreach' ? [
         {
           role: "system",
@@ -793,6 +799,13 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
                         console.error('Error with location services:', error);
                         updatedFormData.googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.address)}`;
                       }
+                    }
+                    
+                    const userInfo = getUserInfoFromLocalStorage();
+                    if (!userInfo) {
+                      toast.error('User information is required. Please complete your profile.')
+                      setViewState('result')
+                      return
                     }
                     
                     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [

@@ -27,7 +27,7 @@ interface FormData {
   deliverables?: string
 }
 
-interface UserInfo {
+export interface UserInfo {
   companyName: string
   userName: string
   businessType: string
@@ -40,7 +40,7 @@ export const getUserInfoFromLocalStorage = (): UserInfo | null => {
 }
 
 // Helper function to get weather emoji for run of show
-const getWeatherEmoji = (condition: string): string => {
+export const getWeatherEmoji = (condition: string): string => {
   const conditions = condition?.toLowerCase() || ''
   if (conditions.includes('snow')) return '🌨️'
   if (conditions.includes('rain')) return '🌧️'
@@ -202,19 +202,6 @@ Format your response in clean, well-structured markdown with appropriate headers
     }
 
     case 'runOfShow':
-      const getWeatherEmoji = (condition: string) => {
-        const conditions = condition?.toLowerCase() || '';
-        if (conditions.includes('snow')) return '🌨️';
-        if (conditions.includes('rain')) return '🌧️';
-        if (conditions.includes('cloud')) return '☁️';
-        if (conditions.includes('clear')) return '☀️';
-        if (conditions.includes('sun')) return '☀️';
-        if (conditions.includes('thunder')) return '⛈️';
-        if (conditions.includes('fog')) return '🌫️';
-        if (conditions.includes('mist')) return '🌫️';
-        return '🌤️'; // default to partly cloudy
-      };
-
       return `Create a detailed run of show document for a video shoot with the following information:
 
 Location: ${formData.location}

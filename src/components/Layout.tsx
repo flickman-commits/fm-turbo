@@ -4,7 +4,7 @@ import { links } from '@/config/links'
 import { creditsManager } from '@/utils/credits'
 import { useState } from 'react'
 import { FeatureRequestModal } from '@/components/FeatureRequestModal'
-import { CompanyInfoContext, useCompanyInfo } from '@/contexts/CompanyInfoContext'
+import { useCompanyInfo } from '@/contexts/CompanyInfoContext'
 
 const navigationItems = [
   { name: 'Home', icon: Home, path: '/' },
