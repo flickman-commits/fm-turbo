@@ -2,8 +2,9 @@ import { Home, History, User, Settings } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { links } from '@/config/links'
 import { creditsManager } from '@/utils/credits'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { FeatureRequestModal } from '@/components/FeatureRequestModal'
+import { CompanyInfoContext, useCompanyInfo } from '@/contexts/CompanyInfoContext'
 
 const navigationItems = [
   { name: 'Home', icon: Home, path: '/' },
@@ -27,10 +28,23 @@ interface UserInfo {
 }
 
 export function Layout({ children }: LayoutProps) {
+  const { isInfoSaved, setIsInfoSaved } = useCompanyInfo()
   const location = useLocation()
   const credits = creditsManager.getCredits()
   const [showFeatureRequest, setShowFeatureRequest] = useState(false)
+  
+  // Track current form state
   const [userInfo, setUserInfo] = useState<UserInfo>(() => {
+    const saved = localStorage.getItem('userInfo')
+    return saved ? JSON.parse(saved) : {
+      companyName: '',
+      userName: '',
+      businessType: ''
+    }
+  })
+
+  // Track saved info state
+  const [savedInfo, setSavedInfo] = useState<UserInfo>(() => {
     const saved = localStorage.getItem('userInfo')
     return saved ? JSON.parse(saved) : {
       companyName: '',
@@ -42,7 +56,19 @@ export function Layout({ children }: LayoutProps) {
   const handleInfoChange = (field: keyof UserInfo, value: string) => {
     const newInfo = { ...userInfo, [field]: value }
     setUserInfo(newInfo)
-    localStorage.setItem('userInfo', JSON.stringify(newInfo))
+  }
+
+  const handleSaveInfo = () => {
+    if (userInfo.companyName && userInfo.userName && userInfo.businessType) {
+      localStorage.setItem('userInfo', JSON.stringify(userInfo))
+      setSavedInfo(userInfo) // Update the saved info state
+      setIsInfoSaved(true)
+      console.log('Saved user info to localStorage:', userInfo)
+    }
+  }
+
+  const isFormValid = () => {
+    return !!(userInfo.companyName && userInfo.userName && userInfo.businessType)
   }
 
   return (
@@ -85,6 +111,36 @@ export function Layout({ children }: LayoutProps) {
             )
           })}
         </nav>
+
+        {/* Update the Callout Box */}
+        <div className={`px-4 py-3 mx-4 mb-4 rounded-lg border-2 ${
+          isInfoSaved 
+            ? 'bg-turbo-green/10 border-turbo-green' 
+            : 'bg-turbo-blue/10 border-turbo-blue'
+        }`}>
+          <p className="text-sm text-turbo-black font-medium mb-1">
+            {isInfoSaved ? '✅ Information Saved' : '⚠️ Action Required'}
+          </p>
+          {isInfoSaved ? (
+            <>
+              <p className="text-sm text-turbo-black/80 mb-2">
+                You may now start using the tasks.
+              </p>
+              <div className="mt-2 pt-2 border-t border-turbo-green/20">
+                <div className="font-medium text-sm text-turbo-black">Current Information:</div>
+                <div className="text-xs mt-1 text-turbo-black/80">
+                  <div>Company: {savedInfo.companyName}</div>
+                  <div>Name: {savedInfo.userName}</div>
+                  <div>Business: {savedInfo.businessType}</div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-turbo-black/80">
+              Please fill in your company information below to start using the tasks.
+            </p>
+          )}
+        </div>
 
         {/* User Info Form */}
         <div className="px-4 py-6 border-t border-turbo-black">
@@ -135,10 +191,13 @@ export function Layout({ children }: LayoutProps) {
             </div>
 
             <button
-              onClick={() => {
-                localStorage.setItem('userInfo', JSON.stringify(userInfo))
-              }}
-              className="w-full px-4 py-2 text-sm font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black rounded-lg transition-colors"
+              onClick={handleSaveInfo}
+              disabled={!isFormValid()}
+              className={`w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                isFormValid()
+                  ? 'bg-turbo-blue text-turbo-beige hover:bg-turbo-black'
+                  : 'bg-turbo-black/40 text-turbo-beige cursor-not-allowed'
+              }`}
             >
               Save Information
             </button>

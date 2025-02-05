@@ -18,6 +18,7 @@ import { PortfolioVideoSelector } from '@/components/PortfolioVideoSelector'
 import { links } from '@/config/links'
 import { queryPerplexity } from '@/services/perplexity'
 import { getOutreachSystemPrompt } from '@/config/outreachPrompt'
+import { useCompanyInfo } from '@/contexts/CompanyInfoContext'
 
 type ViewState = 'input' | 'loading' | 'result'
 
@@ -218,6 +219,7 @@ export function TaskModal({
   onClose: () => void
 }) {
   const { user } = useUser()
+  const { isInfoSaved } = useCompanyInfo()
   const [formData, setFormData] = useState<FormDataWithWeather>({})
   const [viewState, setViewState] = useState<ViewState>('input')
   const [result, setResult] = useState<TaskResult | null>(null)
@@ -295,6 +297,11 @@ export function TaskModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!isInfoSaved) {
+      toast.error('Please complete your company information before using tasks')
+      return
+    }
 
     console.log('Submit initiated for task type:', taskType)
 
@@ -961,9 +968,9 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
                 <button
                   type="submit"
                   className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors disabled:opacity-80 disabled:bg-turbo-black/40 disabled:cursor-not-allowed disabled:text-turbo-beige"
-                  disabled={isLoading || !isFormValid()}
+                  disabled={isLoading || !isFormValid() || !isInfoSaved}
                 >
-                  {isLoading ? 'Generating...' : 'Generate'}
+                  {!isInfoSaved ? 'Complete Company Info First' : isLoading ? 'Generating...' : 'Generate'}
                 </button>
               </div>
             </div>
