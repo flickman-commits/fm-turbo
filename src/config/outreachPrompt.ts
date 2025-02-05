@@ -1,5 +1,5 @@
 import { WeatherData } from '@/services/location'
-import { Video, FormDataValue } from '@/types/forms'
+import { FormDataValue } from '@/types/forms'
 
 interface FormData {
   [key: string]: FormDataValue | WeatherData | undefined
