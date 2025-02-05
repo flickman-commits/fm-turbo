@@ -397,7 +397,7 @@ export default function SignUp() {
       {/* Purpose-Built Section - Beige */}
       <section className="py-24 px-4 bg-[#F5F0E8]">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-[3.25rem] md:text-6xl font-bold mb-12 tracking-tight text-center text-black animate-on-scroll">
+          <h2 className="text-4xl md:text-6xl font-bold mb-12 tracking-tight text-center animate-on-scroll text-black">
             Specifically Built for Freelance Creatives
           </h2>
           <div className="max-w-2xl mx-auto text-center mb-16">
@@ -457,7 +457,7 @@ export default function SignUp() {
       {/* Understanding Section */}
       <section className="py-24 px-4 bg-black text-[#F5F0E8]">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-5xl md:text-7xl font-bold mb-12 tracking-tight animate-on-scroll">
+          <h2 className="text-4xl md:text-7xl font-bold mb-12 tracking-tight animate-on-scroll text-center">
             We Understand Your Problems Because We Have Them Too
           </h2>
           <div className="space-y-8 animate-on-scroll">
@@ -550,7 +550,7 @@ export default function SignUp() {
           <div className="grid md:grid-cols-[1fr,400px] gap-8">
             {/* Left Column - Beta Info */}
             <div className="text-center md:text-left">
-              <h2 className="text-4xl sm:text-5xl md:text-7xl font-bold mb-6 text-black tracking-tight">
+              <h2 className="text-4xl md:text-7xl font-bold mb-6 text-black tracking-tight">
                 Join the Beta
               </h2>
               <p className="text-lg sm:text-xl mb-8 text-black/80">
@@ -690,7 +690,7 @@ export default function SignUp() {
       {/* Final CTA Section - Black */}
       <section className="py-12 sm:py-24 px-4 bg-black text-[#F5F0E8]">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl sm:text-5xl md:text-7xl font-bold mb-6 tracking-tight animate-on-scroll">
+          <h2 className="text-4xl md:text-7xl font-bold mb-6 tracking-tight animate-on-scroll">
             Ready to Turbocharge Your Creative Business?
           </h2>
           <p className="text-base sm:text-xl mb-8 opacity-80 max-w-2xl mx-auto animate-on-scroll">
