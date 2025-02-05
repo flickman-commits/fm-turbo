@@ -9,6 +9,8 @@ export interface FormField {
   options?: { value: string; label: string; default?: boolean }[]
   helpLink?: string
   helpText?: string
+  showIf?: string
+  optional?: string
 }
 
 export interface TaskConfig {
@@ -38,6 +40,7 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
       { id: 'contactPhone', label: 'Contact Phone', type: 'text', placeholder: 'Enter contact phone' },
       { id: 'schedule', label: 'Daily Schedule', type: 'textarea', placeholder: 'Enter detailed daily schedule' },
       { id: 'role', label: 'Contractor Role', type: 'textarea', placeholder: 'Enter detailed role description' },
+      { id: 'deliverables', label: 'Deliverables', type: 'textarea', placeholder: 'Enter project deliverables' },
       { id: 'dailyRate', label: 'Daily Rate', type: 'number', placeholder: 'Enter daily rate' },
       { id: 'numberOfDays', label: 'Number of Days', type: 'number', placeholder: 'Enter number of days' }
     ],
@@ -50,20 +53,61 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
   },
   proposal: {
     title: 'Create Video Content Proposal',
-    description: 'Generate a detailed video content proposal with timeline, requirements, and budget breakdown.',
+    description: 'Let us generate a proposal from a client discovery call transcript. If you don\'t have a transcript, just enter the details and we can take care of the rest.',
     fields: [
-      { id: 'projectType', label: 'Project Type', type: 'text', placeholder: 'Corporate Video, Brand Story, etc.' },
-      { id: 'clientName', label: 'Client Name', type: 'text', placeholder: 'Enter client name' },
-      { id: 'timelineInfo', label: 'Timeline Info', type: 'text', placeholder: 'Enter any info regarding timeline (ex: event takes place Jan 7th, final deliverables needed by Feb 10th, etc.)' },
-      { id: 'budget', label: 'Budget', type: 'text', placeholder: 'Enter budget range' },
+      { 
+        id: 'hasTranscript', 
+        label: 'Do you have a transcript from your discovery call?', 
+        type: 'buttonSelect', 
+        placeholder: 'Select yes/no',
+        options: [
+          { value: 'yes', label: 'Yes', default: true },
+          { value: 'no', label: 'No' }
+        ]
+      },
       { 
         id: 'discoveryTranscript', 
         label: 'Discovery Call Transcript (JSON)', 
         type: 'file', 
         placeholder: 'Upload your discovery call transcript',
-        accept: '.json,application/json'
+        accept: '.json,application/json',
+        showIf: 'hasTranscript=yes'
       },
-      { id: 'requirements', label: 'Special Requirements', type: 'textarea', placeholder: 'Enter any special requirements or notes' }
+      { 
+        id: 'projectType', 
+        label: 'Project Type', 
+        type: 'text', 
+        placeholder: 'Corporate Video, Brand Story, etc.',
+        optional: 'hasTranscript=yes'
+      },
+      { 
+        id: 'clientName', 
+        label: 'Client Name', 
+        type: 'text', 
+        placeholder: 'Enter client name',
+        optional: 'hasTranscript=yes'
+      },
+      { 
+        id: 'timelineInfo', 
+        label: 'Timeline Info', 
+        type: 'text', 
+        placeholder: 'Enter any info regarding timeline (ex: event takes place Jan 7th, final deliverables needed by Feb 10th, etc.)',
+        optional: 'hasTranscript=yes'
+      },
+      { 
+        id: 'budget', 
+        label: 'Budget', 
+        type: 'text', 
+        placeholder: 'Enter budget range',
+        optional: 'hasTranscript=yes'
+      },
+      { 
+        id: 'additionalNotes', 
+        label: 'Additional Notes', 
+        type: 'textarea', 
+        placeholder: 'Enter any additional information or requirements',
+        optional: 'hasTranscript=yes'
+      }
     ],
     resultSections: [
       {
@@ -85,7 +129,7 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
       { id: 'subject', label: 'Subject', type: 'text', placeholder: 'Enter message subject' },
       { id: 'company', label: 'Company', type: 'text', placeholder: 'Enter company name' },
       { id: 'role', label: 'Recipient Role', type: 'text', placeholder: 'Enter recipient role' },
-      { id: 'keyPoints', label: 'Key Points', type: 'textarea', placeholder: 'Enter key points to address' }
+      { id: 'keyPointsToEmphasize', label: 'Key Points to Emphasize', type: 'textarea', placeholder: 'Enter key points to address' }
     ],
     resultSections: [
       {

@@ -1,6 +1,7 @@
 import { TaskType } from '@/types/tasks'
 import { WeatherData } from '@/services/location'
 import { Video, FormDataValue } from '@/types/forms'
+import { getOutreachSystemPrompt, getOutreachUserPrompt } from './outreachPrompt'
 
 interface FormData {
   [key: string]: FormDataValue | WeatherData | undefined
@@ -22,6 +23,7 @@ interface FormData {
   requirements?: string
   perplexityResearch?: string
   timelineInfo?: string
+  deliverables?: string
 }
 
 // System prompts for different task types
@@ -57,11 +59,7 @@ Next Steps:
 - Send over a W9 just so we have it for tax purposes
 Let me know if you have any questions. Looking forward to working with you!`,
   
-  outreach: `You are the best salesman at a video production company (Flickman Media) based in NYC reaching out to prospects. Your tone should be likable, warm and intriguing. People like to answer your emails because you have intrigued them with your words. Adjust your tone and approach based on your familiarity with the recipient:
-
-- For "Never Met": Be professional yet intriguing, focus on creating curiosity and establishing credibility without being too formal.
-- For "Just Met": Reference that it was nice meeting them recently, be warmer and more familiar while maintaining professionalism.
-- For "I Know Them": Be friendly and casual, leverage your existing relationship while still being professional.`,
+  outreach: getOutreachSystemPrompt,
   
   proposal: `You are an expoert salesman at a Flickman Media, a video production company. Your role is to take in information from discovery calls, online research, and provided data about a potential client and then to create an effective content proposal to our potential clients.`,
   
@@ -106,7 +104,7 @@ ${formData.schedule}
 ${formData.role}
 
 **Deliverables:**
-All footage must be handed off to the Flickman Media team before you leave.
+${formData.deliverables}
 
 **Compensation:**
 Rate: $${formData.dailyRate}/day x ${formData.numberOfDays} days = $${Number(formData.dailyRate) * Number(formData.numberOfDays)} total
@@ -117,30 +115,7 @@ Rate: $${formData.dailyRate}/day x ${formData.numberOfDays} days = $${Number(for
 Let me know if you have any questions. Looking forward to working with you!`
 
     case 'outreach':
-      return `Write a concise, friendly, casual, and purposeful email that is just supposed to get the other party to respond -- not necessarily close a deal. Do not include a subject line in the email body. Do not include any signature, sign-off, or name at the end - the email should end with your final message sentence. Your email should
-      follow this general format:
-
-      1. Immediately reference the research summary to start off with something that is relevant to the recipient. Don't use any filler opening lines like "Hope you've been well" or "I hope you're doing great".
-      2. Subtly bring up that we've done work with similar companies to the one that we're reaching out to.
-      3. End the email with a question that is relevant to the work that you guys could do together (example: "I'm curious how you guys are apporaching your content creation given all the new traction you've found?")
-
-Your email should use the following details:
-
-Recipient: ${formData.recipientName}
-Company: ${formData.company}
-Role: ${formData.role}
-Familiarity Level: ${formData.familiarity}
-Key Points: ${formData.keyPoints}
-
-Research Summary:
-${formData.perplexityResearch || 'No additional research available.'}
-
-Use the research summary to tailor the message to the recipient's background and company context.
-
-Your email should be no longer than 150 words, and you should use something from the research summary to start off with something that is relevant to the recipient. Your message should end with a question that is relevant to the work that you guys coudl do together (example: "I'm curious how you guys are apporaching your content creation given all the new traction you've found?")
-
-${formData.familiarity === 'justMet' ? 'Make sure to reference your recent meeting/interaction in a natural way.' : ''}
-${formData.familiarity === 'knowThem' ? 'Use a more casual, friendly tone that reflects your existing relationship.' : ''}`
+      return getOutreachUserPrompt(formData)
 
     case 'proposal':
       const portfolioSection = formData.portfolioVideos?.length

@@ -246,11 +246,7 @@ export default function SignUp() {
                 />
               </div>
               <div className="text-sm sm:text-base font-medium text-black text-center sm:text-left ml-1">
-                TRUSTED BY <AnimatedCounter 
-                  end={usersAtLaunch || 10} 
-                  duration={2000} 
-                  start={isCountLoaded}
-                />{' '}CREATORS AND COUNTING...
+                JOIN FELLOW CREATORS AUTOMATING THEIR WORKFLOWS
               </div>
             </div>
           </div>
