@@ -1,4 +1,5 @@
 import { Layout } from '@/components/Layout'
+import { links } from '@/config/links'
 
 export default function Settings() {
   return (
@@ -41,6 +42,33 @@ export default function Settings() {
             <button className="px-4 py-2 text-sm font-medium text-[#E94E1B] hover:text-black transition-colors">
               Delete Account
             </button>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-4">
+            <div className="flex flex-row items-center">
+              <span className="text-sm font-medium text-black tracking-tight">A TOOL BY</span>
+              <a 
+                href={links.flickmanMedia}
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="-ml-0.5"
+              >
+                <img 
+                  src="/fm-logo.png" 
+                  alt="Flickman Media Logo" 
+                  className="h-9 md:h-11 translate-y-[2px]" 
+                />
+              </a>
+              <span className="text-sm font-medium text-black tracking-tight translate-y-[2px] -ml-[8px]">.</span>
+              <a 
+                href={links.flickmanMedia}
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-sm font-bold text-[#E94E1B] tracking-tight ml-2 hover:text-[#00A651] transition-colors"
+              >
+                <span className="underline">WORK WITH US</span>.
+              </a>
+            </div>
           </div>
         </div>
       </div>

@@ -8,7 +8,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 
-interface DottedDialogProps {
+interface BaseModalProps {
   children: React.ReactNode
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -18,7 +18,7 @@ interface DottedDialogProps {
   headerRightAction?: React.ReactNode
 }
 
-export function DottedDialog({
+export function BaseModal({
   children,
   open,
   onOpenChange,
@@ -26,7 +26,7 @@ export function DottedDialog({
   description,
   headerLeftAction,
   headerRightAction
-}: DottedDialogProps) {
+}: BaseModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogPortal>

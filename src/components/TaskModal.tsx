@@ -529,34 +529,25 @@ export function TaskModal({
         const formattedMessage = result.content.replace(/(https?:\/\/\S+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>')
         return (
           <div className="flex flex-col h-full overflow-hidden">
-            <div className="flex-shrink-0 px-6 pt-8 pb-6 border-b border-black flex justify-between items-center">
-              <button
-                onClick={() => setViewState('input')}
-                className="text-sm text-black/60 hover:text-black transition-colors"
-              >
-                Back
-              </button>
-              <div className="w-[40px]"></div>
-            </div>
             <div className="flex-1 overflow-y-auto">
               <div className="p-4 md:p-6">
                 <div className="prose prose-sm max-w-none bg-[#F5F0E8] text-black prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-p:text-black prose-p:mb-4 prose-ul:list-disc prose-ul:pl-6 prose-li:mb-1 prose-pre:bg-black/5 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto prose-code:text-black prose-code:bg-transparent prose-strong:font-bold">
-                  <div className="mb-6">
-                    <strong className="text-xl font-bold">Research Summary</strong>
-                    <div className="mt-2">
-                      <ReactMarkdown components={markdownComponents}>
-                        {formattedResearch}
-                      </ReactMarkdown>
-                    </div>
-                  </div>
-                  <div>
-                    <strong className="text-xl font-bold">Outreach Message</strong>
-                    <div className="mt-2">
-                      <ReactMarkdown components={markdownComponents}>
-                        {formattedMessage}
-                      </ReactMarkdown>
-                    </div>
-                  </div>
+                  {(taskConfigs[result.taskType].resultSections?.length ?? 0) > 0 ? (
+                    taskConfigs[result.taskType].resultSections?.map((section, index) => {
+                      const content = section.contentKey === 'research' ? formattedResearch : formattedMessage;
+                      return (
+                        <div key={`${section.id}-${index}`}>
+                          <ReactMarkdown components={markdownComponents}>
+                            {content}
+                          </ReactMarkdown>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <ReactMarkdown components={markdownComponents}>
+                      {formattedMessage}
+                    </ReactMarkdown>
+                  )}
                 </div>
               </div>
             </div>
@@ -671,151 +662,139 @@ export function TaskModal({
         )
       case 'input':
         return (
-          <>
-            <div className="flex-shrink-0 flex justify-end p-4 md:p-6 pb-4 border-b border-black">
-              <button
-                type="button"
-                onClick={handleFillTestData}
-                className="text-sm text-black/80 hover:text-black hover:bg-[#29ABE2]/10 px-2 py-1 rounded-md transition-colors"
-              >
-                Fill Test Data
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1">
-              <div className="flex-1 overflow-y-auto">
-                <div className="p-4 md:p-6">
-                  <div className="space-y-4">
-                    {config.fields.map((field) => (
-                      <div key={field.id} className="space-y-2">
-                        <Label htmlFor={field.id} className="text-sm font-medium text-black">
-                          {field.label}
-                        </Label>
-                        {field.type === 'portfolioSelector' ? (
-                          <div className="space-y-2">
-                            <Label htmlFor={field.id}>{field.label}</Label>
-                            {user ? (
-                              <PortfolioVideoSelector
-                                projectType={formData.projectType as string || ''}
-                                userId={user.id}
-                                onSelect={(videos) => handleFieldChange(field.id, videos)}
-                              />
-                            ) : (
-                              <div className="text-center py-6 text-black/60">
-                                Please sign in to include portfolio videos in your proposal
-                              </div>
-                            )}
-                          </div>
-                        ) : field.type === 'textarea' ? (
-                          <textarea
-                            id={field.id}
-                            className="flex min-h-[100px] w-full rounded-md border border-black bg-[#F5F0E8] px-3 py-2 text-sm text-black placeholder:text-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#29ABE2] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder={field.placeholder}
-                            value={typeof formData[field.id] === 'string' ? formData[field.id] as string : ''}
-                            onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                          />
-                        ) : field.type === 'file' ? (
-                          <div className="space-y-2">
-                            <div className="relative flex items-center">
-                              <input
-                                type="file"
-                                id={field.id}
-                                accept={field.accept}
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0]
-                                  if (file) {
-                                    const reader = new FileReader()
-                                    reader.onload = (e) => {
-                                      handleFieldChange(field.id, typeof e.target?.result === 'string' ? e.target.result : '')
-                                    }
-                                    setSelectedFileName(file.name)
-                                    reader.readAsText(file)
+          <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1">
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-4 md:p-6">
+                <div className="space-y-4">
+                  {config.fields.map((field) => (
+                    <div key={field.id} className="space-y-2">
+                      <Label htmlFor={field.id} className="text-sm font-medium text-black">
+                        {field.label}
+                      </Label>
+                      {field.type === 'portfolioSelector' ? (
+                        <div className="space-y-2">
+                          <Label htmlFor={field.id}>{field.label}</Label>
+                          {user ? (
+                            <PortfolioVideoSelector
+                              projectType={formData.projectType as string || ''}
+                              userId={user.id}
+                              onSelect={(videos) => handleFieldChange(field.id, videos)}
+                            />
+                          ) : (
+                            <div className="text-center py-6 text-black/60">
+                              Please sign in to include portfolio videos in your proposal
+                            </div>
+                          )}
+                        </div>
+                      ) : field.type === 'textarea' ? (
+                        <textarea
+                          id={field.id}
+                          className="flex min-h-[100px] w-full rounded-md border border-black bg-[#F5F0E8] px-3 py-2 text-sm text-black placeholder:text-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#29ABE2] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          placeholder={field.placeholder}
+                          value={typeof formData[field.id] === 'string' ? formData[field.id] as string : ''}
+                          onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                        />
+                      ) : field.type === 'file' ? (
+                        <div className="space-y-2">
+                          <div className="relative flex items-center">
+                            <input
+                              type="file"
+                              id={field.id}
+                              accept={field.accept}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                if (file) {
+                                  const reader = new FileReader()
+                                  reader.onload = (e) => {
+                                    handleFieldChange(field.id, typeof e.target?.result === 'string' ? e.target.result : '')
                                   }
-                                }}
-                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                              />
-                              <div className="flex h-10 w-full rounded-md border border-black bg-[#F5F0E8] text-sm text-black">
-                                <div className="flex items-center px-3 border-r border-black">
-                                  Choose File
-                                </div>
-                                <div className="flex items-center px-3 flex-1">
-                                  {selectedFileName || 'No file chosen'}
-                                </div>
+                                  setSelectedFileName(file.name)
+                                  reader.readAsText(file)
+                                }
+                              }}
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                            />
+                            <div className="flex h-10 w-full rounded-md border border-black bg-[#F5F0E8] text-sm text-black">
+                              <div className="flex items-center px-3 border-r border-black">
+                                Choose File
+                              </div>
+                              <div className="flex items-center px-3 flex-1">
+                                {selectedFileName || 'No file chosen'}
                               </div>
                             </div>
-                            {taskType === 'proposal' && field.id === 'discoveryTranscript' && (
-                              <p className="text-sm text-gray-500">
-                                Please upload a JSON file containing the discovery call transcript. The file should include participant information, conversation details, and key points.
-                              </p>
-                            )}
                           </div>
-                        ) : field.type === 'buttonSelect' ? (
-                          <div className="flex items-center gap-2 p-1 bg-[#F5F0E8]/50 rounded-full border-2 border-black">
-                            {field.options?.map((option) => (
-                              <button
-                                key={option.value}
-                                type="button"
-                                className={`flex-1 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                                  formData[field.id] === option.value || (!formData[field.id] && option.default)
-                                    ? 'bg-black text-[#F5F0E8]'
-                                    : 'text-black hover:bg-[#29ABE2] hover:text-[#F5F0E8]'
-                                }`}
-                                onClick={() => handleFieldChange(field.id, option.value)}
-                              >
-                                {option.label}
-                              </button>
-                            ))}
-                          </div>
-                        ) : field.type === 'select' ? (
-                          <select
-                            id={field.id}
-                            className="flex h-10 w-full rounded-md border border-black bg-[#F5F0E8] px-3 py-2 text-sm text-black placeholder:text-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#29ABE2] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            value={typeof formData[field.id] === 'string' ? formData[field.id] as string : field.options?.find(opt => opt.default)?.value || ''}
-                            onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                          >
-                            {field.options?.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <input
-                            id={field.id}
-                            type={field.type}
-                            className="flex h-10 w-full rounded-md border border-black bg-[#F5F0E8] px-3 py-2 text-sm text-black placeholder:text-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#29ABE2] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder={field.placeholder}
-                            value={typeof formData[field.id] === 'string' ? formData[field.id] as string : ''}
-                            onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                          />
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                          {taskType === 'proposal' && field.id === 'discoveryTranscript' && (
+                            <p className="text-sm text-gray-500">
+                              Please upload a JSON file containing the discovery call transcript. The file should include participant information, conversation details, and key points.
+                            </p>
+                          )}
+                        </div>
+                      ) : field.type === 'buttonSelect' ? (
+                        <div className="flex items-center gap-2 p-1 bg-[#F5F0E8]/50 rounded-full border-2 border-black">
+                          {field.options?.map((option) => (
+                            <button
+                              key={option.value}
+                              type="button"
+                              className={`flex-1 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                                formData[field.id] === option.value || (!formData[field.id] && option.default)
+                                  ? 'bg-black text-[#F5F0E8]'
+                                  : 'text-black hover:bg-[#29ABE2] hover:text-[#F5F0E8]'
+                              }`}
+                              onClick={() => handleFieldChange(field.id, option.value)}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                        </div>
+                      ) : field.type === 'select' ? (
+                        <select
+                          id={field.id}
+                          className="flex h-10 w-full rounded-md border border-black bg-[#F5F0E8] px-3 py-2 text-sm text-black placeholder:text-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#29ABE2] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          value={typeof formData[field.id] === 'string' ? formData[field.id] as string : field.options?.find(opt => opt.default)?.value || ''}
+                          onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                        >
+                          {field.options?.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          id={field.id}
+                          type={field.type}
+                          className="flex h-10 w-full rounded-md border border-black bg-[#F5F0E8] px-3 py-2 text-sm text-black placeholder:text-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#29ABE2] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          placeholder={field.placeholder}
+                          value={typeof formData[field.id] === 'string' ? formData[field.id] as string : ''}
+                          onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                        />
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
+            </div>
 
-              <div className="flex-shrink-0 border-t border-black bg-[#F5F0E8] p-4 md:p-6 mt-auto">
-                <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-2">
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-black hover:text-[#F5F0E8] bg-[#F5F0E8] border-2 border-black rounded-full hover:bg-[#E94E1B] transition-colors disabled:opacity-50"
-                    disabled={isLoading}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-[#F5F0E8] bg-black hover:bg-[#29ABE2] rounded-full transition-colors disabled:opacity-50 disabled:hover:bg-black"
-                    disabled={isLoading || !isFormValid()}
-                  >
-                    {isLoading ? 'Generating...' : 'Generate'}
-                  </button>
-                </div>
+            <div className="flex-shrink-0 border-t border-black bg-[#F5F0E8] p-4 md:p-6 mt-auto">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-black hover:text-[#F5F0E8] bg-[#F5F0E8] border-2 border-black rounded-full hover:bg-[#E94E1B] transition-colors disabled:opacity-50"
+                  disabled={isLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-[#F5F0E8] bg-black hover:bg-[#29ABE2] rounded-full transition-colors disabled:opacity-50 disabled:hover:bg-black"
+                  disabled={isLoading || !isFormValid()}
+                >
+                  {isLoading ? 'Generating...' : 'Generate'}
+                </button>
               </div>
-            </form>
-          </>
+            </div>
+          </form>
         )
     }
   }
@@ -826,6 +805,23 @@ export function TaskModal({
       onOpenChange={onClose}
       title={viewState === 'result' && result ? `Your ${getTaskTitle()}` : config.title}
       description={viewState === 'result' ? 'View and share your generated content' : config.description}
+      headerLeftAction={viewState === 'result' ? (
+        <button
+          onClick={() => setViewState('input')}
+          className="text-sm text-black/60 hover:text-black hover:bg-[#29ABE2]/10 px-3 py-1 rounded-md transition-colors"
+        >
+          Back to Form
+        </button>
+      ) : undefined}
+      headerRightAction={viewState === 'input' ? (
+        <button
+          type="button"
+          onClick={handleFillTestData}
+          className="text-sm text-black/80 hover:text-black hover:bg-[#29ABE2]/10 px-3 py-1 rounded-md transition-colors"
+        >
+          Fill Test Data
+        </button>
+      ) : undefined}
     >
       <div className="flex flex-col h-full overflow-hidden relative bg-[#F5F0E8]">
         {renderContent()}

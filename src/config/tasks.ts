@@ -13,6 +13,11 @@ export interface TaskConfig {
   title: string
   description: string
   fields: FormField[]
+  resultSections?: {
+    id: string
+    title: string
+    contentKey?: string // if not provided, will use main content
+  }[]
 }
 
 export const taskConfigs: Record<TaskType, TaskConfig> = {
@@ -33,6 +38,12 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
       { id: 'role', label: 'Contractor Role', type: 'textarea', placeholder: 'Enter detailed role description' },
       { id: 'dailyRate', label: 'Daily Rate', type: 'number', placeholder: 'Enter daily rate' },
       { id: 'numberOfDays', label: 'Number of Days', type: 'number', placeholder: 'Enter number of days' }
+    ],
+    resultSections: [
+      {
+        id: 'content',
+        title: 'Contractor Brief'
+      }
     ]
   },
   proposal: {
@@ -51,6 +62,12 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
         accept: '.json,application/json'
       },
       { id: 'requirements', label: 'Special Requirements', type: 'textarea', placeholder: 'Enter any special requirements or notes' }
+    ],
+    resultSections: [
+      {
+        id: 'content',
+        title: 'Content Proposal'
+      }
     ]
   },
   outreach: {
@@ -67,6 +84,18 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
       { id: 'company', label: 'Company', type: 'text', placeholder: 'Enter company name' },
       { id: 'role', label: 'Recipient Role', type: 'text', placeholder: 'Enter recipient role' },
       { id: 'keyPoints', label: 'Key Points', type: 'textarea', placeholder: 'Enter key points to address' }
+    ],
+    resultSections: [
+      {
+        id: 'research',
+        title: 'Research Summary',
+        contentKey: 'research'
+      },
+      {
+        id: 'message',
+        title: 'Outreach Message',
+        contentKey: 'content'
+      }
     ]
   },
   runOfShow: {
@@ -79,6 +108,12 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
       { id: 'crewMembers', label: 'Crew Members', type: 'textarea', placeholder: 'List all crew members and their roles' },
       { id: 'callTimes', label: 'Call Times', type: 'textarea', placeholder: 'Enter call/wrap times for each crew member' },
       { id: 'schedule', label: 'Detailed Schedule', type: 'textarea', placeholder: 'Enter detailed schedule including setup, scenes to shoot, and wrap' }
+    ],
+    resultSections: [
+      {
+        id: 'content',
+        title: 'Run of Show'
+      }
     ]
   },
   budget: {
@@ -92,6 +127,12 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
       { id: 'editingHours', label: 'Editing Hours', type: 'number', placeholder: 'Estimated post-production hours' },
       { id: 'profitMargin', label: 'Desired Profit Margin (%)', type: 'number', placeholder: 'Enter target profit percentage' },
       { id: 'additionalCosts', label: 'Additional Costs', type: 'textarea', placeholder: 'Travel, accommodation, rentals, etc.' }
+    ],
+    resultSections: [
+      {
+        id: 'content',
+        title: 'Production Budget'
+      }
     ]
   },
   timelineFromTranscript: {
@@ -110,11 +151,23 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
       { id: 'length', label: 'Length of Video', type: 'text', placeholder: 'Desired final video length' },
       { id: 'tone', label: 'Tone of Video', type: 'text', placeholder: 'Desired tone or style of the video' },
       { id: 'additionalNotes', label: 'Additional Notes', type: 'textarea', placeholder: 'Please provide as much detail as possible about what you want to achieve with this video, including any specific moments or themes you want to highlight' }
+    ],
+    resultSections: [
+      {
+        id: 'content',
+        title: 'Timeline'
+      }
     ]
   },
   trendingAudios: {
     title: 'Trending Audios',
     description: 'Download the latest trending audio tracks for your content.',
-    fields: []
+    fields: [],
+    resultSections: [
+      {
+        id: 'content',
+        title: 'Trending Audios'
+      }
+    ]
   }
 } 
