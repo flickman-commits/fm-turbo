@@ -59,7 +59,15 @@ export default function Home() {
         {/* Feature Request Button - Fixed Position */}
         <button
           onClick={() => setShowFeatureModal(true)}
-          className="fixed right-4 h-10 px-4 font-medium text-turbo-black bg-turbo-beige hover:bg-turbo-blue hover:text-turbo-beige border border-turbo-black rounded-full transition-colors whitespace-nowrap z-10 text-sm mb-[calc(env(safe-area-inset-bottom)+64px)] md:mb-8"
+          className="fixed bottom-8 right-8 h-10 px-6 font-medium text-turbo-black bg-turbo-beige hover:bg-turbo-blue hover:text-turbo-beige border border-turbo-black rounded-full transition-colors whitespace-nowrap z-10 text-sm hidden md:block"
+        >
+          Submit Feature Request
+        </button>
+
+        {/* Mobile Feature Request Button */}
+        <button
+          onClick={() => setShowFeatureModal(true)}
+          className="fixed right-4 h-10 px-4 font-medium text-turbo-black bg-turbo-beige hover:bg-turbo-blue hover:text-turbo-beige border border-turbo-black rounded-full transition-colors whitespace-nowrap z-10 text-sm mb-[calc(env(safe-area-inset-bottom)+64px)] md:hidden"
         >
           Submit Feature Request
         </button>

@@ -667,7 +667,7 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
           <div className="flex justify-end">
             <button
               onClick={() => handleAction(taskActionConfigs.trendingAudios[0])}
-              className="px-6 py-2 text-sm font-medium text-turbo-white bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors"
+              className="px-6 py-2 text-sm font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors"
             >
               Download Now
             </button>
@@ -770,7 +770,7 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
                     setViewState('result');
                   }
                 }}
-                className="inline-flex items-center justify-center h-[48px] px-6 py-2 text-base font-medium text-turbo-white bg-turbo-black hover:bg-turbo-blue hover:text-turbo-white border-2 border-turbo-black rounded-full transition-colors min-w-[100px]"
+                className="inline-flex items-center justify-center h-[48px] px-6 py-2 text-base font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue hover:text-turbo-beige border-2 border-turbo-black rounded-full transition-colors min-w-[100px]"
               >
                 Regenerate
               </button>
@@ -803,7 +803,7 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
                           key="copy"
                           onClick={() => handleAction(action)}
                           disabled={copiedButtons[action.label]}
-                          className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-sm font-medium text-turbo-white bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors disabled:opacity-50 min-w-[180px] whitespace-nowrap"
+                          className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-sm font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors disabled:opacity-50 min-w-[180px] whitespace-nowrap"
                         >
                           {copiedButtons[action.label] ? 'Copied!' : action.label}
                         </button>
@@ -907,8 +907,8 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
                                 type="button"
                                 className={`flex-1 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                                   formData[field.id] === option.value || (!formData[field.id] && option.default)
-                                    ? 'bg-turbo-black text-turbo-white'
-                                    : 'text-turbo-black hover:bg-turbo-blue hover:text-turbo-white'
+                                    ? 'bg-turbo-black text-turbo-beige'
+                                    : 'text-turbo-black hover:bg-turbo-blue hover:text-turbo-beige'
                                 }`}
                                 onClick={() => handleFieldChange(field.id, option.value)}
                               >
@@ -960,7 +960,7 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
                 </button>
                 <button
                   type="submit"
-                  className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-turbo-white bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors disabled:opacity-80 disabled:bg-turbo-black/40 disabled:cursor-not-allowed disabled:text-turbo-white"
+                  className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors disabled:opacity-80 disabled:bg-turbo-black/40 disabled:cursor-not-allowed disabled:text-turbo-beige"
                   disabled={isLoading || !isFormValid()}
                 >
                   {isLoading ? 'Generating...' : 'Generate'}
