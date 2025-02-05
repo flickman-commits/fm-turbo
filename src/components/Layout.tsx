@@ -99,6 +99,7 @@ export function Layout({ children }: LayoutProps) {
                 className={`
                   flex items-center gap-3 px-4 py-3 rounded-lg mb-2
                   transition-colors duration-200
+                  ${!isInfoSaved ? 'opacity-50 pointer-events-none' : ''}
                   ${isActive 
                     ? 'bg-turbo-blue text-turbo-beige' 
                     : 'text-turbo-black hover:bg-turbo-black/5'
@@ -112,11 +113,11 @@ export function Layout({ children }: LayoutProps) {
           })}
         </nav>
 
-        {/* Update the Callout Box */}
+        {/* Callout Box */}
         <div className={`px-4 py-3 mx-4 mb-4 rounded-lg border-2 ${
           isInfoSaved 
             ? 'bg-turbo-green/10 border-turbo-green' 
-            : 'bg-turbo-blue/10 border-turbo-blue'
+            : 'bg-red-100 border-red-500'
         }`}>
           <p className="text-sm text-turbo-black font-medium mb-1">
             {isInfoSaved ? '✅ Information Saved' : '⚠️ Action Required'}
@@ -136,7 +137,7 @@ export function Layout({ children }: LayoutProps) {
               </div>
             </>
           ) : (
-            <p className="text-sm text-turbo-black/80">
+            <p className="text-sm text-red-700 font-medium">
               Please fill in your company information below to start using the tasks.
             </p>
           )}
@@ -209,15 +210,19 @@ export function Layout({ children }: LayoutProps) {
           {/* Upgrade Button */}
           <a
             href={links.stripe}
+            className={`hidden flex items-center justify-center w-full px-4 py-2 mb-4 text-sm font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black rounded-full transition-colors ${
+              !isInfoSaved ? 'opacity-50 pointer-events-none' : ''
+            }`}
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden flex items-center justify-center w-full px-4 py-2 mb-4 text-sm font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black rounded-full transition-colors"
           >
             Upgrade
           </a>
 
           {/* Credits Counter */}
-          <div className="hidden flex items-center justify-between px-4 py-2 mb-4 text-sm text-turbo-black">
+          <div className={`hidden flex items-center justify-between px-4 py-2 mb-4 text-sm text-turbo-black ${
+            !isInfoSaved ? 'opacity-50' : ''
+          }`}>
             <span>Credits</span>
             <span className="font-medium">{credits}</span>
           </div>
@@ -228,6 +233,7 @@ export function Layout({ children }: LayoutProps) {
               to="/profile"
               className={`
                 flex items-center gap-2 px-4 py-2 text-sm rounded-lg transition-colors
+                ${!isInfoSaved ? 'opacity-50 pointer-events-none' : ''}
                 ${location.pathname === '/profile' 
                   ? 'bg-turbo-blue text-turbo-beige' 
                   : 'text-turbo-black hover:bg-turbo-black/5'
@@ -241,6 +247,7 @@ export function Layout({ children }: LayoutProps) {
               to="/settings"
               className={`
                 p-2 rounded-lg transition-colors
+                ${!isInfoSaved ? 'opacity-50 pointer-events-none' : ''}
                 ${location.pathname === '/settings'
                   ? 'bg-turbo-blue text-turbo-beige'
                   : 'text-turbo-black hover:bg-turbo-black/5'
@@ -254,7 +261,9 @@ export function Layout({ children }: LayoutProps) {
       </aside>
 
       {/* Mobile Bottom Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-turbo-beige border-t border-turbo-black flex md:hidden items-center justify-around px-4 py-2 z-50">
+      <nav className={`fixed bottom-0 left-0 right-0 bg-turbo-beige border-t border-turbo-black flex md:hidden items-center justify-around px-4 py-2 z-50 ${
+        !isInfoSaved ? 'opacity-50 pointer-events-none' : ''
+      }`}>
         {mobileNavigationItems.map((item) => {
           const isActive = location.pathname === item.path
           const Icon = item.icon
@@ -280,7 +289,7 @@ export function Layout({ children }: LayoutProps) {
       </nav>
 
       {/* Main Content */}
-      <main className="md:pl-64 min-h-screen pb-24">
+      <main className={`md:pl-64 min-h-screen pb-24 ${!isInfoSaved ? 'opacity-50 pointer-events-none' : ''}`}>
         {children}
       </main>
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { TaskType, TaskResult, taskActionConfigs, TaskActionConfig } from '@/types/tasks'
 import { taskConfigs, FormField } from '@/config/tasks'
-import { systemPrompts, getUserPrompt } from '@/config/prompts'
+import { getSystemPrompts, getUserPrompt, getUserInfoFromLocalStorage } from '@/config/prompts'
 import { DottedDialog } from '@/components/ui/dotted-dialog-wrapper'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/components/ui/rainbow-toast'
@@ -275,6 +275,24 @@ export function TaskModal({
           throw new Error('Failed to fetch transcript file')
         }
         const transcriptContent = await response.text()
+        
+        // Create a File object from the content
+        const file = new File(
+          [transcriptContent],
+          'sana-labs-transcript.txt',
+          { type: 'text/plain' }
+        )
+        
+        // Create a DataTransfer object to simulate a file input
+        const dataTransfer = new DataTransfer()
+        dataTransfer.items.add(file)
+        
+        // Find the file input element and set its files
+        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+        if (fileInput) {
+          fileInput.files = dataTransfer.files
+        }
+
         setFormData({
           ...testData[taskType],
           transcriptFile: transcriptContent
@@ -285,8 +303,39 @@ export function TaskModal({
         toast.error('Failed to load transcript file')
       }
     } else if (taskType === 'proposal') {
-      setFormData(testData[taskType])
-      setSelectedFileName('discovery-call-transcript.json')
+      try {
+        const response = await fetch('/discovery-call-transcript.json')
+        if (!response.ok) {
+          throw new Error('Failed to fetch discovery call transcript')
+        }
+        const transcriptContent = await response.text()
+        
+        // Create a File object from the content
+        const file = new File(
+          [transcriptContent],
+          'discovery-call-transcript.json',
+          { type: 'application/json' }
+        )
+        
+        // Create a DataTransfer object to simulate a file input
+        const dataTransfer = new DataTransfer()
+        dataTransfer.items.add(file)
+        
+        // Find the file input element and set its files
+        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+        if (fileInput) {
+          fileInput.files = dataTransfer.files
+        }
+
+        setFormData({
+          ...testData[taskType],
+          discoveryTranscript: transcriptContent
+        })
+        setSelectedFileName('discovery-call-transcript.json')
+      } catch (error) {
+        console.error('Failed to load discovery call transcript:', error)
+        toast.error('Failed to load discovery call transcript')
+      }
     } else {
       setFormData({
         ...testData[taskType],
@@ -329,6 +378,7 @@ export function TaskModal({
 
       console.log('Preparing to send request to OpenAI with updated form data:', updatedFormData)
 
+      const userInfo = getUserInfoFromLocalStorage();
       const messages: OpenAI.Chat.ChatCompletionMessageParam[] = taskType === 'outreach' ? [
         {
           role: "system",
@@ -401,7 +451,7 @@ Key Points: talk about how we met in Miami last week and then talk about how I h
         },
         {
           role: "user",
-          content: getUserPrompt(taskType, updatedFormData)
+          content: getUserPrompt(taskType, updatedFormData, userInfo)
         },
         {
           role: "user",
@@ -446,21 +496,21 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
         },
         {
           role: "user",
-          content: getUserPrompt(taskType, updatedFormData)
+          content: getUserPrompt(taskType, updatedFormData, userInfo)
         }
       ] : [
         {
           role: "system",
-          content: systemPrompts[taskType]
+          content: getSystemPrompts(taskType, userInfo)
         },
         {
           role: "user",
-          content: getUserPrompt(taskType, updatedFormData)
+          content: getUserPrompt(taskType, updatedFormData, userInfo)
         }
       ]
 
-      console.log('OpenAI API system prompt:', systemPrompts[taskType]);
-      console.log('OpenAI API user prompt:', getUserPrompt(taskType, updatedFormData));
+      console.log('OpenAI API system prompt:', getSystemPrompts(taskType, userInfo));
+      console.log('OpenAI API user prompt:', getUserPrompt(taskType, updatedFormData, userInfo));
 
       const response = await createChatCompletion(messages)
       
@@ -748,11 +798,11 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
                     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
                       {
                         role: "system",
-                        content: systemPrompts[taskType]
+                        content: getSystemPrompts(taskType, userInfo)
                       },
                       {
                         role: "user",
-                        content: getUserPrompt(taskType, updatedFormData)
+                        content: getUserPrompt(taskType, updatedFormData, userInfo)
                       }
                     ];
                     

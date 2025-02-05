@@ -56,57 +56,41 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
     description: 'Let us generate a proposal from a client discovery call transcript. If you don\'t have a transcript, just enter the details and we can take care of the rest.',
     fields: [
       { 
-        id: 'hasTranscript', 
-        label: 'Do you have a transcript from your discovery call?', 
-        type: 'buttonSelect', 
-        placeholder: 'Select yes/no',
-        options: [
-          { value: 'yes', label: 'Yes', default: true },
-          { value: 'no', label: 'No' }
-        ]
-      },
-      { 
         id: 'discoveryTranscript', 
-        label: 'Discovery Call Transcript (JSON)', 
+        label: 'Discovery Call Transcript (Optional)', 
         type: 'file', 
         placeholder: 'Upload your discovery call transcript',
-        accept: '.json,application/json',
-        showIf: 'hasTranscript=yes'
+        accept: '.json,application/json'
       },
       { 
         id: 'projectType', 
         label: 'Project Type', 
         type: 'text', 
-        placeholder: 'Corporate Video, Brand Story, etc.',
-        optional: 'hasTranscript=yes'
+        placeholder: 'Corporate Video, Brand Story, etc.'
       },
       { 
         id: 'clientName', 
         label: 'Client Name', 
         type: 'text', 
-        placeholder: 'Enter client name',
-        optional: 'hasTranscript=yes'
+        placeholder: 'Enter client name'
       },
       { 
         id: 'timelineInfo', 
         label: 'Timeline Info', 
         type: 'text', 
-        placeholder: 'Enter any info regarding timeline (ex: event takes place Jan 7th, final deliverables needed by Feb 10th, etc.)',
-        optional: 'hasTranscript=yes'
+        placeholder: 'Enter any info regarding timeline (ex: event takes place Jan 7th, final deliverables needed by Feb 10th, etc.)'
       },
       { 
         id: 'budget', 
         label: 'Budget', 
         type: 'text', 
-        placeholder: 'Enter budget range',
-        optional: 'hasTranscript=yes'
+        placeholder: 'Enter budget range'
       },
       { 
         id: 'additionalNotes', 
         label: 'Additional Notes', 
         type: 'textarea', 
-        placeholder: 'Enter any additional information or requirements',
-        optional: 'hasTranscript=yes'
+        placeholder: 'Enter any specific requirements or additional information about the project'
       }
     ],
     resultSections: [
