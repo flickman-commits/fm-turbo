@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { TaskType } from '@/types/tasks'
 import { TaskModal } from '@/components/TaskModal'
 import { FeatureRequestModal } from '@/components/FeatureRequestModal'
-import { links } from '@/config/links'
 import { Layout } from '@/components/Layout'
 
 export default function Home() {
