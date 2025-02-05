@@ -12,7 +12,6 @@ type RequestType = 'bug' | 'feature';
 export function FeatureRequestModal({ onClose }: FeatureRequestModalProps) {
   const [requestType, setRequestType] = useState<RequestType>('bug')
   const [description, setDescription] = useState('')
-  const [feedback, setFeedback] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,8 +33,7 @@ export function FeatureRequestModal({ onClose }: FeatureRequestModalProps) {
         },
         body: JSON.stringify({
           type: requestType,
-          description,
-          feedback
+          description
         }),
       })
 
@@ -65,8 +63,8 @@ export function FeatureRequestModal({ onClose }: FeatureRequestModalProps) {
       <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
         <div className="p-4 md:p-6 space-y-6">
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-black">
-              Request Type <span className="text-[#E94E1B]">*</span>
+            <label className="block text-sm font-medium text-turbo-black">
+              Request Type <span className="text-turbo-blue">*</span>
             </label>
             <div className="flex gap-3">
               <button
@@ -74,8 +72,8 @@ export function FeatureRequestModal({ onClose }: FeatureRequestModalProps) {
                 onClick={() => setRequestType('bug')}
                 className={`flex-1 px-4 py-2 text-sm font-medium rounded-full transition-colors ${
                   requestType === 'bug'
-                    ? 'bg-black text-[#F5F0E8]'
-                    : 'bg-black/5 text-black hover:bg-black/10'
+                    ? 'bg-turbo-blue text-turbo-beige'
+                    : 'bg-turbo-black/5 text-turbo-black hover:bg-turbo-black/10'
                 }`}
               >
                 🐛 Bug Report
@@ -85,8 +83,8 @@ export function FeatureRequestModal({ onClose }: FeatureRequestModalProps) {
                 onClick={() => setRequestType('feature')}
                 className={`flex-1 px-4 py-2 text-sm font-medium rounded-full transition-colors ${
                   requestType === 'feature'
-                    ? 'bg-black text-[#F5F0E8]'
-                    : 'bg-black/5 text-black hover:bg-black/10'
+                    ? 'bg-turbo-blue text-turbo-beige'
+                    : 'bg-turbo-black/5 text-turbo-black hover:bg-turbo-black/10'
                 }`}
               >
                 ✨ Feature Request
@@ -95,8 +93,8 @@ export function FeatureRequestModal({ onClose }: FeatureRequestModalProps) {
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-black">
-              Description <span className="text-[#E94E1B]">*</span>
+            <label className="block text-sm font-medium text-turbo-black">
+              Description <span className="text-turbo-blue">*</span>
             </label>
             <Textarea
               value={description}
@@ -108,32 +106,20 @@ export function FeatureRequestModal({ onClose }: FeatureRequestModalProps) {
               required
             />
           </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-black">
-              What has been the most useful part of Turbo for you so far? <span className="text-black/60">(optional)</span>
-            </label>
-            <Textarea
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
-              placeholder="Share your experience with us..."
-              className="min-h-[80px]"
-            />
-          </div>
         </div>
 
-        <div className="flex justify-end gap-3 p-4 md:p-6 border-t border-black">
+        <div className="flex justify-end gap-3 p-4 md:p-6 border-t border-turbo-black">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-black hover:text-black/70 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-turbo-black hover:text-turbo-black/70 transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isSubmitting || !requestType || !description}
-            className="px-6 py-2 text-sm font-medium text-[#F5F0E8] bg-black rounded-full hover:bg-black/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 text-sm font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Submitting...' : 'Submit Request'}
           </button>

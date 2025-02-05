@@ -181,14 +181,14 @@ const LoadingOverlay = () => {
   }, [])
 
   return (
-    <div className="absolute inset-0 bg-[#F5F0E8] flex flex-col items-center justify-center z-50 p-8">
-      <div className="w-12 h-12 border-4 border-black/20 border-t-black rounded-full animate-spin mb-4"></div>
-      <p className="text-black text-lg font-medium text-center mb-12">
+    <div className="absolute inset-0 bg-turbo-beige flex flex-col items-center justify-center z-50 p-8">
+      <div className="w-12 h-12 border-4 border-turbo-black/20 border-t-turbo-black rounded-full animate-spin mb-4"></div>
+      <p className="text-turbo-black text-lg font-medium text-center mb-12">
         Hold tight... Turbo is doing tedious work for you...
       </p>
-      <div className="max-w-2xl w-full bg-black/5 border-2 border-black rounded-lg p-6">
-        <p className="text-2xl font-bold text-black mb-3 text-left">💭 Words of Wisdom</p>
-        <p className="text-lg text-black leading-relaxed">
+      <div className="max-w-2xl w-full bg-turbo-black/5 border-2 border-turbo-black rounded-lg p-6">
+        <p className="text-2xl font-bold text-turbo-black mb-3 text-left">💭 Words of Wisdom</p>
+        <p className="text-lg text-turbo-black leading-relaxed">
           "{BUSINESS_QUOTES[quoteIndex]}"
         </p>
       </div>
@@ -434,47 +434,47 @@ export function TaskModal({
   }
 
   const markdownComponents: Components = {
-    h1: (props) => <h1 className="text-2xl font-bold mb-4 text-black" {...props} />,
-    h2: (props) => <h2 className="text-xl font-bold mb-3 text-black" {...props} />,
+    h1: (props) => <h1 className="text-2xl font-bold mb-4 text-turbo-black" {...props} />,
+    h2: (props) => <h2 className="text-xl font-bold mb-3 text-turbo-black" {...props} />,
     p: ({ children, ...props }) => {
       if (typeof children === 'string') {
         if (children.includes('Weather Conditions:')) {
           const formattedContent = children
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\|(.*?)°F/g, '<span class="text-black">|$1°F</span>')
+            .replace(/\|(.*?)°F/g, '<span class="text-turbo-black">|$1°F</span>')
           return <p className="mb-2" dangerouslySetInnerHTML={{ __html: formattedContent }} />
         }
         if (children.includes('**') || children.includes('Yellow') || children.includes('Green') || children.includes('Orange') || children.includes('Blue')) {
           const formattedContent = children
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/Yellow/g, '<span class="text-[#E94E1B]">Yellow</span>')
-            .replace(/Green/g, '<span class="text-[#29ABE2]">Green</span>')
-            .replace(/Orange/g, '<span class="text-[#E94E1B]">Orange</span>')
-            .replace(/Blue/g, '<span class="text-[#29ABE2]">Blue</span>')
+            .replace(/Yellow/g, '<span class="text-turbo-blue">Yellow</span>')
+            .replace(/Green/g, '<span class="text-turbo-green">Green</span>')
+            .replace(/Orange/g, '<span class="text-turbo-blue">Orange</span>')
+            .replace(/Blue/g, '<span class="text-turbo-blue">Blue</span>')
           return <p className="mb-2" dangerouslySetInnerHTML={{ __html: formattedContent }} />
         }
       }
-      return <p className="mb-2 text-black" {...props}>{children}</p>
+      return <p className="mb-2 text-turbo-black" {...props}>{children}</p>
     },
-    ul: (props) => <ul className="list-disc pl-6 mb-4 text-black" {...props} />,
+    ul: (props) => <ul className="list-disc pl-6 mb-4 text-turbo-black" {...props} />,
     li: ({ children, ...props }) => {
       if (typeof children === 'string' && (children.includes('**') || children.includes('Yellow') || children.includes('Green') || children.includes('Orange') || children.includes('Blue'))) {
         const formattedContent = children
           .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-          .replace(/Yellow/g, '<span class="text-[#E94E1B]">Yellow</span>')
-          .replace(/Green/g, '<span class="text-[#29ABE2]">Green</span>')
-          .replace(/Orange/g, '<span class="text-[#E94E1B]">Orange</span>')
-          .replace(/Blue/g, '<span class="text-[#29ABE2]">Blue</span>')
+          .replace(/Yellow/g, '<span class="text-turbo-blue">Yellow</span>')
+          .replace(/Green/g, '<span class="text-turbo-green">Green</span>')
+          .replace(/Orange/g, '<span class="text-turbo-blue">Orange</span>')
+          .replace(/Blue/g, '<span class="text-turbo-blue">Blue</span>')
         return <li className="mb-1" dangerouslySetInnerHTML={{ __html: formattedContent }} />
       }
-      return <li className="mb-1 text-black" {...props}>{children}</li>
+      return <li className="mb-1 text-turbo-black" {...props}>{children}</li>
     },
-    strong: (props) => <strong className="font-bold text-black" {...props} />,
-    em: (props) => <em className="italic text-black" {...props} />,
-    code: (props) => <code className="font-mono text-black" {...props} />,
+    strong: (props) => <strong className="font-bold text-turbo-black" {...props} />,
+    em: (props) => <em className="italic text-turbo-black" {...props} />,
+    code: (props) => <code className="font-mono text-turbo-black" {...props} />,
     a: (props) => (
       <a
-        className="text-black underline hover:text-[#29ABE2] transition-colors"
+        className="text-turbo-black underline hover:text-turbo-blue transition-colors"
         target="_blank"
         rel="noopener noreferrer"
         {...props}
@@ -507,13 +507,13 @@ export function TaskModal({
     if (taskType === 'trendingAudios') {
       return (
         <div className="p-6">
-          <p className="text-black/60 mb-6">
+          <p className="text-turbo-black/60 mb-6">
             Every week we update this link with the 10 most trending audios on social media, ready for download.
           </p>
           <div className="flex justify-end">
             <button
               onClick={() => handleAction(taskActionConfigs.trendingAudios[0])}
-              className="px-6 py-2 text-sm font-medium text-[#F5F0E8] bg-black hover:bg-[#29ABE2] rounded-full transition-colors"
+              className="px-6 py-2 text-sm font-medium text-turbo-white bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors"
             >
               Download Now
             </button>
@@ -533,7 +533,7 @@ export function TaskModal({
           <div className="flex flex-col h-full overflow-hidden">
             <div className="flex-1 overflow-y-auto">
               <div className="p-4 md:p-6">
-                <div className="prose prose-sm max-w-none bg-[#F5F0E8] text-black prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-p:text-black prose-p:mb-4 prose-ul:list-disc prose-ul:pl-6 prose-li:mb-1 prose-pre:bg-black/5 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto prose-code:text-black prose-code:bg-transparent prose-strong:font-bold">
+                <div className="prose prose-sm max-w-none bg-turbo-beige text-turbo-black prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-p:text-turbo-black prose-p:mb-4 prose-ul:list-disc prose-ul:pl-6 prose-li:mb-1 prose-pre:bg-turbo-black/5 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto prose-code:text-turbo-black prose-code:bg-transparent prose-strong:font-bold">
                   {(taskConfigs[result.taskType].resultSections?.length ?? 0) > 0 ? (
                     taskConfigs[result.taskType].resultSections?.map((section, index) => {
                       const content = section.contentKey === 'research' ? formattedResearch : formattedMessage;
@@ -553,7 +553,7 @@ export function TaskModal({
                 </div>
               </div>
             </div>
-            <div className="flex-shrink-0 flex flex-col sm:flex-row justify-between gap-3 sm:gap-2 p-4 md:p-6 border-t border-black">
+            <div className="flex-shrink-0 flex flex-col sm:flex-row justify-between gap-3 sm:gap-2 p-4 md:p-6 border-t border-turbo-black">
               <button
                 onClick={async () => {
                   if (creditsManager.getCredits() <= 0) {
@@ -616,7 +616,7 @@ export function TaskModal({
                     setViewState('result');
                   }
                 }}
-                className="inline-flex items-center justify-center h-[48px] px-6 py-2 text-base font-medium text-black bg-[#F5F0E8] hover:bg-[#29ABE2] hover:text-[#F5F0E8] border-2 border-black rounded-full transition-colors min-w-[100px]"
+                className="inline-flex items-center justify-center h-[48px] px-6 py-2 text-base font-medium text-turbo-black bg-turbo-beige hover:bg-turbo-blue hover:text-turbo-white border-2 border-turbo-black rounded-full transition-colors min-w-[100px]"
               >
                 Regenerate
               </button>
@@ -628,7 +628,7 @@ export function TaskModal({
                         <button
                           key="gmail"
                           onClick={() => handleAction(action)}
-                          className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-sm font-medium text-black bg-[#F5F0E8] hover:bg-[#29ABE2] hover:text-[#F5F0E8] border-2 border-black rounded-full transition-colors min-w-[180px]"
+                          className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-sm font-medium text-turbo-black bg-turbo-beige hover:bg-turbo-blue hover:text-turbo-white border-2 border-turbo-black rounded-full transition-colors min-w-[180px]"
                         >
                           <span className="flex items-center gap-2 whitespace-nowrap">
                             Compose in <img src="/gmail-icon.png" alt="Gmail" className="h-4 w-auto relative top-[1px]" />
@@ -640,7 +640,7 @@ export function TaskModal({
                         <NotionButton
                           key="notion"
                           onClick={() => handleAction(action)}
-                          className="text-black bg-[#F5F0E8] hover:bg-[#E94E1B] hover:text-[#F5F0E8] border-2 border-black min-w-[180px] text-sm whitespace-nowrap"
+                          className="text-turbo-black bg-turbo-beige hover:bg-turbo-blue hover:text-turbo-white border-2 border-turbo-black min-w-[180px] text-sm whitespace-nowrap"
                         />
                       )
                     case 'copy':
@@ -649,7 +649,7 @@ export function TaskModal({
                           key="copy"
                           onClick={() => handleAction(action)}
                           disabled={copiedButtons[action.label]}
-                          className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-sm font-medium text-[#F5F0E8] bg-black hover:bg-[#29ABE2] rounded-full transition-colors disabled:opacity-50 min-w-[180px] whitespace-nowrap"
+                          className="inline-flex items-center justify-center h-[48px] px-8 py-2 text-sm font-medium text-turbo-white bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors disabled:opacity-50 min-w-[180px] whitespace-nowrap"
                         >
                           {copiedButtons[action.label] ? 'Copied!' : action.label}
                         </button>
@@ -670,14 +670,14 @@ export function TaskModal({
                 <div className="space-y-4">
                   {config.fields.map((field) => (
                     <div key={field.id} className="space-y-2">
-                      <Label htmlFor={field.id} className="text-sm font-medium text-black">
+                      <Label htmlFor={field.id} className="text-sm font-medium text-turbo-black">
                         {field.label}
                         {field.helpLink && (
                           <a
                             href={field.helpLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="ml-2 text-[#29ABE2] hover:text-[#E94E1B] text-sm font-medium transition-colors"
+                            className="ml-2 text-turbo-blue hover:text-turbo-blue/80 text-sm font-medium transition-colors"
                           >
                             ({field.helpText})
                           </a>
@@ -693,7 +693,7 @@ export function TaskModal({
                               onSelect={(videos) => handleFieldChange(field.id, videos)}
                             />
                           ) : (
-                            <div className="text-center py-6 text-black/60">
+                            <div className="text-center py-6 text-turbo-black/60">
                               Please sign in to include portfolio videos in your proposal
                             </div>
                           )}
@@ -701,7 +701,7 @@ export function TaskModal({
                       ) : field.type === 'textarea' ? (
                         <textarea
                           id={field.id}
-                          className="flex min-h-[100px] w-full rounded-md border border-black bg-[#F5F0E8] px-3 py-2 text-sm text-black placeholder:text-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#29ABE2] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="flex min-h-[100px] w-full rounded-md border border-turbo-black bg-turbo-beige px-3 py-2 text-sm text-turbo-black placeholder:text-turbo-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-turbo-blue focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                           placeholder={field.placeholder}
                           value={typeof formData[field.id] === 'string' ? formData[field.id] as string : ''}
                           onChange={(e) => handleFieldChange(field.id, e.target.value)}
@@ -726,8 +726,8 @@ export function TaskModal({
                               }}
                               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                             />
-                            <div className="flex h-10 w-full rounded-md border border-black bg-[#F5F0E8] text-sm text-black">
-                              <div className="flex items-center px-3 border-r border-black">
+                            <div className="flex h-10 w-full rounded-md border border-turbo-black bg-turbo-beige text-sm text-turbo-black">
+                              <div className="flex items-center px-3 border-r border-turbo-black">
                                 Choose File
                               </div>
                               <div className="flex items-center px-3 flex-1">
@@ -736,21 +736,21 @@ export function TaskModal({
                             </div>
                           </div>
                           {taskType === 'proposal' && field.id === 'discoveryTranscript' && (
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-turbo-black/50">
                               Please upload a JSON file containing the discovery call transcript. The file should include participant information, conversation details, and key points.
                             </p>
                           )}
                         </div>
                       ) : field.type === 'buttonSelect' ? (
-                        <div className="flex items-center gap-2 p-1 bg-[#F5F0E8]/50 rounded-full border-2 border-black">
+                        <div className="flex items-center gap-2 p-1 bg-turbo-beige/50 rounded-full border-2 border-turbo-black">
                           {field.options?.map((option) => (
                             <button
                               key={option.value}
                               type="button"
                               className={`flex-1 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                                 formData[field.id] === option.value || (!formData[field.id] && option.default)
-                                  ? 'bg-black text-[#F5F0E8]'
-                                  : 'text-black hover:bg-[#29ABE2] hover:text-[#F5F0E8]'
+                                  ? 'bg-turbo-black text-turbo-white'
+                                  : 'text-turbo-black hover:bg-turbo-blue hover:text-turbo-white'
                               }`}
                               onClick={() => handleFieldChange(field.id, option.value)}
                             >
@@ -761,7 +761,7 @@ export function TaskModal({
                       ) : field.type === 'select' ? (
                         <select
                           id={field.id}
-                          className="flex h-10 w-full rounded-md border border-black bg-[#F5F0E8] px-3 py-2 text-sm text-black placeholder:text-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#29ABE2] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="flex h-10 w-full rounded-md border border-turbo-black bg-turbo-beige px-3 py-2 text-sm text-turbo-black placeholder:text-turbo-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-turbo-blue focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                           value={typeof formData[field.id] === 'string' ? formData[field.id] as string : field.options?.find(opt => opt.default)?.value || ''}
                           onChange={(e) => handleFieldChange(field.id, e.target.value)}
                         >
@@ -775,7 +775,7 @@ export function TaskModal({
                         <input
                           id={field.id}
                           type={field.type}
-                          className="flex h-10 w-full rounded-md border border-black bg-[#F5F0E8] px-3 py-2 text-sm text-black placeholder:text-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#29ABE2] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="flex h-10 w-full rounded-md border border-turbo-black bg-turbo-beige px-3 py-2 text-sm text-turbo-black placeholder:text-turbo-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-turbo-blue focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                           placeholder={field.placeholder}
                           value={typeof formData[field.id] === 'string' ? formData[field.id] as string : ''}
                           onChange={(e) => handleFieldChange(field.id, e.target.value)}
@@ -787,19 +787,19 @@ export function TaskModal({
               </div>
             </div>
 
-            <div className="flex-shrink-0 border-t border-black bg-[#F5F0E8] p-4 md:p-6 mt-auto">
+            <div className="flex-shrink-0 border-t border-turbo-black bg-turbo-beige p-4 md:p-6 mt-auto">
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-2">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-black hover:text-[#F5F0E8] bg-[#F5F0E8] border-2 border-black rounded-full hover:bg-[#E94E1B] transition-colors disabled:opacity-50"
+                  className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-turbo-black hover:text-turbo-white bg-turbo-beige border-2 border-turbo-black rounded-full hover:bg-turbo-blue transition-colors disabled:opacity-50"
                   disabled={isLoading}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-[#F5F0E8] bg-black hover:bg-[#29ABE2] rounded-full transition-colors disabled:opacity-50 disabled:hover:bg-black"
+                  className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-turbo-white bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors disabled:opacity-80 disabled:hover:bg-turbo-black/40 disabled:bg-turbo-black/40 disabled:cursor-not-allowed"
                   disabled={isLoading || !isFormValid()}
                 >
                   {isLoading ? 'Generating...' : 'Generate'}
@@ -820,7 +820,7 @@ export function TaskModal({
       headerLeftAction={viewState === 'result' ? (
         <button
           onClick={() => setViewState('input')}
-          className="text-sm text-black/60 hover:text-black hover:bg-[#29ABE2]/10 px-3 py-1 rounded-md transition-colors"
+          className="text-sm text-turbo-black/60 hover:text-turbo-black hover:bg-turbo-blue/10 px-3 py-1 rounded-md transition-colors"
         >
           Back to Form
         </button>
@@ -829,13 +829,13 @@ export function TaskModal({
         <button
           type="button"
           onClick={handleFillTestData}
-          className="text-sm text-black/80 hover:text-black hover:bg-[#29ABE2]/10 px-3 py-1 rounded-md transition-colors"
+          className="text-sm text-turbo-black/80 hover:text-turbo-black hover:bg-turbo-blue/10 px-3 py-1 rounded-md transition-colors"
         >
           Fill Test Data
         </button>
       ) : undefined}
     >
-      <div className="flex flex-col h-full overflow-hidden relative bg-[#F5F0E8]">
+      <div className="flex flex-col h-full overflow-hidden relative bg-turbo-beige">
         {renderContent()}
       </div>
     </DottedDialog>

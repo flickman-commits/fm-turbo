@@ -1,91 +1,63 @@
-interface RequestBody {
-  type: 'bug' | 'feature';
-  description: string;
-  feedback?: string;
+import { NextApiRequest, NextApiResponse } from 'next'
+
+interface FeatureRequest {
+  type: 'bug' | 'feature'
+  description: string
 }
 
-export default async function handler(req: Request) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    return res.status(405).json({ message: 'Method not allowed' })
   }
 
   try {
-    const body = await req.json() as RequestBody;
-    const { type, description, feedback } = body;
+    const { type, description } = req.body as FeatureRequest
 
-    // Format the message for Slack
+    if (!type || !description) {
+      return res.status(400).json({ message: 'Missing required fields' })
+    }
+
+    const emoji = type === 'bug' ? '🐛' : '✨'
+    const title = type === 'bug' ? 'Bug Report' : 'Feature Request'
+
     const message = {
       blocks: [
         {
-          type: "header",
+          type: 'header',
           text: {
-            type: "plain_text",
-            text: `New ${type === 'bug' ? 'Bug Report' : 'Feature Request'} 🚀`,
+            type: 'plain_text',
+            text: `${emoji} New ${title}`,
             emoji: true
           }
         },
         {
-          type: "section",
+          type: 'section',
           text: {
-            type: "mrkdwn",
-            text: `*Description:*\n${description}`
+            type: 'mrkdwn',
+            text: description
           }
         }
       ]
-    };
-
-    // Add feedback section if provided
-    if (feedback) {
-      message.blocks.push({
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: `*Most Useful Feature:*\n${feedback}`
-        }
-      });
     }
 
-    // Send to Slack
-    const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL;
-    if (!SLACK_WEBHOOK_URL) {
-      return new Response(JSON.stringify({ error: 'Slack webhook URL not configured' }), {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-    }
-    
-    const response = await fetch(SLACK_WEBHOOK_URL, {
+    const slackResponse = await fetch(process.env.SLACK_WEBHOOK_URL!, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(message),
-    });
+    })
 
-    if (!response.ok) {
-      throw new Error('Failed to send to Slack');
+    if (!slackResponse.ok) {
+      throw new Error('Failed to send message to Slack')
     }
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    return res.status(200).json({ message: 'Request submitted successfully' })
   } catch (error) {
-    console.error('Error processing feature request:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    console.error('Error handling feature request:', error)
+    return res.status(500).json({ message: 'Internal server error' })
   }
 } 
