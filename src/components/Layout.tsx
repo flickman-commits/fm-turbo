@@ -26,9 +26,9 @@ export function Layout({ children }: LayoutProps) {
   const [showFeatureRequest, setShowFeatureRequest] = useState(false)
 
   return (
-    <div className="min-h-screen bg-[#F5F0E8]">
+    <div className="min-h-screen bg-turbo-beige">
       {/* Desktop Sidebar */}
-      <aside className="fixed top-0 left-0 bottom-0 w-64 border-r border-black hidden md:flex flex-col bg-[#F5F0E8] z-50">
+      <aside className="fixed top-0 left-0 bottom-0 w-64 border-r border-turbo-black hidden md:flex flex-col bg-turbo-beige z-50">
         {/* Logo */}
         <div className="p-6">
           <Link to="/">
@@ -45,8 +45,8 @@ export function Layout({ children }: LayoutProps) {
           {navigationItems.map((item, index) => {
             const isActive = location.pathname === item.path
             const Icon = item.icon
-            // Alternate between brand colors for active states
-            const activeColors = ['#E94E1B', '#00A651']
+            // Alternate between Turbo Blue and Turbo Green for active states
+            const activeColors = ['#4169E1', '#4CAF50']
             const activeColor = activeColors[index % activeColors.length]
             
             return (
@@ -57,8 +57,8 @@ export function Layout({ children }: LayoutProps) {
                   flex items-center gap-3 px-4 py-3 rounded-lg mb-2
                   transition-colors duration-200
                   ${isActive 
-                    ? 'bg-[var(--active-color)] text-[#F5F0E8]' 
-                    : 'text-black hover:bg-black/5'
+                    ? 'bg-[var(--active-color)] text-turbo-beige' 
+                    : 'text-turbo-black hover:bg-turbo-black/5'
                   }
                 `}
                 style={{ '--active-color': activeColor } as any}
@@ -71,19 +71,19 @@ export function Layout({ children }: LayoutProps) {
         </nav>
 
         {/* Bottom Section */}
-        <div className="p-4 border-t border-black">
+        <div className="p-4 border-t border-turbo-black">
           {/* Upgrade Button */}
           <a
             href={links.stripe}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center w-full px-4 py-2 mb-4 text-sm font-medium text-[#F5F0E8] bg-[#E94E1B] hover:bg-[#00A651] rounded-full transition-colors"
+            className="flex items-center justify-center w-full px-4 py-2 mb-4 text-sm font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black rounded-full transition-colors"
           >
             Upgrade
           </a>
 
           {/* Credits Counter */}
-          <div className="flex items-center justify-between px-4 py-2 mb-4 text-sm text-black">
+          <div className="flex items-center justify-between px-4 py-2 mb-4 text-sm text-turbo-black">
             <span>Credits</span>
             <span className="font-medium">{credits}</span>
           </div>
@@ -95,8 +95,8 @@ export function Layout({ children }: LayoutProps) {
               className={`
                 flex items-center gap-2 px-4 py-2 text-sm rounded-lg transition-colors
                 ${location.pathname === '/profile' 
-                  ? 'bg-[#29ABE2] text-[#F5F0E8]' 
-                  : 'text-black hover:bg-black/5'
+                  ? 'bg-turbo-blue text-turbo-beige' 
+                  : 'text-turbo-black hover:bg-turbo-black/5'
                 }
               `}
             >
@@ -108,8 +108,8 @@ export function Layout({ children }: LayoutProps) {
               className={`
                 p-2 rounded-lg transition-colors
                 ${location.pathname === '/settings'
-                  ? 'bg-[#29ABE2] text-[#F5F0E8]'
-                  : 'text-black hover:bg-black/5'
+                  ? 'bg-turbo-blue text-turbo-beige'
+                  : 'text-turbo-black hover:bg-turbo-black/5'
                 }
               `}
             >
@@ -120,12 +120,12 @@ export function Layout({ children }: LayoutProps) {
       </aside>
 
       {/* Mobile Bottom Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-[#F5F0E8] border-t border-black flex md:hidden items-center justify-around px-4 py-2 z-50">
+      <nav className="fixed bottom-0 left-0 right-0 bg-turbo-beige border-t border-turbo-black flex md:hidden items-center justify-around px-4 py-2 z-50">
         {mobileNavigationItems.map((item, index) => {
           const isActive = location.pathname === item.path
           const Icon = item.icon
-          // Alternate between brand colors for active states
-          const activeColors = ['#E94E1B', '#00A651', '#29ABE2', '#29ABE2']
+          // Alternate between Turbo Blue and Turbo Green for active states
+          const activeColors = ['#4169E1', '#4CAF50', '#4169E1', '#4CAF50']
           const activeColor = activeColors[index % activeColors.length]
           
           return (
@@ -137,7 +137,7 @@ export function Layout({ children }: LayoutProps) {
                 transition-colors duration-200
                 ${isActive 
                   ? 'text-[var(--active-color)]' 
-                  : 'text-black hover:text-[#29ABE2]'
+                  : 'text-turbo-black hover:text-turbo-blue'
                 }
               `}
               style={{ '--active-color': activeColor } as any}

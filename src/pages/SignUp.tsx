@@ -216,13 +216,13 @@ export default function SignUp() {
   return (
     <main className="min-h-screen bg-[#F5F0E8] overflow-x-hidden relative">
       {/* Hero Section - Beige */}
-      <section className="min-h-screen flex flex-col items-center px-4 relative overflow-hidden bg-[#F5F0E8]">
+      <section className="min-h-screen flex flex-col items-center px-4 relative overflow-hidden bg-turbo-beige">
         <div className="w-full h-[20vh]" ref={topRef}></div>
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-6xl md:text-8xl font-bold mb-6 text-black tracking-tight animate-on-scroll">
+          <h1 className="text-6xl md:text-8xl font-bold mb-6 text-turbo-black tracking-tight animate-on-scroll">
             Turbocharge Your Creative Business
           </h1>
-          <p className="text-lg md:text-2xl mb-16 text-black/80 tracking-tight max-w-2xl mx-auto animate-on-scroll">
+          <p className="text-lg md:text-2xl mb-16 text-turbo-black/80 tracking-tight max-w-2xl mx-auto animate-on-scroll">
             Transform hours of business tasks into seconds. Built specifically for freelance creatives who want to focus on what they do best.
           </p>
           
@@ -256,7 +256,7 @@ export default function SignUp() {
           </div>
 
           <div className="mb-12 animate-on-scroll">
-            <h3 className="text-xl font-semibold mb-6 text-[#E94E1B]">
+            <h3 className="text-xl font-semibold mb-6 text-turbo-blue">
               Beta Launching Friday, February 7th
             </h3>
             
@@ -267,7 +267,7 @@ export default function SignUp() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="flex-1">
                   <input 
-                    className="h-[48px] px-4 rounded-full bg-white border border-black/10 w-full focus:outline-none focus:ring-2 focus:ring-[#E94E1B] transition-all" 
+                    className="h-[48px] px-4 rounded-full bg-white border border-turbo-black/10 w-full focus:outline-none focus:ring-2 focus:ring-turbo-blue transition-all" 
                     name="email_address" 
                     type="email"
                     placeholder="Leave email to get notified of drop" 
@@ -277,11 +277,11 @@ export default function SignUp() {
                 <button 
                   type="submit"
                   disabled={isSubmitting}
-                  className="h-[48px] px-6 font-medium text-[#F5F0E8] bg-black hover:bg-[#E94E1B] rounded-full transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="h-[48px] px-6 font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black rounded-full transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
                     <div className="flex items-center justify-center">
-                      <div className="w-5 h-5 border-2 border-[#F5F0E8] border-t-transparent rounded-full animate-spin"></div>
+                      <div className="w-5 h-5 border-2 border-turbo-beige border-t-transparent rounded-full animate-spin"></div>
                     </div>
                   ) : (
                     'Get Notified'
@@ -294,7 +294,7 @@ export default function SignUp() {
       </section>
 
       {/* How it Works Section - Black */}
-      <section className="py-24 px-4 bg-black text-[#F5F0E8]">
+      <section className="py-24 px-4 bg-turbo-black text-turbo-beige">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight">
@@ -303,8 +303,8 @@ export default function SignUp() {
             <p className="text-xl mb-12 opacity-80 animate-on-scroll">
               Watch how Turbo transforms your creative workflow in seconds
             </p>
-            <div className="bg-[#F5F0E8]/10 rounded-xl p-8 backdrop-blur-sm">
-              <div className="aspect-video rounded-lg bg-[#F5F0E8]/5 flex items-center justify-center">
+            <div className="bg-turbo-beige/10 rounded-xl p-8 backdrop-blur-sm">
+              <div className="aspect-video rounded-lg bg-turbo-beige/5 flex items-center justify-center">
                 <iframe src="https://www.loom.com/embed/18b2d5ac39a747f5b2db007cf2f2c879" 
                         frameBorder="0" 
                         allowFullScreen 
@@ -318,36 +318,36 @@ export default function SignUp() {
             <div className="space-y-8">
               <div className="animate-on-scroll">
                 <div className="flex items-start gap-4">
-                  <div className="bg-[#E94E1B] rounded-lg p-3">
+                  <div className="bg-turbo-blue rounded-lg p-3">
                     <span className="text-2xl">📝</span>
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold mb-2">Content Proposal</h3>
-                    <p className="text-[#F5F0E8]/80">Generate professional proposals in seconds, increasing your win rate and saving hours of writing time</p>
+                    <p className="text-turbo-beige/80">Generate professional proposals in seconds, increasing your win rate and saving hours of writing time</p>
                   </div>
                 </div>
               </div>
 
               <div className="animate-on-scroll">
                 <div className="flex items-start gap-4">
-                  <div className="bg-[#E94E1B] rounded-lg p-3">
+                  <div className="bg-turbo-blue rounded-lg p-3">
                     <span className="text-2xl">💌</span>
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold mb-2">Outreach Message</h3>
-                    <p className="text-[#F5F0E8]/80">Craft personalized outreach messages that get responses, turning cold leads into warm conversations</p>
+                    <p className="text-turbo-beige/80">Craft personalized outreach messages that get responses, turning cold leads into warm conversations</p>
                   </div>
                 </div>
               </div>
 
               <div className="animate-on-scroll">
                 <div className="flex items-start gap-4">
-                  <div className="bg-[#E94E1B] rounded-lg p-3">
+                  <div className="bg-turbo-blue rounded-lg p-3">
                     <span className="text-2xl">📋</span>
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold mb-2">Run of Show</h3>
-                    <p className="text-[#F5F0E8]/80">Create detailed production schedules instantly, keeping your crew organized and shoots running smoothly</p>
+                    <p className="text-turbo-beige/80">Create detailed production schedules instantly, keeping your crew organized and shoots running smoothly</p>
                   </div>
                 </div>
               </div>
@@ -356,36 +356,36 @@ export default function SignUp() {
             <div className="space-y-8">
               <div className="animate-on-scroll">
                 <div className="flex items-start gap-4">
-                  <div className="bg-[#E94E1B] rounded-lg p-3">
+                  <div className="bg-turbo-blue rounded-lg p-3">
                     <span className="text-2xl">💰</span>
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold mb-2">Production Budget</h3>
-                    <p className="text-[#F5F0E8]/80">Generate accurate budgets quickly, ensuring profitability while maintaining transparency with clients</p>
+                    <p className="text-turbo-beige/80">Generate accurate budgets quickly, ensuring profitability while maintaining transparency with clients</p>
                   </div>
                 </div>
               </div>
 
               <div className="animate-on-scroll">
                 <div className="flex items-start gap-4">
-                  <div className="bg-[#E94E1B] rounded-lg p-3">
+                  <div className="bg-turbo-blue rounded-lg p-3">
                     <span className="text-2xl">📄</span>
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold mb-2">Contractor Brief</h3>
-                    <p className="text-[#F5F0E8]/80">Create clear, comprehensive briefs for your team, ensuring everyone knows their roles and deliverables</p>
+                    <p className="text-turbo-beige/80">Create clear, comprehensive briefs for your team, ensuring everyone knows their roles and deliverables</p>
                   </div>
                 </div>
               </div>
 
               <div className="animate-on-scroll">
                 <div className="flex items-start gap-4">
-                  <div className="bg-[#E94E1B] rounded-lg p-3">
+                  <div className="bg-turbo-blue rounded-lg p-3">
                     <span className="text-2xl">⏱️</span>
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold mb-2">Timeline from Transcript <span className="text-xs bg-[#E94E1B] px-1.5 py-0.5 rounded ml-2">BETA</span></h3>
-                    <p className="text-[#F5F0E8]/80">Convert interview transcripts into organized timelines automatically, cutting post-production planning time in half</p>
+                    <p className="text-turbo-beige/80">Convert interview transcripts into organized timelines automatically, cutting post-production planning time in half</p>
                   </div>
                 </div>
               </div>
@@ -395,58 +395,58 @@ export default function SignUp() {
       </section>
 
       {/* Purpose-Built Section - Beige */}
-      <section className="py-24 px-4 bg-[#F5F0E8]">
+      <section className="py-24 px-4 bg-turbo-beige">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-4xl md:text-6xl font-bold mb-12 tracking-tight text-center text-black">
+          <h2 className="text-4xl md:text-6xl font-bold mb-12 tracking-tight text-center text-turbo-black">
             Specifically Built for Freelance Creatives
           </h2>
           <div className="max-w-2xl mx-auto text-center mb-16">
-            <p className="text-2xl md:text-3xl font-bold mb-4 text-[#E94E1B]">
+            <p className="text-2xl md:text-3xl font-bold mb-4 text-turbo-blue">
               AI won't take your job. But someone using it will.
             </p>
-            <p className="text-xl md:text-2xl text-black/80">
+            <p className="text-xl md:text-2xl text-turbo-black/80">
               Be the one using it... not the one being replaced by it.
             </p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b-2 border-[#E94E1B]">
-                  <th className="py-4 px-6 text-left text-[#E94E1B] font-medium">Feature</th>
-                  <th className="py-4 px-6 text-center text-[#E94E1B] font-medium">Turbo</th>
-                  <th className="py-4 px-6 text-center text-[#E94E1B] font-medium">ChatGPT</th>
+                <tr className="border-b-2 border-turbo-blue">
+                  <th className="py-4 px-6 text-left text-turbo-blue font-medium">Feature</th>
+                  <th className="py-4 px-6 text-center text-turbo-blue font-medium">Turbo</th>
+                  <th className="py-4 px-6 text-center text-turbo-blue font-medium">ChatGPT</th>
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-b border-[#E94E1B]/20">
-                  <td className="py-4 px-6 text-[#E94E1B]">Pre-defined tasks that are relevant to your business</td>
-                  <td className="py-4 px-6 text-center text-[#E94E1B]">✓</td>
-                  <td className="py-4 px-6 text-center text-[#E94E1B]">✗</td>
+                <tr className="border-b border-turbo-blue/20">
+                  <td className="py-4 px-6 text-turbo-blue">Pre-defined tasks that are relevant to your business</td>
+                  <td className="py-4 px-6 text-center text-turbo-blue">✓</td>
+                  <td className="py-4 px-6 text-center text-turbo-blue">✗</td>
                 </tr>
-                <tr className="border-b border-[#E94E1B]/20">
-                  <td className="py-4 px-6 text-[#E94E1B]">Integrations with softwares you use (Vimeo, Dropbox, etc.)</td>
-                  <td className="py-4 px-6 text-center text-[#E94E1B]">✓</td>
-                  <td className="py-4 px-6 text-center text-[#E94E1B]">✗</td>
+                <tr className="border-b border-turbo-blue/20">
+                  <td className="py-4 px-6 text-turbo-blue">Integrations with softwares you use (Vimeo, Dropbox, etc.)</td>
+                  <td className="py-4 px-6 text-center text-turbo-blue">✓</td>
+                  <td className="py-4 px-6 text-center text-turbo-blue">✗</td>
                 </tr>
-                <tr className="border-b border-[#E94E1B]/20">
-                  <td className="py-4 px-6 text-[#E94E1B]">Custom prompts built for freelance creatives</td>
-                  <td className="py-4 px-6 text-center text-[#E94E1B]">✓</td>
-                  <td className="py-4 px-6 text-center text-[#E94E1B]">✗</td>
+                <tr className="border-b border-turbo-blue/20">
+                  <td className="py-4 px-6 text-turbo-blue">Custom prompts built for freelance creatives</td>
+                  <td className="py-4 px-6 text-center text-turbo-blue">✓</td>
+                  <td className="py-4 px-6 text-center text-turbo-blue">✗</td>
                 </tr>
-                <tr className="border-b border-[#E94E1B]/20">
-                  <td className="py-4 px-6 text-[#E94E1B]">Created by nerds that are also creatives</td>
-                  <td className="py-4 px-6 text-center text-[#E94E1B]">✓</td>
-                  <td className="py-4 px-6 text-center text-[#E94E1B]">✗</td>
+                <tr className="border-b border-turbo-blue/20">
+                  <td className="py-4 px-6 text-turbo-blue">Created by nerds that are also creatives</td>
+                  <td className="py-4 px-6 text-center text-turbo-blue">✓</td>
+                  <td className="py-4 px-6 text-center text-turbo-blue">✗</td>
                 </tr>
-                <tr className="border-b border-[#E94E1B]/20">
-                  <td className="py-4 px-6 text-[#E94E1B]">Aesthetic interface</td>
-                  <td className="py-4 px-6 text-center text-[#E94E1B]">✓</td>
-                  <td className="py-4 px-6 text-center text-[#E94E1B]">✗</td>
+                <tr className="border-b border-turbo-blue/20">
+                  <td className="py-4 px-6 text-turbo-blue">Aesthetic interface</td>
+                  <td className="py-4 px-6 text-center text-turbo-blue">✓</td>
+                  <td className="py-4 px-6 text-center text-turbo-blue">✗</td>
                 </tr>
-                <tr className="border-b border-[#E94E1B]/20">
-                  <td className="py-4 px-6 text-[#E94E1B]">Built on OpenAI</td>
-                  <td className="py-4 px-6 text-center text-[#E94E1B]">✓</td>
-                  <td className="py-4 px-6 text-center text-[#E94E1B]">✓</td>
+                <tr className="border-b border-turbo-blue/20">
+                  <td className="py-4 px-6 text-turbo-blue">Built on OpenAI</td>
+                  <td className="py-4 px-6 text-center text-turbo-blue">✓</td>
+                  <td className="py-4 px-6 text-center text-turbo-blue">✓</td>
                 </tr>
               </tbody>
             </table>
@@ -455,30 +455,30 @@ export default function SignUp() {
       </section>
 
       {/* Understanding Section */}
-      <section className="py-24 px-4 bg-black text-[#F5F0E8]">
+      <section className="py-24 px-4 bg-turbo-black text-turbo-beige">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-4xl md:text-7xl font-bold mb-12 tracking-tight text-center">
             We Understand Your Problems Because We Have Them Too
           </h2>
           <div className="space-y-8">
-            <div className="flex items-start gap-6 p-6 rounded-lg bg-[#F5F0E8]/5 hover:bg-[#F5F0E8]/10 transition-colors">
+            <div className="flex items-start gap-6 p-6 rounded-lg bg-turbo-beige/5 hover:bg-turbo-beige/10 transition-colors">
               <div className="text-5xl">🎨</div>
               <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-[#29ABE2]">The Creative's Dilemma</h3>
+                <h3 className="text-xl font-semibold text-turbo-blue">The Creative's Dilemma</h3>
                 <p>You didn't become a creative to spend hours on proposals and budgets. Save that for the finance bros.</p>
               </div>
             </div>
-            <div className="flex items-start gap-6 p-6 rounded-lg bg-[#F5F0E8]/5 hover:bg-[#F5F0E8]/10 transition-colors">
+            <div className="flex items-start gap-6 p-6 rounded-lg bg-turbo-beige/5 hover:bg-turbo-beige/10 transition-colors">
               <div className="text-5xl">⏰</div>
               <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-[#00A651]">The Time Trap</h3>
+                <h3 className="text-xl font-semibold text-turbo-green">The Time Trap</h3>
                 <p>Every hour spent on admin is an hour not spent creating. Free up your time by automating repeatable tasks.</p>
               </div>
             </div>
-            <div className="flex items-start gap-6 p-6 rounded-lg bg-[#F5F0E8]/5 hover:bg-[#F5F0E8]/10 transition-colors">
+            <div className="flex items-start gap-6 p-6 rounded-lg bg-turbo-beige/5 hover:bg-turbo-beige/10 transition-colors">
               <div className="text-5xl">🤖</div>
               <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-[#E94E1B]">Generic AI Tools Suck</h3>
+                <h3 className="text-xl font-semibold text-turbo-coral">Generic AI Tools Suck</h3>
                 <p>You've been using ChatGPT but it can't seem to make anything useful. They don't understand the nuances of creative work.</p>
               </div>
             </div>
@@ -487,7 +487,7 @@ export default function SignUp() {
       </section>
 
       {/* Testimonials Section - Coral */}
-      <section className="py-24 px-4 bg-[#E94E1B] text-[#F5F0E8]">
+      <section className="py-24 px-4 bg-turbo-coral text-turbo-beige">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-4xl md:text-6xl font-bold mb-16 tracking-tight text-center">
             What Creators Are Saying
@@ -545,23 +545,23 @@ export default function SignUp() {
       </section>
 
       {/* Pricing Section - Beige */}
-      <section className="py-12 sm:py-24 px-4 bg-[#F5F0E8]">
+      <section className="py-12 sm:py-24 px-4 bg-turbo-beige">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-[1fr,400px] gap-8">
             {/* Left Column - Beta Info */}
             <div className="text-center md:text-left">
-              <h2 className="text-4xl md:text-7xl font-bold mb-6 text-black tracking-tight">
+              <h2 className="text-4xl md:text-7xl font-bold mb-6 text-turbo-black tracking-tight">
                 Join the Beta
               </h2>
-              <p className="text-lg sm:text-xl mb-8 text-black/80">
+              <p className="text-lg sm:text-xl mb-8 text-turbo-black/80">
                 Be one of the first to try Turbo and help shape its future.
               </p>
-              <p className="text-base sm:text-lg mb-12 text-black/80">
+              <p className="text-base sm:text-lg mb-12 text-turbo-black/80">
                 Early beta users will get special perks and pricing when we launch.
               </p>
 
-              <div className="bg-black/5 rounded-xl p-4 mb-12 inline-block hover:bg-[#00A651]/10 transition-colors">
-                <div className="text-base sm:text-lg font-medium text-black flex items-center gap-2">
+              <div className="bg-turbo-black/5 rounded-xl p-4 mb-12 inline-block hover:bg-[#00A651]/10 transition-colors">
+                <div className="text-base sm:text-lg font-medium text-turbo-black flex items-center gap-2">
                   Users: <AnimatedCounter 
                     end={usersAtLaunch || 10} 
                     duration={1000} 
@@ -571,7 +571,7 @@ export default function SignUp() {
               </div>
 
               <div className="relative max-w-2xl mx-auto md:mx-0" ref={pricingSliderRef}>
-                <div className="h-1 bg-black/20 rounded-full mb-8">
+                <div className="h-1 bg-turbo-black/20 rounded-full mb-8">
                   <div 
                     className="absolute -top-2 w-4 h-4 bg-[#29ABE2] rounded-full transition-all duration-1000 -translate-x-1/2" 
                     style={{ 
@@ -579,7 +579,7 @@ export default function SignUp() {
                     }}
                   />
                 </div>
-                <div className="flex justify-between text-black">
+                <div className="flex justify-between text-turbo-black">
                   {PRICING_TIERS.map((tier, index) => (
                     <div 
                       key={index} 
@@ -609,9 +609,9 @@ export default function SignUp() {
 
             {/* Right Column - Beta Signup Card */}
             <div className="md:sticky md:top-8 mt-16 md:mt-0">
-              <div className="bg-white rounded-xl p-6 sm:p-8 shadow-lg">
-                <h3 className="text-xl sm:text-2xl font-bold mb-4 text-black">Beta Access</h3>
-                <div className="text-4xl sm:text-6xl font-bold text-black mb-8">
+              <div className="bg-turbo-white rounded-xl p-6 sm:p-8 shadow-lg">
+                <h3 className="text-xl sm:text-2xl font-bold mb-4 text-turbo-black">Beta Access</h3>
+                <div className="text-4xl sm:text-6xl font-bold text-turbo-black mb-8">
                   {typeof currentTier.price === 'number' ? (
                     <>
                       ${currentTier.price}<span className="text-xl sm:text-2xl font-normal">/mo</span>
@@ -622,31 +622,31 @@ export default function SignUp() {
                 </div>
                 
                 <div className="mb-8">
-                  <h4 className="text-base sm:text-lg font-semibold mb-4 text-black">Features Included:</h4>
+                  <h4 className="text-base sm:text-lg font-semibold mb-4 text-turbo-black">Features Included:</h4>
                   <div className="grid grid-cols-1 gap-3">
                     <div className="flex items-start gap-3">
-                      <span className="text-[#00A651]">✓</span>
-                      <span className="text-[#E94E1B]/80">Content Proposal</span>
+                      <span className="text-turbo-green">✓</span>
+                      <span className="text-turbo-blue/80">Content Proposal</span>
                     </div>
                     <div className="flex items-start gap-3">
-                      <span className="text-[#00A651]">✓</span>
-                      <span className="text-[#E94E1B]/80">Outreach Message</span>
+                      <span className="text-turbo-green">✓</span>
+                      <span className="text-turbo-blue/80">Outreach Message</span>
                     </div>
                     <div className="flex items-start gap-3">
-                      <span className="text-[#00A651]">✓</span>
-                      <span className="text-[#E94E1B]/80">Run of Show</span>
+                      <span className="text-turbo-green">✓</span>
+                      <span className="text-turbo-blue/80">Run of Show</span>
                     </div>
                     <div className="flex items-start gap-3">
-                      <span className="text-[#00A651]">✓</span>
-                      <span className="text-[#E94E1B]/80">Production Budget</span>
+                      <span className="text-turbo-green">✓</span>
+                      <span className="text-turbo-blue/80">Production Budget</span>
                     </div>
                     <div className="flex items-start gap-3">
-                      <span className="text-[#00A651]">✓</span>
-                      <span className="text-[#E94E1B]/80">Contractor Brief</span>
+                      <span className="text-turbo-green">✓</span>
+                      <span className="text-turbo-blue/80">Contractor Brief</span>
                     </div>
                     <div className="flex items-start gap-3">
-                      <span className="text-[#00A651]">✓</span>
-                      <span className="text-[#E94E1B]/80">Timeline from Transcript</span>
+                      <span className="text-turbo-green">✓</span>
+                      <span className="text-turbo-blue/80">Timeline from Transcript</span>
                       <span className="px-1.5 py-0.5 text-xs font-medium bg-[#E94E1B] text-[#F5F0E8] rounded">
                         BETA
                       </span>
@@ -657,11 +657,11 @@ export default function SignUp() {
                 <div className="w-full text-center">
                   <button
                     onClick={scrollToTop}
-                    className="w-full h-[48px] px-6 font-medium text-[#F5F0E8] bg-black hover:bg-[#E94E1B] rounded-full transition-colors"
+                    className="w-full h-[48px] px-6 font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black rounded-full transition-colors"
                   >
                     Get Notified of Beta Launch
                   </button>
-                  <p className="text-xs sm:text-sm text-black/60 mt-4">
+                  <p className="text-xs sm:text-sm text-turbo-black/60 mt-4">
                     Get early access • Lock in this price forever
                   </p>
                 </div>
@@ -671,14 +671,14 @@ export default function SignUp() {
 
           {/* Price Comparisons Section */}
           {currentTier.price !== 'FREE' && (
-            <div className="mt-16 bg-white rounded-xl p-6 sm:p-8 shadow-lg">
-              <h4 className="text-xl sm:text-2xl font-bold mb-8 text-black text-center">Less Expensive Than:</h4>
+            <div className="mt-16 bg-turbo-white rounded-xl p-6 sm:p-8 shadow-lg">
+              <h4 className="text-xl sm:text-2xl font-bold mb-8 text-turbo-black text-center">Less Expensive Than:</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
                 {PRICE_COMPARISONS[currentTier.price].map((comparison, index) => (
                   <div key={index} className="text-center">
                     <div className="h-24 flex items-center justify-center mb-2 text-4xl" dangerouslySetInnerHTML={{ __html: comparison.emoji }} />
-                    {comparison.item && <div className="font-medium text-black text-xl sm:text-2xl">{comparison.item}</div>}
-                    <div className="text-[#E94E1B] font-medium mt-1">{comparison.price}</div>
+                    {comparison.item && <div className="font-medium text-turbo-black text-xl sm:text-2xl">{comparison.item}</div>}
+                    <div className="text-turbo-blue font-medium mt-1">{comparison.price}</div>
                   </div>
                 ))}
               </div>
@@ -688,7 +688,7 @@ export default function SignUp() {
       </section>
 
       {/* Final CTA Section - Black */}
-      <section className="py-12 sm:py-24 px-4 bg-black text-[#F5F0E8]">
+      <section className="py-12 sm:py-24 px-4 bg-turbo-black text-turbo-beige">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl md:text-7xl font-bold mb-6 tracking-tight">
             Ready to Turbocharge Your Creative Business?
@@ -700,7 +700,7 @@ export default function SignUp() {
           <div className="max-w-md mx-auto w-full">
             <button
               onClick={scrollToTop}
-              className="w-full h-[48px] px-6 font-medium text-black bg-[#F5F0E8] hover:bg-[#E94E1B] hover:text-[#F5F0E8] rounded-full transition-colors"
+              className="w-full h-[48px] px-6 font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black rounded-full transition-colors"
             >
               Get Notified of Beta Launch
             </button>
@@ -709,7 +709,7 @@ export default function SignUp() {
       </section>
 
       {/* Footer - Black */}
-      <footer className="py-8 sm:py-12 px-4 bg-black text-[#F5F0E8]">
+      <footer className="py-8 sm:py-12 px-4 bg-turbo-black text-turbo-beige">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center mb-4 md:mb-0">
             <a 

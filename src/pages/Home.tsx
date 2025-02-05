@@ -25,51 +25,41 @@ export default function Home() {
   return (
     <Layout>
       <div className="max-w-3xl mx-auto px-4 py-12">
-        <h1 className="text-4xl md:text-7xl font-bold mb-12 text-black tracking-tight">
+        <h1 className="text-4xl md:text-7xl font-bold mb-12 text-turbo-black tracking-tight">
           What would you like to create today?
         </h1>
         
         <div className="space-y-4 mb-8">
-          {tasks.map((task, index) => {
-            // Alternate between the three accent colors
-            const colors = ['#E94E1B', '#00A651', '#29ABE2']
-            const colorIndex = index % 3
-            const accentColor = colors[colorIndex]
-            
-            return (
-              <div 
-                key={task.type}
-                className="flex items-center justify-between border-b border-black pb-4 group cursor-pointer hover:border-[var(--accent-color)]"
-                onClick={() => handleTaskSelect(task.type)}
-                style={{ '--accent-color': accentColor } as any}
-              >
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-black group-hover:text-[var(--accent-color)] transition-colors">
-                    {task.label}
-                  </h2>
-                  {task.beta && (
-                    <span className="px-1.5 py-0.5 text-xs font-medium bg-black text-[#F5F0E8] rounded">
-                      BETA
-                    </span>
-                  )}
-                </div>
-                <button
-                  className="text-3xl text-black hover:text-[var(--accent-color)] hover:scale-110 transition-all"
-                  style={{ '--accent-color': accentColor } as any}
-                  aria-label={`Open ${task.label}`}
-                >
-                  +
-                </button>
+          {tasks.map((task) => (
+            <div 
+              key={task.type}
+              className="flex items-center justify-between border-b border-turbo-black pb-4 group cursor-pointer hover:border-turbo-blue"
+              onClick={() => handleTaskSelect(task.type)}
+            >
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-turbo-black group-hover:text-turbo-blue transition-colors">
+                  {task.label}
+                </h2>
+                {task.beta && (
+                  <span className="px-1.5 py-0.5 text-xs font-medium bg-turbo-blue text-turbo-beige rounded">
+                    BETA
+                  </span>
+                )}
               </div>
-            )
-          })}
+              <button
+                className="text-3xl text-turbo-black group-hover:text-turbo-blue hover:scale-110 transition-all"
+                aria-label={`Open ${task.label}`}
+              >
+                +
+              </button>
+            </div>
+          ))}
         </div>
 
         {/* Feature Request Button - Fixed Position */}
         <button
           onClick={() => setShowFeatureModal(true)}
-          className="fixed bottom-safe right-4 h-10 px-4 font-medium text-black bg-[#F5F0E8] hover:bg-black hover:text-[#F5F0E8] border border-black rounded-full transition-colors whitespace-nowrap z-10 text-sm"
-          style={{ marginBottom: 'env(safe-area-inset-bottom, 16px)' }}
+          className="fixed right-4 h-10 px-4 font-medium text-turbo-black bg-turbo-beige hover:bg-turbo-blue hover:text-turbo-beige border border-turbo-black rounded-full transition-colors whitespace-nowrap z-10 text-sm mb-[calc(env(safe-area-inset-bottom)+64px)] md:mb-8"
         >
           Submit Feature Request
         </button>

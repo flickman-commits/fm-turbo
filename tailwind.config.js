@@ -8,6 +8,13 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Brand Colors
+        'turbo-beige': '#F5F0E8',
+        'turbo-blue': '#4169E1',
+        'turbo-coral': '#E94E1B',
+        'turbo-green': '#4CAF50',
+        'turbo-black': '#000000',
+        // System Colors
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',

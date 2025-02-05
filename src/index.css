@@ -4,25 +4,27 @@
  
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 20 14.3% 4.1%;
-    --card: 0 0% 100%;
-    --card-foreground: 20 14.3% 4.1%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 20 14.3% 4.1%;
-    --primary: 24 9.8% 10%;
-    --primary-foreground: 60 9.1% 97.8%;
-    --secondary: 60 4.8% 95.9%;
-    --secondary-foreground: 24 9.8% 10%;
-    --muted: 60 4.8% 95.9%;
-    --muted-foreground: 25 5.3% 44.7%;
-    --accent: 60 4.8% 95.9%;
-    --accent-foreground: 24 9.8% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 60 9.1% 97.8%;
-    --border: 20 5.9% 90%;
-    --input: 20 5.9% 90%;
-    --ring: 20 14.3% 4.1%;
+    --background: 37 33% 93%; /* Turbo Beige */
+    --foreground: 0 0% 0%; /* Turbo Black */
+    --card: 37 33% 93%;
+    --card-foreground: 0 0% 0%;
+    --popover: 37 33% 93%;
+    --popover-foreground: 0 0% 0%;
+    --primary: 225 75% 56%; /* Turbo Blue */
+    --primary-foreground: 37 33% 93%;
+    --secondary: 0 0% 0%; /* Turbo Black */
+    --secondary-foreground: 37 33% 93%;
+    --muted: 37 33% 93%;
+    --muted-foreground: 0 0% 0%;
+    --accent: 15 84% 51%; /* Turbo Coral */
+    --accent-foreground: 37 33% 93%;
+    --success: 122 41% 49%; /* Turbo Green */
+    --success-foreground: 37 33% 93%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 37 33% 93%;
+    --border: 0 0% 0%;
+    --input: 0 0% 0%;
+    --ring: 225 75% 56%;
     --radius: 0.5rem;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
