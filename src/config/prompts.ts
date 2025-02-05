@@ -286,7 +286,10 @@ Please provide:
 3. A version of the transcript with recommended segments clearly highlighted
 4. Any additional editing notes or recommendations
 
-Format the response in clear markdown with appropriate sections and timecodes.`
+Format your response in clean, well-structured markdown with clear sections for:
+1. Overview of selected segments
+2. Detailed timeline with timecodes
+3. Rationale for selections`
 
     default:
       return ''

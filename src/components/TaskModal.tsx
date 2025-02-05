@@ -234,6 +234,9 @@ export function TaskModal({
     if (taskType === 'timelineFromTranscript') {
       try {
         const response = await fetch('/sana-labs-transcript.txt')
+        if (!response.ok) {
+          throw new Error('Failed to fetch transcript file')
+        }
         const transcriptContent = await response.text()
         setFormData({
           ...testData[taskType],
@@ -243,7 +246,6 @@ export function TaskModal({
       } catch (error) {
         console.error('Failed to load transcript file:', error)
         toast.error('Failed to load transcript file')
-        setFormData(testData[taskType])
       }
     } else if (taskType === 'proposal') {
       setFormData(testData[taskType])
@@ -670,6 +672,16 @@ export function TaskModal({
                     <div key={field.id} className="space-y-2">
                       <Label htmlFor={field.id} className="text-sm font-medium text-black">
                         {field.label}
+                        {field.helpLink && (
+                          <a
+                            href={field.helpLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="ml-2 text-[#29ABE2] hover:text-[#E94E1B] text-sm font-medium transition-colors"
+                          >
+                            ({field.helpText})
+                          </a>
+                        )}
                       </Label>
                       {field.type === 'portfolioSelector' ? (
                         <div className="space-y-2">

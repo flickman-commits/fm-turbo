@@ -7,6 +7,8 @@ export interface FormField {
   placeholder: string
   accept?: string
   options?: { value: string; label: string; default?: boolean }[]
+  helpLink?: string
+  helpText?: string
 }
 
 export interface TaskConfig {
@@ -137,14 +139,16 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
   },
   timelineFromTranscript: {
     title: 'Your Timeline from Transcript',
-    description: 'Create the most effective timeline based off your transcript and project goals.',
+    description: 'This task will help you cut down minutes or hours of interview footage into the bits that you need to create a compelling video. Simply upload a transcript of your timeline, tell us what you\'re looking for, and we will do the rest.',
     fields: [
       { 
         id: 'transcriptFile', 
         label: 'Transcript File', 
         type: 'file', 
         placeholder: 'Upload your transcript file',
-        accept: '.txt,text/plain'
+        accept: '.txt,text/plain',
+        helpLink: 'https://www.youtube.com/watch?v=fwHZYS0tduE',
+        helpText: 'teach me how to get this file'
       },
       { id: 'clientName', label: 'Client Name', type: 'text', placeholder: 'Enter client name' },
       { id: 'purpose', label: 'Purpose of Video', type: 'textarea', placeholder: 'What is the main purpose or goal of this video?' },
