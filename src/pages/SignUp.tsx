@@ -297,7 +297,7 @@ export default function SignUp() {
       <section className="py-24 px-4 bg-black text-[#F5F0E8]">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight animate-on-scroll">
+            <h2 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight">
               How it Works
             </h2>
             <p className="text-xl mb-12 opacity-80 animate-on-scroll">
@@ -397,7 +397,7 @@ export default function SignUp() {
       {/* Purpose-Built Section - Beige */}
       <section className="py-24 px-4 bg-[#F5F0E8]">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-4xl md:text-6xl font-bold mb-12 tracking-tight text-center animate-on-scroll text-black">
+          <h2 className="text-4xl md:text-6xl font-bold mb-12 tracking-tight text-center text-black">
             Specifically Built for Freelance Creatives
           </h2>
           <div className="max-w-2xl mx-auto text-center mb-16">
@@ -457,10 +457,10 @@ export default function SignUp() {
       {/* Understanding Section */}
       <section className="py-24 px-4 bg-black text-[#F5F0E8]">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-4xl md:text-7xl font-bold mb-12 tracking-tight animate-on-scroll text-center">
+          <h2 className="text-4xl md:text-7xl font-bold mb-12 tracking-tight text-center">
             We Understand Your Problems Because We Have Them Too
           </h2>
-          <div className="space-y-8 animate-on-scroll">
+          <div className="space-y-8">
             <div className="flex items-start gap-6 p-6 rounded-lg bg-[#F5F0E8]/5 hover:bg-[#F5F0E8]/10 transition-colors">
               <div className="text-5xl">🎨</div>
               <div className="space-y-2">
@@ -489,7 +489,7 @@ export default function SignUp() {
       {/* Testimonials Section - Coral */}
       <section className="py-24 px-4 bg-[#E94E1B] text-[#F5F0E8]">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-4xl md:text-6xl font-bold mb-16 tracking-tight text-center animate-on-scroll">
+          <h2 className="text-4xl md:text-6xl font-bold mb-16 tracking-tight text-center">
             What Creators Are Saying
           </h2>
           <div className="max-w-xl mx-auto">
@@ -690,10 +690,10 @@ export default function SignUp() {
       {/* Final CTA Section - Black */}
       <section className="py-12 sm:py-24 px-4 bg-black text-[#F5F0E8]">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl md:text-7xl font-bold mb-6 tracking-tight animate-on-scroll">
+          <h2 className="text-4xl md:text-7xl font-bold mb-6 tracking-tight">
             Ready to Turbocharge Your Creative Business?
           </h2>
-          <p className="text-base sm:text-xl mb-8 opacity-80 max-w-2xl mx-auto animate-on-scroll">
+          <p className="text-base sm:text-xl mb-8 opacity-80 max-w-2xl mx-auto">
             Join the creators who are saving time and growing their business with Turbo.
           </p>
           
