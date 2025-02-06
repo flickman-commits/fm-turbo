@@ -32,7 +32,9 @@ export default function Home() {
   return (
     <Layout>
       <div className="max-w-3xl mx-auto px-4 py-12">
-        <h1 className="text-4xl md:text-7xl font-bold mb-12 text-turbo-black tracking-tight">
+        <h1 className={`text-4xl md:text-7xl font-bold mb-12 tracking-tight ${
+          isInfoSaved ? 'text-turbo-black' : 'text-turbo-black/40'
+        }`}>
           What would you like to create today?
         </h1>
         
@@ -84,7 +86,12 @@ export default function Home() {
         <div className="text-center">
           <button
             onClick={() => setShowVideoModal(true)}
-            className="text-turbo-blue hover:text-turbo-black text-sm font-medium underline transition-colors"
+            disabled={!isInfoSaved}
+            className={`text-sm font-medium underline transition-colors ${
+              isInfoSaved 
+                ? 'text-turbo-blue hover:text-turbo-black' 
+                : 'text-turbo-black/40 cursor-not-allowed'
+            }`}
           >
             IF YOU NEED HELP USING TURBO CLICK HERE
           </button>
@@ -93,7 +100,10 @@ export default function Home() {
         {/* Feature Request Button */}
         <button
           onClick={() => setShowFeatureModal(true)}
-          className="fixed right-4 bottom-4 h-10 px-4 font-medium text-turbo-black bg-turbo-beige hover:bg-turbo-blue hover:text-turbo-beige border border-turbo-black rounded-full transition-colors whitespace-nowrap z-10 text-sm mb-[calc(env(safe-area-inset-bottom)+64px)] md:bottom-8 md:right-8 md:mb-0"
+          disabled={!isInfoSaved}
+          className={`fixed right-4 bottom-4 h-10 px-4 font-medium text-turbo-black bg-turbo-beige hover:bg-turbo-blue hover:text-turbo-beige border border-turbo-black rounded-full transition-colors whitespace-nowrap z-10 text-sm mb-[calc(env(safe-area-inset-bottom)+64px)] md:bottom-8 md:right-8 md:mb-0 ${
+            !isInfoSaved ? 'opacity-50 cursor-not-allowed hover:bg-turbo-beige hover:text-turbo-black' : ''
+          }`}
         >
           Submit Feature Request
         </button>

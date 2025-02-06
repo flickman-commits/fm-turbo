@@ -109,7 +109,7 @@ export function Layout({ children }: LayoutProps) {
             <img 
               src="/turbo-logo.png" 
               alt="Turbo Logo" 
-              className="h-12 w-auto" 
+              className={`h-12 w-auto transition-opacity ${!isInfoSaved ? 'opacity-40' : ''}`}
             />
           </Link>
         </div>
@@ -127,6 +127,7 @@ export function Layout({ children }: LayoutProps) {
                 className={`
                   flex items-center gap-3 px-4 py-3 rounded-lg mb-2
                   transition-colors duration-200
+                  ${!isInfoSaved ? 'opacity-40 pointer-events-none' : ''}
                   ${isActive 
                     ? 'bg-turbo-blue text-turbo-beige' 
                     : 'text-turbo-black hover:bg-turbo-black/5'
@@ -144,7 +145,7 @@ export function Layout({ children }: LayoutProps) {
         <div className={`px-4 py-3 mx-4 mb-4 rounded-lg border-2 ${
           isInfoSaved 
             ? 'bg-turbo-green/10 border-turbo-green' 
-            : 'bg-turbo-blue/10 border-turbo-blue'
+            : 'bg-red-100 border-red-500'
         }`}>
           <p className="text-sm text-turbo-black font-medium mb-1">
             {isInfoSaved ? '✅ Information Saved' : '⚠️ Action Required'}
@@ -164,7 +165,7 @@ export function Layout({ children }: LayoutProps) {
               </div>
             </>
           ) : (
-            <p className="text-sm text-turbo-black/80">
+            <p className="text-sm text-red-700 font-medium">
               Please fill in your company information below to start using the tasks.
             </p>
           )}
@@ -295,6 +296,7 @@ export function Layout({ children }: LayoutProps) {
               className={`
                 flex flex-col items-center gap-1 p-2
                 transition-colors duration-200
+                ${!isInfoSaved ? 'opacity-40 pointer-events-none' : ''}
                 ${isActive 
                   ? 'text-turbo-blue' 
                   : 'text-turbo-black hover:text-turbo-blue'
