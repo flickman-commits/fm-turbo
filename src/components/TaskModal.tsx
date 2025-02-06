@@ -457,10 +457,6 @@ Key Points: talk about how we met in Miami last week and then talk about how I h
         },
         {
           role: "user",
-          content: getUserPrompt(taskType, updatedFormData, userInfo)
-        },
-        {
-          role: "user",
           content:`
 Here's a concise bullet-pointed list of information about Jason Kuperberg and OthersideAI:
 Jason Kuperberg is the co-founder of OthersideAI, an applied AI company building tools powered by artificial intelligence14
