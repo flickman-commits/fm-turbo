@@ -10,14 +10,14 @@
     --card-foreground: 0 0% 0%;
     --popover: 37 33% 93%;
     --popover-foreground: 0 0% 0%;
-    --primary: 225 75% 56%; /* Turbo Blue */
+    --primary: 227 75% 47%; /* Turbo Blue */
     --primary-foreground: 37 33% 93%;
     --secondary: 0 0% 0%; /* Turbo Black */
     --secondary-foreground: 37 33% 93%;
     --muted: 37 33% 93%;
     --muted-foreground: 0 0% 0%;
-    --accent: 15 84% 51%; /* Turbo Coral */
-    --accent-foreground: 37 33% 93%;
+    --accent: 65 100% 50%; /* Turbo Yellow */
+    --accent-foreground: 0 0% 0%;
     --success: 122 41% 49%; /* Turbo Green */
     --success-foreground: 37 33% 93%;
     --destructive: 0 84% 60%;

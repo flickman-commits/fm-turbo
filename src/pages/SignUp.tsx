@@ -381,7 +381,7 @@ export default function SignUp() {
                     <span className="text-2xl">⏱️</span>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold mb-2">Timeline from Transcript <span className="text-xs bg-[#E94E1B] px-1.5 py-0.5 rounded ml-2">BETA</span></h3>
+                    <h3 className="text-xl font-semibold mb-2">Timeline from Transcript <span className="text-xs bg-turbo-yellow px-1.5 py-0.5 rounded ml-2">BETA</span></h3>
                     <p className="text-turbo-beige/80">Convert interview transcripts into organized timelines automatically, cutting post-production planning time in half</p>
                   </div>
                 </div>
@@ -475,7 +475,7 @@ export default function SignUp() {
             <div className="flex items-start gap-6 p-6 rounded-lg bg-turbo-beige/5 hover:bg-turbo-beige/10 transition-colors">
               <div className="text-5xl">🤖</div>
               <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-turbo-coral">Generic AI Tools Suck</h3>
+                <h3 className="text-xl font-semibold text-turbo-yellow">Generic AI Tools Suck</h3>
                 <p>You've been using ChatGPT but it can't seem to make anything useful. They don't understand the nuances of creative work.</p>
               </div>
             </div>
@@ -483,8 +483,8 @@ export default function SignUp() {
         </div>
       </section>
 
-      {/* Testimonials Section - Coral */}
-      <section className="py-24 px-4 bg-turbo-coral text-turbo-beige">
+      {/* Testimonials Section - Yellow */}
+      <section className="py-24 px-4 bg-turbo-yellow text-turbo-black">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-4xl md:text-6xl font-bold mb-16 tracking-tight text-center">
             What Creators Are Saying
@@ -644,7 +644,7 @@ export default function SignUp() {
                     <div className="flex items-start gap-3">
                       <span className="text-turbo-green">✓</span>
                       <span className="text-turbo-blue/80">Timeline from Transcript</span>
-                      <span className="px-1.5 py-0.5 text-xs font-medium bg-[#E94E1B] text-[#F5F0E8] rounded">
+                      <span className="px-1.5 py-0.5 text-xs font-medium bg-turbo-yellow text-turbo-black rounded">
                         BETA
                       </span>
                     </div>

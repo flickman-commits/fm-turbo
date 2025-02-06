@@ -10,8 +10,8 @@ export default {
       colors: {
         // Brand Colors
         'turbo-beige': '#F5F0E8',
-        'turbo-blue': '#4169E1',
-        'turbo-coral': '#E94E1B',
+        'turbo-blue': '#1f4dd3',
+        'turbo-yellow': '#ceff00',
         'turbo-green': '#4CAF50',
         'turbo-black': '#000000',
         // System Colors
