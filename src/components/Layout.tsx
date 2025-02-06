@@ -4,7 +4,7 @@ import { links } from '@/config/links'
 import { creditsManager } from '@/utils/credits'
 import { useState } from 'react'
 import { FeatureRequestModal } from '@/components/FeatureRequestModal'
-import { useCompanyInfo } from '@/contexts/CompanyInfoContext'
+import { CompanyInfoContext, useCompanyInfo } from '@/contexts/CompanyInfoContext'
 
 const navigationItems = [
   { name: 'Home', icon: Home, path: '/' },
@@ -25,6 +25,7 @@ interface UserInfo {
   companyName: string;
   userName: string;
   businessType: string;
+  email: string;
 }
 
 export function Layout({ children }: LayoutProps) {
@@ -32,6 +33,7 @@ export function Layout({ children }: LayoutProps) {
   const location = useLocation()
   const credits = creditsManager.getCredits()
   const [showFeatureRequest, setShowFeatureRequest] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   
   // Track current form state
   const [userInfo, setUserInfo] = useState<UserInfo>(() => {
@@ -39,7 +41,8 @@ export function Layout({ children }: LayoutProps) {
     return saved ? JSON.parse(saved) : {
       companyName: '',
       userName: '',
-      businessType: ''
+      businessType: '',
+      email: ''
     }
   })
 
@@ -49,7 +52,8 @@ export function Layout({ children }: LayoutProps) {
     return saved ? JSON.parse(saved) : {
       companyName: '',
       userName: '',
-      businessType: ''
+      businessType: '',
+      email: ''
     }
   })
 
@@ -58,17 +62,44 @@ export function Layout({ children }: LayoutProps) {
     setUserInfo(newInfo)
   }
 
-  const handleSaveInfo = () => {
-    if (userInfo.companyName && userInfo.userName && userInfo.businessType) {
-      localStorage.setItem('userInfo', JSON.stringify(userInfo))
-      setSavedInfo(userInfo) // Update the saved info state
-      setIsInfoSaved(true)
-      console.log('Saved user info to localStorage:', userInfo)
+  const handleSaveInfo = async () => {
+    if (userInfo.companyName && userInfo.userName && userInfo.businessType && userInfo.email) {
+      setIsSubmitting(true)
+      
+      try {
+        // Save to localStorage
+        localStorage.setItem('userInfo', JSON.stringify(userInfo))
+        setSavedInfo(userInfo)
+        setIsInfoSaved(true)
+        
+        // Send to Google Sheets
+        const date = new Date().toLocaleDateString()
+        const time = new Date().toLocaleTimeString()
+        
+        await fetch('https://script.google.com/macros/s/AKfycbxCvoevTYrwn8VzrMxh6lmqIn35xhI-Q2xA3MbyA64O3mDrJeA0SjtEzcHGey4SWXUlHA/exec', {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: userInfo.email,
+            date,
+            time
+          })
+        })
+        
+        console.log('Saved user info to localStorage and Google Sheets:', userInfo)
+      } catch (error) {
+        console.error('Error saving info:', error)
+      } finally {
+        setIsSubmitting(false)
+      }
     }
   }
 
   const isFormValid = () => {
-    return !!(userInfo.companyName && userInfo.userName && userInfo.businessType)
+    return !!(userInfo.companyName && userInfo.userName && userInfo.businessType && userInfo.email)
   }
 
   return (
@@ -99,7 +130,6 @@ export function Layout({ children }: LayoutProps) {
                 className={`
                   flex items-center gap-3 px-4 py-3 rounded-lg mb-2
                   transition-colors duration-200
-                  ${!isInfoSaved ? 'opacity-50 pointer-events-none' : ''}
                   ${isActive 
                     ? 'bg-turbo-blue text-turbo-beige' 
                     : 'text-turbo-black hover:bg-turbo-black/5'
@@ -113,11 +143,11 @@ export function Layout({ children }: LayoutProps) {
           })}
         </nav>
 
-        {/* Callout Box */}
+        {/* Update the Callout Box */}
         <div className={`px-4 py-3 mx-4 mb-4 rounded-lg border-2 ${
           isInfoSaved 
             ? 'bg-turbo-green/10 border-turbo-green' 
-            : 'bg-red-100 border-red-500'
+            : 'bg-turbo-blue/10 border-turbo-blue'
         }`}>
           <p className="text-sm text-turbo-black font-medium mb-1">
             {isInfoSaved ? '✅ Information Saved' : '⚠️ Action Required'}
@@ -137,95 +167,90 @@ export function Layout({ children }: LayoutProps) {
               </div>
             </>
           ) : (
-            <p className="text-sm text-red-700 font-medium">
+            <p className="text-sm text-turbo-black/80">
               Please fill in your company information below to start using the tasks.
             </p>
           )}
         </div>
 
         {/* User Info Form */}
-        <div className="px-4 py-6 border-t border-turbo-black">
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="companyName" className="block text-sm font-medium text-turbo-black mb-1">
-                Company Name
-              </label>
-              <input
-                type="text"
-                id="companyName"
-                value={userInfo.companyName}
-                onChange={(e) => handleInfoChange('companyName', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-1 focus:ring-turbo-blue"
-              />
-            </div>
+        <div className="px-4 space-y-3 mb-6">
+          <div>
+            <label htmlFor="companyName" className="block text-sm font-medium text-turbo-black mb-1">
+              Company Name
+            </label>
+            <input
+              type="text"
+              id="companyName"
+              value={userInfo.companyName}
+              onChange={(e) => handleInfoChange('companyName', e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-1 focus:ring-turbo-blue"
+            />
+          </div>
 
-            <div>
-              <label htmlFor="userName" className="block text-sm font-medium text-turbo-black mb-1">
-                Your Name
-              </label>
-              <input
-                type="text"
-                id="userName"
-                value={userInfo.userName}
-                onChange={(e) => handleInfoChange('userName', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-1 focus:ring-turbo-blue"
-              />
-            </div>
+          <div>
+            <label htmlFor="userName" className="block text-sm font-medium text-turbo-black mb-1">
+              Your Name
+            </label>
+            <input
+              type="text"
+              id="userName"
+              value={userInfo.userName}
+              onChange={(e) => handleInfoChange('userName', e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-1 focus:ring-turbo-blue"
+            />
+          </div>
 
-            <div>
-              <label htmlFor="businessType" className="block text-sm font-medium text-turbo-black mb-1">
-                Business Type
-              </label>
-              <select
-                id="businessType"
-                value={userInfo.businessType}
-                onChange={(e) => handleInfoChange('businessType', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-1 focus:ring-turbo-blue"
-              >
-                <option value="">Select type...</option>
-                <option value="Video Production">Video Production</option>
-                <option value="Photography">Photography</option>
-                <option value="Graphic Design">Graphic Design</option>
-                <option value="Branding">Branding</option>
-                <option value="Marketing">Marketing</option>
-              </select>
-            </div>
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-turbo-black mb-1">
+              Email Address
+            </label>
+            <input
+              type="email"
+              id="email"
+              value={userInfo.email}
+              onChange={(e) => handleInfoChange('email', e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-1 focus:ring-turbo-blue"
+            />
+          </div>
 
-            <button
-              onClick={handleSaveInfo}
-              disabled={!isFormValid()}
-              className={`w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                isFormValid()
-                  ? 'bg-turbo-blue text-turbo-beige hover:bg-turbo-black'
-                  : 'bg-turbo-black/40 text-turbo-beige cursor-not-allowed'
-              }`}
+          <div>
+            <label htmlFor="businessType" className="block text-sm font-medium text-turbo-black mb-1">
+              Business Type
+            </label>
+            <select
+              id="businessType"
+              value={userInfo.businessType}
+              onChange={(e) => handleInfoChange('businessType', e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-1 focus:ring-turbo-blue"
             >
-              Save Information
-            </button>
+              <option value="">Select type...</option>
+              <option value="Video Production">Video Production</option>
+              <option value="Photography">Photography</option>
+              <option value="Graphic Design">Graphic Design</option>
+              <option value="Branding">Branding</option>
+              <option value="Marketing">Marketing</option>
+            </select>
           </div>
         </div>
 
-        {/* Bottom Section */}
-        <div className="p-4 border-t border-turbo-black">
-          {/* Upgrade Button */}
-          <a
-            href={links.stripe}
-            className={`hidden flex items-center justify-center w-full px-4 py-2 mb-4 text-sm font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black rounded-full transition-colors ${
-              !isInfoSaved ? 'opacity-50 pointer-events-none' : ''
+        {/* Fixed Bottom Section */}
+        <div className="flex-shrink-0 p-4 border-t border-turbo-black">
+          <button
+            onClick={handleSaveInfo}
+            disabled={!isFormValid() || isSubmitting}
+            className={`w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors mb-4 flex items-center justify-center ${
+              isFormValid() && !isSubmitting
+                ? 'bg-turbo-blue text-turbo-beige hover:bg-turbo-black'
+                : 'bg-turbo-black/40 text-turbo-beige cursor-not-allowed'
             }`}
-            target="_blank"
-            rel="noopener noreferrer"
           >
-            Upgrade
-          </a>
-
-          {/* Credits Counter */}
-          <div className={`hidden flex items-center justify-between px-4 py-2 mb-4 text-sm text-turbo-black ${
-            !isInfoSaved ? 'opacity-50' : ''
-          }`}>
-            <span>Credits</span>
-            <span className="font-medium">{credits}</span>
-          </div>
+            {isSubmitting ? (
+              <div className="w-5 h-5 border-2 border-turbo-beige border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              'Save Information'
+            )}
+          </button>
 
           {/* Profile & Settings */}
           <div className="flex items-center justify-between">
@@ -261,9 +286,7 @@ export function Layout({ children }: LayoutProps) {
       </aside>
 
       {/* Mobile Bottom Bar */}
-      <nav className={`fixed bottom-0 left-0 right-0 bg-turbo-beige border-t border-turbo-black flex md:hidden items-center justify-around px-4 py-2 z-50 ${
-        !isInfoSaved ? 'opacity-50 pointer-events-none' : ''
-      }`}>
+      <nav className="fixed bottom-0 left-0 right-0 bg-turbo-beige border-t border-turbo-black flex md:hidden items-center justify-around px-4 py-2 z-50">
         {mobileNavigationItems.map((item) => {
           const isActive = location.pathname === item.path
           const Icon = item.icon
@@ -289,7 +312,7 @@ export function Layout({ children }: LayoutProps) {
       </nav>
 
       {/* Main Content */}
-      <main className={`md:pl-64 min-h-screen pb-24 ${!isInfoSaved ? 'opacity-50 pointer-events-none' : ''}`}>
+      <main className="md:pl-64 min-h-screen pb-24">
         {children}
       </main>
 

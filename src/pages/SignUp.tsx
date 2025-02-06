@@ -300,11 +300,14 @@ export default function SignUp() {
               Watch how Turbo transforms your creative workflow in seconds
             </p>
             <div className="bg-turbo-beige/10 rounded-xl p-8 backdrop-blur-sm">
-              <div className="aspect-video rounded-lg bg-turbo-beige/5 flex items-center justify-center">
-                <iframe src="https://www.loom.com/embed/18b2d5ac39a747f5b2db007cf2f2c879" 
-                        frameBorder="0" 
-                        allowFullScreen 
-                        className="w-full h-full rounded-lg">
+              <div style={{ position: 'relative', paddingBottom: '64.90384615384616%', height: 0 }}>
+                <iframe 
+                  src="https://www.loom.com/embed/926952eeaa9e401ebf107fc35038bc44?sid=07b2b81e-a7a8-4d06-a554-304cc35f7de4" 
+                  frameBorder="0" 
+                  webkitAllowFullScreen 
+                  mozAllowFullScreen 
+                  allowFullScreen 
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
                 </iframe>
               </div>
             </div>

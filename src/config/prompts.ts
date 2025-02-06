@@ -56,36 +56,7 @@ export const getWeatherEmoji = (condition: string): string => {
 // System prompts for different task types
 export const getSystemPrompts = (taskType: TaskType, userInfo: UserInfo): string => {
   const prompts: Record<TaskType, string> = {
-    contractorBrief: `You are an expert production manager at ${userInfo.companyName}, responsible for creating clear and professional contractor brief emails for ${userInfo.companyName}. Create a well-structured email following this exact format:
-
-Hey [Name],
-
-Excited to have you on board for this project! Here's everything you need to know:
-
-Client: [Client Name] - [Company]
-
-Dates: [Start Date] to [End Date]
-
-Location: [Location]
-
-Point of Contact: [Name] ([Email] - [Phone])
-
-Schedule:
-[Detailed daily schedule with times and activities]
-
-Your Role:
-[Role Title]: [Detailed role description]
-
-Deliverables:
-[List of deliverables]
-
-Compensation:
-Rate: $[Daily Rate]/day x [Number of Days] days = $[Total] total
-
-Next Steps:
-- Confirm your availability by replying to this email
-- Send over a W9 just so we have it for tax purposes
-Let me know if you have any questions. Looking forward to working with you!`,
+    contractorBrief: `You are an expert production manager at ${userInfo.companyName}, responsible for creating clear and professional contractor brief emails for ${userInfo.companyName}`,
 
     outreach: getOutreachSystemPrompt,
 
@@ -116,35 +87,36 @@ export const getUserPrompt = (taskType: TaskType, formData: FormData, userInfo: 
 
     case 'contractorBrief':
       return `Create a contractor brief email following this exact format and style:
+      Create a well-structured email following this exact format:
 
-Hey ${formData.contractorName},
+      Hey ${formData.contractorName},
 
-Excited to have you on board for this project! Here's everything you need to know:
+      Excited to have you on board for this project! Here's everything you need to know:
 
-**Client:** ${formData.client}
+      **Client:** ${formData.client}
 
-**Dates:** ${formData.startDate} to ${formData.endDate}
+      **Dates:** ${formData.startDate} to ${formData.endDate}
 
-**Location:** ${formData.location}
+      **Location:** ${formData.location}
 
-**Point of Contact:** ${formData.pointOfContact} (${formData.contactEmail} - ${formData.contactPhone})
+      **Point of Contact:** ${formData.pointOfContact} (${formData.contactEmail} - ${formData.contactPhone})
 
-**Schedule:**
-${formData.schedule}
+      **Schedule:**
+      ${formData.schedule}
 
-**Your Role:**
-${formData.role}
+      **Your Role:**
+      ${formData.role}
 
-**Deliverables:**
-${formData.deliverables}
+      **Deliverables:**
+      ${formData.deliverables}
 
-**Compensation:**
-Rate: $${formData.dailyRate}/day x ${formData.numberOfDays} days = $${Number(formData.dailyRate) * Number(formData.numberOfDays)} total
+      **Compensation:**
+      Rate: $${formData.dailyRate}/day x ${formData.numberOfDays} days = $${Number(formData.dailyRate) * Number(formData.numberOfDays)} total
 
-**Next Steps:**
-- Confirm your availability by replying to this email
-- Send over a W9 just so we have it for tax purposes
-Let me know if you have any questions. Looking forward to working with you!`
+      **Next Steps:**
+      - Confirm your availability by replying to this email
+      - Send over a W9 just so we have it for tax purposes
+      Let me know if you have any questions. Looking forward to working with you!`
 
     case 'outreach':
       return getOutreachUserPrompt(formData)

@@ -4,11 +4,13 @@ import { TaskModal } from '@/components/TaskModal'
 import { FeatureRequestModal } from '@/components/FeatureRequestModal'
 import { Layout } from '@/components/Layout'
 import { useCompanyInfo } from '@/contexts/CompanyInfoContext'
+import { VideoModal } from '@/components/VideoModal'
 
 export default function Home() {
   const { isInfoSaved } = useCompanyInfo()
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null)
   const [showFeatureModal, setShowFeatureModal] = useState(false)
+  const [showVideoModal, setShowVideoModal] = useState(false)
 
   const handleTaskSelect = (task: TaskType) => {
     if (!isInfoSaved) {
@@ -78,6 +80,16 @@ export default function Home() {
           ))}
         </div>
 
+        {/* Help Link */}
+        <div className="text-center">
+          <button
+            onClick={() => setShowVideoModal(true)}
+            className="text-turbo-blue hover:text-turbo-black text-sm font-medium underline transition-colors"
+          >
+            IF YOU NEED HELP USING TURBO CLICK HERE
+          </button>
+        </div>
+
         {/* Feature Request Button */}
         <button
           onClick={() => setShowFeatureModal(true)}
@@ -96,6 +108,12 @@ export default function Home() {
         {showFeatureModal && (
           <FeatureRequestModal
             onClose={() => setShowFeatureModal(false)}
+          />
+        )}
+
+        {showVideoModal && (
+          <VideoModal
+            onClose={() => setShowVideoModal(false)}
           />
         )}
       </div>
