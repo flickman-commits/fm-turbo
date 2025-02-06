@@ -1,10 +1,8 @@
 import { Home, History, User, Settings } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
-import { links } from '@/config/links'
-import { creditsManager } from '@/utils/credits'
 import { useState } from 'react'
 import { FeatureRequestModal } from '@/components/FeatureRequestModal'
-import { CompanyInfoContext, useCompanyInfo } from '@/contexts/CompanyInfoContext'
+import { useCompanyInfo } from '@/contexts/CompanyInfoContext'
 
 const navigationItems = [
   { name: 'Home', icon: Home, path: '/' },
@@ -31,7 +29,6 @@ interface UserInfo {
 export function Layout({ children }: LayoutProps) {
   const { isInfoSaved, setIsInfoSaved } = useCompanyInfo()
   const location = useLocation()
-  const credits = creditsManager.getCredits()
   const [showFeatureRequest, setShowFeatureRequest] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   
