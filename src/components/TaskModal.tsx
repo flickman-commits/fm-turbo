@@ -196,11 +196,6 @@ export function TaskModal({
   const [result, setResult] = useState<TaskResult | null>(null)
   const [selectedFileName, setSelectedFileName] = useState('')
   const [copiedButtons, setCopiedButtons] = useState<Record<string, boolean>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isRegenerating, setIsRegenerating] = useState(false)
-  const [isTestDataFilled, setIsTestDataFilled] = useState(false)
-  const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false)
-  const [selectedVideos, setSelectedVideos] = useState<Video[]>([])
 
   if (!taskType) return null
   const config = taskConfigs[taskType]
