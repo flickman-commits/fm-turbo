@@ -58,7 +58,7 @@ export const getSystemPrompts = (taskType: TaskType, userInfo: UserInfo): string
   const prompts: Record<TaskType, string> = {
     contractorBrief: `You are an expert production manager at ${userInfo.companyName}, responsible for creating clear and professional contractor brief emails for ${userInfo.companyName}`,
 
-    outreach: getOutreachSystemPrompt,
+    outreach: getOutreachSystemPrompt(userInfo),
 
     proposal: `You are an expert salesman at ${userInfo.companyName}, a ${userInfo.businessType} company. Your role is to take in information from discovery calls, online research, and provided data about a potential client and then to create an effective content proposal to our potential clients.`,
 
