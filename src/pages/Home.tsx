@@ -14,6 +14,15 @@ export default function Home() {
   const [showVideoModal, setShowVideoModal] = useState(false)
   const [credits, setCredits] = useState(creditsManager.getCredits())
   const [isCreditsHovered, setIsCreditsHovered] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     // Subscribe to credit changes
@@ -26,8 +35,9 @@ export default function Home() {
   }, [])
 
   const handleTaskSelect = (task: TaskType) => {
-    if (!isInfoSaved) {
-      return // Early return if info isn't saved
+    // On mobile, allow task selection regardless of info saved state
+    if (!isInfoSaved && !isMobile) {
+      return // Early return if info isn't saved and not on mobile
     }
     setSelectedTask(task)
   }
@@ -51,12 +61,12 @@ export default function Home() {
   return (
     <Layout>
       <div className="max-w-3xl mx-auto px-4 py-8">
-        {/* Credits Counter - Adjust position for mobile */}
+        {/* Credits Counter */}
         <button
           onClick={handleRequestCredits}
           onMouseEnter={() => setIsCreditsHovered(true)}
           onMouseLeave={() => setIsCreditsHovered(false)}
-          className="fixed top-3 right-4 md:right-8 bg-turbo-beige border border-turbo-black rounded-full px-3 py-1.5 text-sm font-medium z-50 opacity-70 hover:opacity-100 transition-all flex items-center gap-2 hover:bg-turbo-blue hover:text-turbo-beige hover:border-turbo-blue"
+          className="fixed top-3 right-4 md:right-8 bg-turbo-beige border border-turbo-black rounded-full px-3 py-1.5 text-sm font-medium z-40 opacity-70 hover:opacity-100 transition-all flex items-center gap-2 hover:bg-turbo-blue hover:text-turbo-beige hover:border-turbo-blue"
         >
           {isCreditsHovered ? (
             'GET MORE CREDITS'
@@ -73,7 +83,7 @@ export default function Home() {
         </button>
 
         <h1 className={`text-4xl md:text-7xl font-bold mb-12 tracking-tight ${
-          isInfoSaved ? 'text-turbo-black' : 'text-turbo-black/40'
+          !isInfoSaved && !isMobile ? 'text-turbo-black/40' : 'text-turbo-black'
         }`}>
           What would you like to create today?
         </h1>
@@ -83,15 +93,15 @@ export default function Home() {
             <div 
               key={task.type}
               className={`flex items-center justify-between border-b border-turbo-black pb-4 group ${
-                isInfoSaved 
+                isInfoSaved || isMobile
                   ? 'cursor-pointer hover:border-turbo-blue' 
                   : 'opacity-50 cursor-not-allowed'
               }`}
-              onClick={() => isInfoSaved && handleTaskSelect(task.type)}
+              onClick={() => handleTaskSelect(task.type)}
             >
               <div className="flex items-center gap-2">
                 <h2 className={`text-xl md:text-2xl font-semibold tracking-tight text-turbo-black ${
-                  isInfoSaved ? 'group-hover:text-turbo-blue' : ''
+                  isInfoSaved || isMobile ? 'group-hover:text-turbo-blue' : ''
                 } transition-colors`}>
                   {task.label}
                 </h2>
@@ -103,17 +113,15 @@ export default function Home() {
               </div>
               <button
                 className={`text-3xl text-turbo-black ${
-                  isInfoSaved 
+                  isInfoSaved || isMobile
                     ? 'group-hover:text-turbo-blue hover:scale-110' 
                     : 'cursor-not-allowed'
                 } transition-all`}
                 aria-label={`Open ${task.label}`}
-                disabled={!isInfoSaved}
+                disabled={!isInfoSaved && !isMobile}
                 onClick={(e) => {
                   e.stopPropagation()
-                  if (isInfoSaved) {
-                    handleTaskSelect(task.type)
-                  }
+                  handleTaskSelect(task.type)
                 }}
               >
                 +
@@ -126,9 +134,9 @@ export default function Home() {
         <div className="text-center">
           <button
             onClick={() => setShowVideoModal(true)}
-            disabled={!isInfoSaved}
+            disabled={!isInfoSaved && !isMobile}
             className={`text-sm font-medium underline transition-colors ${
-              isInfoSaved 
+              isInfoSaved || isMobile
                 ? 'text-turbo-blue hover:text-turbo-black' 
                 : 'text-turbo-black/40 cursor-not-allowed'
             }`}
@@ -140,9 +148,9 @@ export default function Home() {
         {/* Feature Request Button */}
         <button
           onClick={() => setShowFeatureModal(true)}
-          disabled={!isInfoSaved}
+          disabled={!isInfoSaved && !isMobile}
           className={`fixed right-4 bottom-4 h-10 px-4 font-medium text-turbo-black bg-turbo-beige hover:bg-turbo-blue hover:text-turbo-beige border border-turbo-black rounded-full transition-colors whitespace-nowrap z-10 text-sm mb-[calc(env(safe-area-inset-bottom)+64px)] md:bottom-8 md:right-8 md:mb-0 ${
-            !isInfoSaved ? 'opacity-50 cursor-not-allowed hover:bg-turbo-beige hover:text-turbo-black' : ''
+            !isInfoSaved && !isMobile ? 'opacity-50 cursor-not-allowed hover:bg-turbo-beige hover:text-turbo-black' : ''
           }`}
         >
           Submit Feature Request

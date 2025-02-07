@@ -107,7 +107,7 @@ export function Layout({ children }: LayoutProps) {
           <img 
             src="/turbo-logo.png" 
             alt="Turbo Logo" 
-            className={`h-9 w-auto transition-opacity ${!isInfoSaved ? 'opacity-40' : ''}`}
+            className="h-9 w-auto"
           />
         </Link>
       </div>
@@ -138,7 +138,7 @@ export function Layout({ children }: LayoutProps) {
                 className={`
                   flex items-center gap-3 px-4 py-3 rounded-lg mb-2
                   transition-colors duration-200
-                  ${!isInfoSaved ? 'opacity-40 pointer-events-none' : ''}
+                  ${!isInfoSaved ? 'md:opacity-40 md:pointer-events-none' : ''}
                   ${isActive 
                     ? 'bg-turbo-blue text-turbo-beige' 
                     : 'text-turbo-black hover:bg-turbo-black/5'
@@ -305,7 +305,6 @@ export function Layout({ children }: LayoutProps) {
               className={`
                 flex flex-col items-center gap-1 p-2
                 transition-colors duration-200
-                ${!isInfoSaved ? 'opacity-40 pointer-events-none' : ''}
                 ${isActive 
                   ? 'text-turbo-blue' 
                   : 'text-turbo-black hover:text-turbo-blue'
@@ -319,8 +318,8 @@ export function Layout({ children }: LayoutProps) {
         })}
       </nav>
 
-      {/* Main Content - Add top padding on mobile */}
-      <main className="md:pl-64 min-h-screen pb-24 pt-20 md:pt-0">
+      {/* Main Content - Reduce top padding on mobile */}
+      <main className="md:pl-64 min-h-screen pb-24 pt-10 md:pt-0">
         {children}
       </main>
 
