@@ -99,11 +99,9 @@ Sunday, December 8th - Miami, FL (Shoot):
   },
   outreach: {
     recipientName: 'Linnea Schuessler',
-    subject: 'Video Production Partnership for Huel',
     company: 'Huel',
-    role: 'Creative Strategist',
     familiarity: 'neverMet',
-    keyPointsToEmphasize: 'Experienced in brand storytelling, product launches, and social media content creation. Specialized in food & beverage industry video production.'
+    keyPointsToEmphasize: 'talk about how you saw their new ads in NYC and they got you inspired'
   },
   runOfShow: {
     location: 'The Malin',
@@ -385,7 +383,7 @@ export function TaskModal({
       const messages: OpenAI.Chat.ChatCompletionMessageParam[] = taskType === 'outreach' ? [
         {
           role: "system",
-          content: getOutreachSystemPrompt
+          content: getOutreachSystemPrompt(userInfo)
         },
         {
           role: "user",
@@ -524,7 +522,7 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
       const newResult = {
         content: response.content || '',
         taskType,
-        research: String(updatedFormData.perplexityResearch)
+        research: String(updatedFormData.perplexityResearch || '')
       }
       
       setResult(newResult)
@@ -535,6 +533,23 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
       setViewState('input')
     }
   }
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        if (isFormValid() && !isLoading && isInfoSaved) {
+          const form = document.querySelector('form')
+          if (form) {
+            e.preventDefault()
+            form.requestSubmit()
+          }
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isFormValid, isLoading, isInfoSaved])
 
   const handleAction = async (action: TaskActionConfig) => {
     if (action.type === 'download') {
@@ -572,6 +587,19 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
   const handleGmailCompose = () => {
     try {
       if (!result) return
+
+      const getValue = (key: string) => {
+        const value = formData[key]
+        return typeof value === 'string' ? value : ''
+      }
+
+      // Extract subject line for outreach tasks
+      let subject = ''
+      if (taskType === 'outreach') {
+        const subjectMatch = result.content.match(/^Subject: (.+)$/m)
+        subject = subjectMatch ? subjectMatch[1] : ''
+      }
+
       // Format content for email using clean plain text
       const formattedContent = result.content
         .replace(/\*\*(.*?)\*\*/g, '$1')
@@ -581,26 +609,21 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
         .replace(/^### (.*?)$/gm, '\n$1\n')
         .replace(/^- (.*?)$/gm, '  • $1')
         .replace(/\n{3,}/g, '\n\n')
-        .replace(/^Subject:.*\n/m, '')
+        .replace(/^Subject:.*\n/m, '') // Remove subject line from body
 
-      let subject = ''
-      const getValue = (key: string) => {
-        const value = formData[key]
-        return typeof value === 'string' ? value : ''
-      }
-
-      if (taskType === 'contractorBrief' && getValue('contractorEmail')) {
-        subject = `Project Brief - ${getValue('client')}`
-      } else if (taskType === 'runOfShow') {
-        subject = `Run of Show - ${getValue('eventName')}`
-      } else if (taskType === 'proposal') {
-        subject = `Video Content Proposal - ${getValue('clientName')}`
-      } else if (taskType === 'budget') {
-        subject = `Production Budget - ${getValue('eventType')}`
-      } else if (taskType === 'outreach') {
-        subject = getValue('subject')
-      } else {
-        subject = `${taskType.charAt(0).toUpperCase() + taskType.slice(1)}`
+      // Set subject based on task type
+      if (!subject) {
+        if (taskType === 'contractorBrief' && getValue('contractorEmail')) {
+          subject = `Project Brief - ${getValue('client')}`
+        } else if (taskType === 'runOfShow') {
+          subject = `Run of Show - ${getValue('eventName')}`
+        } else if (taskType === 'proposal') {
+          subject = `Video Content Proposal - ${getValue('clientName')}`
+        } else if (taskType === 'budget') {
+          subject = `Production Budget - ${getValue('eventType')}`
+        } else {
+          subject = `${taskType.charAt(0).toUpperCase() + taskType.slice(1)}`
+        }
       }
 
       const mailtoUrl = taskType === 'contractorBrief' && getValue('contractorEmail')
@@ -774,24 +797,9 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
                   setViewState('loading');
                   try {
                     const updatedFormData: FormDataWithWeather = { ...formData };
-                    
-                    if (taskType === 'runOfShow' && typeof formData.address === 'string' && typeof formData.shootDate === 'string') {
-                      try {
-                        const googleMapsLink = await getGoogleMapsLink(formData.address);
-                        updatedFormData.googleMapsLink = googleMapsLink;
-                        
-                        try {
-                          const weatherData = await getWeatherData(formData.address, formData.shootDate);
-                          updatedFormData.weather = weatherData;
-                        } catch (weatherError) {
-                          console.error('Weather data error:', weatherError);
-                          toast.error('Using default sunrise/sunset times');
-                          updatedFormData.weather = defaultWeather;
-                        }
-                      } catch (error) {
-                        console.error('Error with location services:', error);
-                        updatedFormData.googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.address)}`;
-                      }
+                    // Preserve the existing perplexityResearch for outreach tasks
+                    if (taskType === 'outreach') {
+                      updatedFormData.perplexityResearch = result?.research || ''
                     }
                     
                     const userInfo = getUserInfoFromLocalStorage();
@@ -801,7 +809,16 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
                       return
                     }
                     
-                    const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+                    const messages: OpenAI.Chat.ChatCompletionMessageParam[] = taskType === 'outreach' ? [
+                      {
+                        role: "system",
+                        content: getOutreachSystemPrompt(userInfo)
+                      },
+                      {
+                        role: "user",
+                        content: getUserPrompt(taskType, updatedFormData, userInfo)
+                      }
+                    ] : [
                       {
                         role: "system",
                         content: getSystemPrompts(taskType, userInfo)
@@ -823,6 +840,7 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
                     const newResult = {
                       content: response.content || '',
                       taskType,
+                      research: String(updatedFormData.perplexityResearch || '')
                     };
                     
                     setResult(newResult);
@@ -1023,10 +1041,20 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
                 </button>
                 <button
                   type="submit"
-                  className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors disabled:opacity-80 disabled:bg-turbo-black/40 disabled:cursor-not-allowed disabled:text-turbo-beige"
+                  className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors disabled:opacity-80 disabled:bg-turbo-black/40 disabled:cursor-not-allowed disabled:text-turbo-beige group relative"
                   disabled={isLoading || !isFormValid() || !isInfoSaved}
                 >
-                  {!isInfoSaved ? 'Complete Company Info First' : isLoading ? 'Generating...' : 'Generate'}
+                  <span className="flex items-center justify-center gap-2">
+                    {!isInfoSaved ? 'Complete Company Info First' : isLoading ? 'Generating...' : (
+                      <>
+                        Generate
+                        <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-turbo-beige/30 bg-turbo-beige/10 px-1.5 font-mono text-[10px] font-medium text-turbo-beige opacity-50 group-hover:opacity-75">
+                          <span className="text-xs">⌘</span>
+                          <span className="text-xs">↵</span>
+                        </kbd>
+                      </>
+                    )}
+                  </span>
                 </button>
               </div>
             </div>

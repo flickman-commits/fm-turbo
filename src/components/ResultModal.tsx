@@ -169,20 +169,10 @@ export function ResultModal({ result, onClose, formData }: ResultModalProps) {
       <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="p-4 md:p-6">
           <div className="prose prose-sm max-w-none bg-[#E0CFC0] text-[#3D0C11] prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-p:text-[#3D0C11] prose-p:mb-4 prose-ul:list-disc prose-ul:pl-6 prose-li:mb-1 prose-pre:bg-[#3D0C11]/5 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto prose-code:text-[#3D0C11] prose-code:bg-transparent prose-strong:font-bold">
-            {result.taskType === 'outreach' && formData.subject ? (
-              <>
-                <div className="mb-6">
-                  <strong>Subject Line:</strong> {typeof formData.subject === 'string' ? formData.subject : ''}
-                </div>
-                <div>
-                  <strong>Body:</strong>
-                  <div className="mt-2">
-                    <ReactMarkdown components={markdownComponents}>
-                      {result.content}
-                    </ReactMarkdown>
-                  </div>
-                </div>
-              </>
+            {result.taskType === 'outreach' ? (
+              <ReactMarkdown components={markdownComponents}>
+                {result.content}
+              </ReactMarkdown>
             ) : (
               <ReactMarkdown components={markdownComponents}>
                 {result.content}

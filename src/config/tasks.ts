@@ -110,9 +110,7 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
         { value: 'justMet', label: '👋 Just Met' },
         { value: 'knowThem', label: '🤗 I Know Them' }
       ]},
-      { id: 'subject', label: 'Subject', type: 'text', placeholder: 'Enter message subject' },
       { id: 'company', label: 'Company', type: 'text', placeholder: 'Enter company name' },
-      { id: 'role', label: 'Recipient Role', type: 'text', placeholder: 'Enter recipient role' },
       { id: 'keyPointsToEmphasize', label: 'Key Points to Emphasize', type: 'textarea', placeholder: 'Enter key points to address' }
     ],
     resultSections: [
