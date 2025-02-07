@@ -1,8 +1,97 @@
 import { Layout } from '@/components/Layout'
 import { useUser } from '@/contexts/UserContext'
+import { useState, useEffect } from 'react'
+import { useCompanyInfo } from '@/contexts/CompanyInfoContext'
+
+// Default user info for mobile
+const DEFAULT_USER_INFO = {
+  companyName: 'Flickman Media',
+  userName: 'Matt Hickman',
+  businessType: 'Video Production',
+  email: 'matt@flickmanmedia.com'
+}
+
+interface UserInfo {
+  companyName: string;
+  userName: string;
+  businessType: string;
+  email: string;
+}
 
 export default function Profile() {
   const { user } = useUser()
+  const { isInfoSaved, setIsInfoSaved } = useCompanyInfo()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+
+  // Track current form state
+  const [userInfo, setUserInfo] = useState<UserInfo>(() => {
+    const saved = localStorage.getItem('userInfo')
+    return saved ? JSON.parse(saved) : (isMobile ? DEFAULT_USER_INFO : {
+      companyName: '',
+      userName: '',
+      businessType: '',
+      email: ''
+    })
+  })
+
+  useEffect(() => {
+    // Set default user info for mobile on first load
+    if (isMobile && !localStorage.getItem('userInfo')) {
+      localStorage.setItem('userInfo', JSON.stringify(DEFAULT_USER_INFO))
+      setIsInfoSaved(true)
+    }
+
+    // Handle window resize
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  const handleInfoChange = (field: keyof UserInfo, value: string) => {
+    const newInfo = { ...userInfo, [field]: value }
+    setUserInfo(newInfo)
+  }
+
+  const handleSaveInfo = async () => {
+    if (userInfo.companyName && userInfo.userName && userInfo.businessType && userInfo.email) {
+      setIsSubmitting(true)
+      
+      try {
+        // Save to localStorage
+        localStorage.setItem('userInfo', JSON.stringify(userInfo))
+        setIsInfoSaved(true)
+        
+        // Send to Google Sheets
+        const date = new Date().toLocaleDateString()
+        const time = new Date().toLocaleTimeString()
+        
+        await fetch('https://script.google.com/macros/s/AKfycbxCvoevTYrwn8VzrMxh6lmqIn35xhI-Q2xA3MbyA64O3mDrJeA0SjtEzcHGey4SWXUlHA/exec', {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: userInfo.email,
+            date,
+            time
+          })
+        })
+      } catch (error) {
+        console.error('Error saving info:', error)
+      } finally {
+        setIsSubmitting(false)
+      }
+    }
+  }
+
+  const isFormValid = () => {
+    return !!(userInfo.companyName && userInfo.userName && userInfo.businessType && userInfo.email)
+  }
 
   return (
     <Layout>
@@ -12,6 +101,118 @@ export default function Profile() {
         </h1>
         
         <div className="space-y-8">
+          {/* Company Info Section - Show form on mobile */}
+          <div className="p-6 bg-white rounded-xl border-2 border-turbo-black">
+            <h2 className="text-xl font-semibold mb-4">Company Info</h2>
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <img 
+                  src="/fm-logo.png" 
+                  alt="Company Logo" 
+                  className="w-16 h-16 object-contain border border-turbo-black/10 rounded-lg"
+                />
+                <button className="px-4 py-2 text-sm font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black rounded-full transition-colors">
+                  Update Logo
+                </button>
+              </div>
+              
+              {/* Show form fields on mobile */}
+              <div className="md:hidden space-y-4">
+                <div>
+                  <label htmlFor="companyName" className="block text-sm font-medium text-turbo-black mb-1">
+                    Company Name
+                  </label>
+                  <input
+                    type="text"
+                    id="companyName"
+                    value={userInfo.companyName}
+                    onChange={(e) => handleInfoChange('companyName', e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-1 focus:ring-turbo-blue"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="userName" className="block text-sm font-medium text-turbo-black mb-1">
+                    Your Name
+                  </label>
+                  <input
+                    type="text"
+                    id="userName"
+                    value={userInfo.userName}
+                    onChange={(e) => handleInfoChange('userName', e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-1 focus:ring-turbo-blue"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-turbo-black mb-1">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    value={userInfo.email}
+                    onChange={(e) => handleInfoChange('email', e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-1 focus:ring-turbo-blue"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="businessType" className="block text-sm font-medium text-turbo-black mb-1">
+                    Business Type
+                  </label>
+                  <select
+                    id="businessType"
+                    value={userInfo.businessType}
+                    onChange={(e) => handleInfoChange('businessType', e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-1 focus:ring-turbo-blue"
+                  >
+                    <option value="">Select type...</option>
+                    <option value="Video Production">Video Production</option>
+                    <option value="Photography">Photography</option>
+                    <option value="Graphic Design">Graphic Design</option>
+                    <option value="Branding">Branding</option>
+                    <option value="Marketing">Marketing</option>
+                  </select>
+                </div>
+
+                <button
+                  onClick={handleSaveInfo}
+                  disabled={!isFormValid() || isSubmitting}
+                  className={`w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    isFormValid() && !isSubmitting
+                      ? 'bg-turbo-blue text-turbo-beige hover:bg-turbo-black'
+                      : 'bg-turbo-black/40 text-turbo-beige cursor-not-allowed'
+                  }`}
+                >
+                  {isSubmitting ? (
+                    <div className="w-5 h-5 border-2 border-turbo-beige border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    'Save Information'
+                  )}
+                </button>
+              </div>
+
+              {/* Show static info on desktop */}
+              <div className="hidden md:block space-y-4">
+                <div>
+                  <p className="text-turbo-black/60 mb-1">Company Name</p>
+                  <p className="font-medium">{userInfo.companyName}</p>
+                </div>
+                
+                <div>
+                  <p className="text-turbo-black/60 mb-1">Your Name</p>
+                  <p className="font-medium">{userInfo.userName}</p>
+                </div>
+                
+                <div>
+                  <p className="text-turbo-black/60 mb-1">Business Type</p>
+                  <p className="font-medium">{userInfo.businessType}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="p-6 bg-white rounded-xl border-2 border-turbo-black">
             <h2 className="text-xl font-semibold mb-4">Account Details</h2>
             <div className="space-y-4">
@@ -30,39 +231,6 @@ export default function Profile() {
                 <div className="flex items-center gap-2">
                   <p className="font-medium">247</p>
                   <span className="text-xs text-turbo-black/40">all-time</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-6 bg-white rounded-xl border-2 border-turbo-black">
-            <h2 className="text-xl font-semibold mb-4">Company Info</h2>
-            <div className="space-y-6">
-              <div className="flex items-center gap-4">
-                <img 
-                  src="/fm-logo.png" 
-                  alt="Company Logo" 
-                  className="w-16 h-16 object-contain border border-turbo-black/10 rounded-lg"
-                />
-                <button className="px-4 py-2 text-sm font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black rounded-full transition-colors">
-                  Update Logo
-                </button>
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <p className="text-turbo-black/60 mb-1">Company Name</p>
-                  <p className="font-medium">Flickman Media</p>
-                </div>
-                
-                <div>
-                  <p className="text-turbo-black/60 mb-1">City</p>
-                  <p className="font-medium">New York City</p>
-                </div>
-                
-                <div>
-                  <p className="text-turbo-black/60 mb-1">Payment Terms With Clients</p>
-                  <p className="font-medium">50% upfront, 50% upon completion</p>
                 </div>
               </div>
             </div>

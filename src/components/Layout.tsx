@@ -101,15 +101,26 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-turbo-beige">
+      {/* Mobile Logo - Only show on mobile */}
+      <div className="md:hidden fixed top-4 left-4 z-50">
+        <Link to="/">
+          <img 
+            src="/turbo-logo.png" 
+            alt="Turbo Logo" 
+            className={`h-9 w-auto transition-opacity ${!isInfoSaved ? 'opacity-40' : ''}`}
+          />
+        </Link>
+      </div>
+
       {/* Desktop Sidebar */}
       <aside className="fixed top-0 left-0 bottom-0 w-64 border-r border-turbo-black hidden md:flex flex-col bg-turbo-beige z-50">
         {/* Logo */}
-        <div className="p-6 flex justify-center items-center">
+        <div className="p-6 flex justify-start items-center">
           <Link to="/">
             <img 
               src="/turbo-logo.png" 
               alt="Turbo Logo" 
-              className={`h-12 w-auto transition-opacity ${!isInfoSaved ? 'opacity-40' : ''}`}
+              className={`h-[60px] w-auto transition-opacity ${!isInfoSaved ? 'opacity-40' : ''}`}
             />
           </Link>
         </div>
@@ -172,7 +183,7 @@ export function Layout({ children }: LayoutProps) {
         </div>
 
         {/* User Info Form */}
-        <div className="px-4 space-y-3 mb-6">
+        <div className="px-4 space-y-3 mb-6 hidden md:block">
           <div>
             <label htmlFor="companyName" className="block text-sm font-medium text-turbo-black mb-1">
               Company Name
@@ -237,7 +248,7 @@ export function Layout({ children }: LayoutProps) {
           <button
             onClick={handleSaveInfo}
             disabled={!isFormValid() || isSubmitting}
-            className={`w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors mb-4 flex items-center justify-center ${
+            className={`w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors mb-4 hidden md:flex items-center justify-center ${
               isFormValid() && !isSubmitting
                 ? 'bg-turbo-blue text-turbo-beige hover:bg-turbo-black'
                 : 'bg-turbo-black/40 text-turbo-beige cursor-not-allowed'
@@ -256,7 +267,6 @@ export function Layout({ children }: LayoutProps) {
               to="/profile"
               className={`
                 flex items-center gap-2 px-4 py-2 text-sm rounded-lg transition-colors
-                ${!isInfoSaved ? 'opacity-50 pointer-events-none' : ''}
                 ${location.pathname === '/profile' 
                   ? 'bg-turbo-blue text-turbo-beige' 
                   : 'text-turbo-black hover:bg-turbo-black/5'
@@ -270,7 +280,6 @@ export function Layout({ children }: LayoutProps) {
               to="/settings"
               className={`
                 p-2 rounded-lg transition-colors
-                ${!isInfoSaved ? 'opacity-50 pointer-events-none' : ''}
                 ${location.pathname === '/settings'
                   ? 'bg-turbo-blue text-turbo-beige'
                   : 'text-turbo-black hover:bg-turbo-black/5'
@@ -310,8 +319,8 @@ export function Layout({ children }: LayoutProps) {
         })}
       </nav>
 
-      {/* Main Content */}
-      <main className="md:pl-64 min-h-screen pb-24">
+      {/* Main Content - Add top padding on mobile */}
+      <main className="md:pl-64 min-h-screen pb-24 pt-20 md:pt-0">
         {children}
       </main>
 

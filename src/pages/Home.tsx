@@ -50,13 +50,13 @@ export default function Home() {
 
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        {/* Credits Counter */}
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        {/* Credits Counter - Adjust position for mobile */}
         <button
           onClick={handleRequestCredits}
           onMouseEnter={() => setIsCreditsHovered(true)}
           onMouseLeave={() => setIsCreditsHovered(false)}
-          className="fixed top-4 right-4 md:right-8 bg-turbo-beige border border-turbo-black rounded-full px-3 py-1.5 text-sm font-medium z-50 opacity-70 hover:opacity-100 transition-all flex items-center gap-2 hover:bg-turbo-blue hover:text-turbo-beige hover:border-turbo-blue"
+          className="fixed top-3 right-4 md:right-8 bg-turbo-beige border border-turbo-black rounded-full px-3 py-1.5 text-sm font-medium z-50 opacity-70 hover:opacity-100 transition-all flex items-center gap-2 hover:bg-turbo-blue hover:text-turbo-beige hover:border-turbo-blue"
         >
           {isCreditsHovered ? (
             'GET MORE CREDITS'
