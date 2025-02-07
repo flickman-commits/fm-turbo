@@ -66,12 +66,7 @@ export const getSystemPrompts = (taskType: TaskType, userInfo: UserInfo): string
 
     budget: `You are an expert assistant helping to generate professional content for ${userInfo.companyName}. Create a detailed production budget breakdown that includes all costs, labor rates, equipment fees, and calculates the total with the specified profit margin. Format your response in clean, well-structured markdown with appropriate headers and lists.`,
 
-    timelineFromTranscript: `You are an expert video editor at ${userInfo.companyName}, responsible for analyzing transcripts and creating time-coded editing timelines. Your task is to:
-1. Analyze the provided transcript
-2. Identify the most impactful and relevant segments based on the video's purpose and tone
-3. Create a detailed timeline showing which parts of the transcript should be used
-4. Highlight the specific sections of the transcript that should be included
-5. Format your response in clean, well-structured markdown with clear timecodes and explanations for each segment selection`,
+    timelineFromTranscript: `You are an expert assistant video editor at ${userInfo.companyName}, responsible for analyzing transcripts and creating time-coded editing timelines.`,
 
     trendingAudios: '' // No prompt needed for trending audios
   }
@@ -237,27 +232,24 @@ Additional Costs: ${formData.additionalCosts}
 Break down all costs including labor, equipment, post-production, and additional expenses. Calculate subtotals and apply the specified profit margin. Format in clear markdown with appropriate sections and calculations.`
 
     case 'timelineFromTranscript':
-      return `Please analyze this transcript and create a detailed editing timeline with the following parameters:
+      return `Your task is to
 
+1. Take in the provided transcript, video purpose, target length, desired tone, and additional context
+
+Transcript Content:${formData.transcriptFile}
 Client: ${formData.clientName}
 Purpose: ${formData.purpose}
 Target Length: ${formData.length}
 Desired Tone: ${formData.tone}
 Additional Context: ${formData.additionalNotes}
 
-Transcript Content:
-${formData.transcriptFile}
-
-Please provide:
-1. A time-coded timeline of recommended segments to use
-2. Brief explanations for why each segment was chosen
-3. A version of the transcript with recommended segments clearly highlighted
-4. Any additional editing notes or recommendations
-
-Format your response in clean, well-structured markdown with clear sections for:
-1. Overview of selected segments
-2. Detailed timeline with timecodes
-3. Rationale for selections`
+2. Identify the most impactful and relevant segments based on the video's purpose, tone, and additional context. Make sure to read the entire transcript. You can move the order of the segments if it helps tell a better story.
+3. Create a detailed write up that includes the follwoing
+  A. An overview of the selected segments in a section called "Overview of The Segments We Chose"
+  B. A timeline for a finished video that is the same length as the target length, showing which parts of the provided transcript should be used, their content, speaker name, and ratinoale for using them as it relates to the purpose of the video "Your Timeline"
+  C. Total Run Time of New Video in a section called "Total Run Time"
+  D. Any additional editing notes or recommendations
+3. Format your response in clean, well-structured markdown`
 
     default:
       return ''

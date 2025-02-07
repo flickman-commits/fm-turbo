@@ -26,40 +26,40 @@ const testData: Record<TaskType, FormDataWithWeather> = {
   contractorBrief: {
     contractorName: 'Nick',
     contractorEmail: 'nick@example.com',
-    client: 'Evergreen Wealth',
+    client: 'Evergreen Health',
     startDate: '2024-12-07',
     endDate: '2024-12-08',
-    location: 'Miami, FL',
-    pointOfContact: 'Matt Hickman',
+    location: 'Orlando, FL',
+    pointOfContact: 'Flickman',
     contactEmail: 'matt@flickmanmedia.com',
-    contactPhone: '5039156104',
+    contactPhone: '(503) 890-1239',
     schedule: `Saturday, December 7th (Shoot):
-7:30 AM - Leave Crew Hotel & Uber to Studio
-7:50 AM - Arrive at Studio
-8:00 AM - We are let in to studio
-9:30 AM-11 AM - First shot
-11-1:30 PM - Film Tax Strategies
-1:30 PM Lunch on location (PA to order on Uber Eats)
-3:00 PM - 6:00 PM Shoot Miami cityscape location
-7:00 PM Crew dinner. Make game plan for tomorrow — get some outdoor shots, more run and gun, delivering lines, run and gun
+              7:30 AM - Leave Crew Hotel & Uber to Studio
+              7:50 AM - Arrive at Studio
+              8:00 AM - We are let in to studio
+              9:30 AM-11 AM - First shot
+              11-1:30 PM - Film Tax Strategies
+              1:30 PM Lunch on location (PA to order on Uber Eats)
+              3:00 PM - 6:00 PM Shoot Miami cityscape location
+              7:00 PM Crew dinner. Make game plan for tomorrow — get some outdoor shots, more run and gun, delivering lines, run and gun
 
-Sunday, December 8th - Miami, FL (Shoot):
-6:56 AM - Sunrise
-6:45 AM - Meet for Breakfast & Coffee
-7:00 AM - Leave for Jack Daniel's HQ
-7:30 AM - 9:30 AM Shoot for social on Day 2 — Shoot horizontal and cut vertical
-1:30 PM Lunch on location or in Lynchburg
-3:30 PM - 6:30 PM Shoot Miami cityscape location
-7:00 PM Crew dinner
-5:30 PM Sunset`,
+              Sunday, December 8th - Miami, FL (Shoot):
+              6:56 AM - Sunrise
+              6:45 AM - Meet for Breakfast & Coffee
+              7:00 AM - Leave for Jack Daniel's HQ
+              7:30 AM - 9:30 AM Shoot for social on Day 2 — Shoot horizontal and cut vertical
+              1:30 PM Lunch on location or in Lynchburg
+              3:30 PM - 6:30 PM Shoot Miami cityscape location
+              7:00 PM Crew dinner
+              5:30 PM Sunset`,
     role: `Director of Photography (DP)`,
-    deliverables: `- All raw footage must be handed off to our team at the end of the shoot`,
+    deliverables: `All raw footage must be handed off to our team at the end of the shoot`,
     dailyRate: '1500',
     numberOfDays: '2'
   },
   proposal: {
     projectType: 'US Creative Partner',
-    clientName: 'Oanda',
+    clientName: 'Robinhood',
     timelineInfo: 'Event filming on Jan 7th 2024, rough cut needed by Jan 21st, final deliverables by Feb 10th 2024',
     budget: '$50,000',
     discoveryTranscript: '/discovery-call-transcript.json',
@@ -98,29 +98,29 @@ Sunday, December 8th - Miami, FL (Shoot):
     ]
   },
   outreach: {
-    recipientName: 'Linnea Schuessler',
-    company: 'Huel',
+    recipientName: 'Tim Cook',
+    company: 'Apple',
     familiarity: 'neverMet',
     keyPointsToEmphasize: 'talk about how you saw their new ads in NYC and they got you inspired'
   },
   runOfShow: {
-    location: 'The Malin',
-    address: '387 Park Ave South, 5th Floor, New York, NY 10016',
+    location: 'Empire State Building',
+    address: '350 5th Ave, New York, NY 10118',
     shootDate: '2023-12-16',
     crewMembers: `Flickman, Nick Brady, Natalia Ohanesian, Lilah Beldner, Holly & Brian`,
     callTimes: `7:45 AM (call) / 5:00 PM (wrap)`,
     schedule: `7:15 AM - Sunrise
-7:45 AM - Arrive on site
-8:00 - 9:00 AM - Go up to Malin, build out cameras, Nick to start setting up interview setup, Flickman to shoot b-roll on gimbal during this time
-9:00 - 10:00 AM - Sana Labs is having real meeting in board room — we will shoot this on gimbal (can shoot on both cams if Nick is done setting up lighting equipment)
-10:00 - 11:00 AM - Clean the Sana Labs office, set up decor, start getting office b-roll if it's clean, detail shots
-11:00 AM - 12:00 PM - Real meeting in Sana Labs office (shoot this on gimbal)
-12:00 - 1:00 PM - Choreographed / specialty shots in Sana Labs office
-1:00 - 2:00 PM - Lunch break
-2:00 - 3:30 PM - Shoot interviews
-3:30 - 5:00 PM - Additional b-roll and breakdown gear
-5:00 PM - Wrap shoot
-4:30 PM - Sunset`
+          7:45 AM - Arrive on site
+          8:00 - 9:00 AM - Go up to Malin, build out cameras, Nick to start setting up interview setup, Flickman to shoot b-roll on gimbal during this time
+          9:00 - 10:00 AM - Sana Labs is having real meeting in board room — we will shoot this on gimbal (can shoot on both cams if Nick is done setting up lighting equipment)
+          10:00 - 11:00 AM - Clean the Sana Labs office, set up decor, start getting office b-roll if it's clean, detail shots
+          11:00 AM - 12:00 PM - Real meeting in Sana Labs office (shoot this on gimbal)
+          12:00 - 1:00 PM - Choreographed / specialty shots in Sana Labs office
+          1:00 - 2:00 PM - Lunch break
+          2:00 - 3:30 PM - Shoot interviews
+          3:30 - 5:00 PM - Additional b-roll and breakdown gear
+          5:00 PM - Wrap shoot
+          4:30 PM - Sunset`
   },
   budget: {
     eventType: 'Corporate Brand Video',
@@ -132,25 +132,11 @@ Sunday, December 8th - Miami, FL (Shoot):
     additionalCosts: 'Travel for crew, Equipment insurance, Location permits, Catering'
   },
   timelineFromTranscript: {
-    clientName: 'The Malin',
-    purpose: 'Build brand awareness for Sana Labs as an innovative AI company and highlight the synergy between Sana Labs and The Malin through their shared appreciation for design.',
-    length: '2-3 minutes',
-    tone: 'Inspiring',
-    additionalNotes: `I'm going to give you a transcript from some interviews we recorded - we recorded 4 different employees who work at Sana Labs, which is a company that creates two main AI products -
-
-The four employees names are Timmy (his interview starts at 0 seconds), Velm (his interview starts at 7:14), Lisa (her interview starts at 17:54) and Nick (his interview starts at 30:45)
-
-Each of them has a different perspective on working at Sana labs
-
-The purpose of this video is to highlight that Sana Labs is an exciting new company that is doing big things in the world of AI, we also want to highlight how design-forward Sana Labs is and tie their scandanavian roots and love of design with their decision to work at the Malin (because the Malin is very design forward as well)
-
-The general structure of the video is going to be as follows:
-- Explaining what Sana Labs is and what they do
-- talk about the excitement in AI, what they are excited about
-- talk about how Sana labs is a very design forward company
-- talk about why Sana labs chose to work at the Malin (using the design forward approach of the malin and sana labs as the segway into that section)
-
-We shouldn't cut between speakers too often, the minimum would be 10 seconds of a speaker before showing the next`
+    clientName: 'Outbound Hotels',
+    purpose: "We're creating an investor video that's supposed to explain all of the different parts of Outbound Hotels, how the company came to be, and also why it's so great",
+    length: '3 minutes max',
+    tone: 'uplifting, fun',
+    additionalNotes: 'There are 4 different speakers and they all need to have a section of talking'
   },
   trendingAudios: {
     // This is a placeholder for the new task type
@@ -265,7 +251,7 @@ export function TaskModal({
   const handleFillTestData = async () => {
     if (taskType === 'timelineFromTranscript') {
       try {
-        const response = await fetch('/sana-labs-transcript.txt')
+        const response = await fetch('/outbound-transcript.txt')
         if (!response.ok) {
           throw new Error('Failed to fetch transcript file')
         }
@@ -274,7 +260,7 @@ export function TaskModal({
         // Create a File object from the content
         const file = new File(
           [transcriptContent],
-          'sana-labs-transcript.txt',
+          'outbound-transcript.txt',
           { type: 'text/plain' }
         )
         
@@ -292,7 +278,7 @@ export function TaskModal({
           ...testData[taskType],
           transcriptFile: transcriptContent
         })
-        setSelectedFileName('sana-labs-transcript.txt')
+        setSelectedFileName('outbound-transcript.txt')
       } catch (error) {
         console.error('Failed to load transcript file:', error)
         toast.error('Failed to load transcript file')
@@ -341,21 +327,15 @@ export function TaskModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    if (!isInfoSaved) {
-      toast.error('Please complete your company information before using tasks')
-      return
-    }
-
-    console.log('Submit initiated for task type:', taskType)
+    if (!isFormValid()) return
 
     if (creditsManager.getCredits() <= 0) {
-      toast.error('No credits remaining. Please upgrade your plan.')
+      toast.error('No credits remaining')
       return
     }
 
     setViewState('loading')
-
+    
     try {
       const updatedFormData: FormDataWithWeather = { ...formData }
       
@@ -531,6 +511,81 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
       console.error('Error generating content:', error)
       toast.error('Failed to generate content. Please try again.')
       setViewState('input')
+    }
+  }
+
+  const handleRegenerate = async () => {
+    if (creditsManager.getCredits() <= 0) {
+      toast.error('No credits remaining')
+      return
+    }
+
+    setViewState('loading')
+    
+    try {
+      const updatedFormData: FormDataWithWeather = { ...formData }
+      
+      if (taskType === 'outreach' && typeof formData.recipientName === 'string' && typeof formData.company === 'string') {
+        console.log('Initiating Perplexity API call for:', formData.recipientName, formData.company)
+        try {
+          const research = await queryPerplexity(formData.recipientName, formData.company)
+          updatedFormData.perplexityResearch = String(research)
+          console.log('Perplexity research result:', research)
+        } catch (error) {
+          console.error('Perplexity research error:', error)
+          updatedFormData.perplexityResearch = "Couldn't find any relevant data"
+        }
+      }
+
+      console.log('Preparing to send request to OpenAI with updated form data:', updatedFormData)
+
+      const userInfo: UserInfo | null = getUserInfoFromLocalStorage();
+      if (!userInfo) {
+        toast.error('User information is required. Please complete your profile.')
+        setViewState('result')
+        return
+      }
+
+      const messages: OpenAI.Chat.ChatCompletionMessageParam[] = taskType === 'outreach' ? [
+        {
+          role: "system",
+          content: getOutreachSystemPrompt(userInfo)
+        },
+        {
+          role: "user",
+          content: getUserPrompt(taskType, updatedFormData, userInfo)
+        }
+      ] : [
+        {
+          role: "system",
+          content: getSystemPrompts(taskType, userInfo)
+        },
+        {
+          role: "user",
+          content: getUserPrompt(taskType, updatedFormData, userInfo)
+        }
+      ];
+      
+      const response = await createChatCompletion(messages);
+      
+      if (!response) {
+        throw new Error('Failed to generate content');
+      }
+      
+      creditsManager.useCredit();
+      
+      const newResult = {
+        content: response.content || '',
+        taskType,
+        research: String(updatedFormData.perplexityResearch || '')
+      };
+      
+      setResult(newResult);
+      setViewState('result');
+    } catch (error) {
+      console.error('Error regenerating content:', error);
+      setViewState('result');
+      toast.error('Failed to regenerate content');
     }
   }
 
@@ -788,69 +843,7 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
             </div>
             <div className="flex-shrink-0 flex flex-col sm:flex-row justify-between gap-3 sm:gap-2 p-4 md:p-6 border-t border-turbo-black">
               <button
-                onClick={async () => {
-                  if (creditsManager.getCredits() <= 0) {
-                    toast.error('No credits remaining. Please upgrade your plan.')
-                    return
-                  }
-                  
-                  setViewState('loading');
-                  try {
-                    const updatedFormData: FormDataWithWeather = { ...formData };
-                    // Preserve the existing perplexityResearch for outreach tasks
-                    if (taskType === 'outreach') {
-                      updatedFormData.perplexityResearch = result?.research || ''
-                    }
-                    
-                    const userInfo = getUserInfoFromLocalStorage();
-                    if (!userInfo) {
-                      toast.error('User information is required. Please complete your profile.')
-                      setViewState('result')
-                      return
-                    }
-                    
-                    const messages: OpenAI.Chat.ChatCompletionMessageParam[] = taskType === 'outreach' ? [
-                      {
-                        role: "system",
-                        content: getOutreachSystemPrompt(userInfo)
-                      },
-                      {
-                        role: "user",
-                        content: getUserPrompt(taskType, updatedFormData, userInfo)
-                      }
-                    ] : [
-                      {
-                        role: "system",
-                        content: getSystemPrompts(taskType, userInfo)
-                      },
-                      {
-                        role: "user",
-                        content: getUserPrompt(taskType, updatedFormData, userInfo)
-                      }
-                    ];
-                    
-                    const response = await createChatCompletion(messages);
-                    
-                    if (!response) {
-                      throw new Error('Failed to generate content');
-                    }
-                    
-                    creditsManager.useCredit();
-                    
-                    const newResult = {
-                      content: response.content || '',
-                      taskType,
-                      research: String(updatedFormData.perplexityResearch || '')
-                    };
-                    
-                    setResult(newResult);
-                    setViewState('result');
-                  } catch (error) {
-                    console.error('Error generating content:', error);
-                    toast.error('Failed to generate content. Please try again.');
-                    setViewState('result');
-                  }
-                }}
+                onClick={handleRegenerate}
                 className="inline-flex items-center justify-center h-[48px] px-6 py-2 text-base font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue hover:text-turbo-beige border-2 border-turbo-black rounded-full transition-colors min-w-[100px]"
               >
                 Regenerate
