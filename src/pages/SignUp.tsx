@@ -381,7 +381,7 @@ export default function SignUp() {
                     <span className="text-2xl">⏱️</span>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold mb-2">Timeline from Transcript <span className="text-xs bg-turbo-yellow px-1.5 py-0.5 rounded ml-2">BETA</span></h3>
+                    <h3 className="text-xl font-semibold mb-2">Timeline from Transcript <span className="text-xs bg-turbo-yellow text-turbo-blue px-1.5 py-0.5 rounded ml-2">BETA</span></h3>
                     <p className="text-turbo-beige/80">Convert interview transcripts into organized timelines automatically, cutting post-production planning time in half</p>
                   </div>
                 </div>
@@ -484,7 +484,7 @@ export default function SignUp() {
       </section>
 
       {/* Testimonials Section - Yellow */}
-      <section className="py-24 px-4 bg-turbo-yellow text-turbo-black">
+      <section className="py-24 px-4 bg-turbo-blue text-turbo-beige">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-4xl md:text-6xl font-bold mb-16 tracking-tight text-center">
             What Creators Are Saying
@@ -541,24 +541,24 @@ export default function SignUp() {
         </div>
       </section>
 
-      {/* Pricing Section - Beige */}
-      <section className="py-12 sm:py-24 px-4 bg-turbo-beige">
+      {/* Pricing Section - Now Black */}
+      <section className="py-12 sm:py-24 px-4 bg-turbo-black text-turbo-beige">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-[1fr,400px] gap-8">
             {/* Left Column - Beta Info */}
             <div className="text-center md:text-left">
-              <h2 className="text-4xl md:text-7xl font-bold mb-6 text-turbo-black tracking-tight">
+              <h2 className="text-4xl md:text-7xl font-bold mb-6 text-turbo-beige tracking-tight">
                 Join the Beta
               </h2>
-              <p className="text-lg sm:text-xl mb-8 text-turbo-black/80">
+              <p className="text-lg sm:text-xl mb-8 text-turbo-beige/80">
                 Be one of the first to try Turbo and help shape its future.
               </p>
-              <p className="text-base sm:text-lg mb-12 text-turbo-black/80">
+              <p className="text-base sm:text-lg mb-12 text-turbo-beige/80">
                 Early beta users will get special perks and pricing when we launch.
               </p>
 
-              <div className="bg-turbo-black/5 rounded-xl p-4 mb-12 inline-block hover:bg-[#00A651]/10 transition-colors">
-                <div className="text-base sm:text-lg font-medium text-turbo-black flex items-center gap-2">
+              <div className="bg-turbo-beige/5 rounded-xl p-4 mb-12 inline-block hover:bg-turbo-beige/10 transition-colors">
+                <div className="text-base sm:text-lg font-medium text-turbo-beige flex items-center gap-2">
                   Users: <AnimatedCounter 
                     end={usersAtLaunch || 10} 
                     duration={1000} 
@@ -568,15 +568,15 @@ export default function SignUp() {
               </div>
 
               <div className="relative max-w-2xl mx-auto md:mx-0" ref={pricingSliderRef}>
-                <div className="h-1 bg-turbo-black/20 rounded-full mb-8">
+                <div className="h-1 bg-turbo-beige/20 rounded-full mb-8">
                   <div 
-                    className="absolute -top-2 w-4 h-4 bg-[#29ABE2] rounded-full transition-all duration-1000 -translate-x-1/2" 
+                    className="absolute -top-2 w-4 h-4 bg-turbo-blue rounded-full transition-all duration-1000 -translate-x-1/2" 
                     style={{ 
                       left: isPricingVisible && isCountLoaded ? `${getSliderPosition(usersAtLaunch || 10)}%` : '0%',
                     }}
                   />
                 </div>
-                <div className="flex justify-between text-turbo-black">
+                <div className="flex justify-between text-turbo-beige">
                   {PRICING_TIERS.map((tier, index) => (
                     <div 
                       key={index} 
@@ -606,12 +606,12 @@ export default function SignUp() {
 
             {/* Right Column - Beta Signup Card */}
             <div className="md:sticky md:top-8 mt-16 md:mt-0">
-              <div className="bg-turbo-white rounded-xl p-6 sm:p-8 shadow-lg">
+              <div className="bg-turbo-beige rounded-xl p-6 sm:p-8 shadow-lg">
                 <h3 className="text-xl sm:text-2xl font-bold mb-4 text-turbo-black">Beta Access</h3>
-                <div className="text-4xl sm:text-6xl font-bold text-turbo-black mb-8">
+                <div className="text-4xl sm:text-6xl font-bold text-turbo-blue mb-8">
                   {typeof currentTier.price === 'number' ? (
                     <>
-                      ${currentTier.price}<span className="text-xl sm:text-2xl font-normal">/mo</span>
+                      ${currentTier.price}<span className="text-xl sm:text-2xl font-normal text-turbo-black">/mo</span>
                     </>
                   ) : (
                     currentTier.price
@@ -622,29 +622,29 @@ export default function SignUp() {
                   <h4 className="text-base sm:text-lg font-semibold mb-4 text-turbo-black">Features Included:</h4>
                   <div className="grid grid-cols-1 gap-3">
                     <div className="flex items-start gap-3">
-                      <span className="text-turbo-green">✓</span>
-                      <span className="text-turbo-blue/80">Content Proposal</span>
+                      <span className="text-turbo-blue">✓</span>
+                      <span className="text-turbo-black">Content Proposal</span>
                     </div>
                     <div className="flex items-start gap-3">
-                      <span className="text-turbo-green">✓</span>
-                      <span className="text-turbo-blue/80">Outreach Message</span>
+                      <span className="text-turbo-blue">✓</span>
+                      <span className="text-turbo-black">Outreach Message</span>
                     </div>
                     <div className="flex items-start gap-3">
-                      <span className="text-turbo-green">✓</span>
-                      <span className="text-turbo-blue/80">Run of Show</span>
+                      <span className="text-turbo-blue">✓</span>
+                      <span className="text-turbo-black">Run of Show</span>
                     </div>
                     <div className="flex items-start gap-3">
-                      <span className="text-turbo-green">✓</span>
-                      <span className="text-turbo-blue/80">Production Budget</span>
+                      <span className="text-turbo-blue">✓</span>
+                      <span className="text-turbo-black">Production Budget</span>
                     </div>
                     <div className="flex items-start gap-3">
-                      <span className="text-turbo-green">✓</span>
-                      <span className="text-turbo-blue/80">Contractor Brief</span>
+                      <span className="text-turbo-blue">✓</span>
+                      <span className="text-turbo-black">Contractor Brief</span>
                     </div>
                     <div className="flex items-start gap-3">
-                      <span className="text-turbo-green">✓</span>
-                      <span className="text-turbo-blue/80">Timeline from Transcript</span>
-                      <span className="px-1.5 py-0.5 text-xs font-medium bg-turbo-yellow text-turbo-black rounded">
+                      <span className="text-turbo-blue">✓</span>
+                      <span className="text-turbo-black">Timeline from Transcript</span>
+                      <span className="px-1.5 py-0.5 text-xs font-medium bg-turbo-blue text-turbo-beige rounded">
                         BETA
                       </span>
                     </div>
@@ -654,7 +654,7 @@ export default function SignUp() {
                 <div className="w-full text-center">
                   <button
                     onClick={scrollToTop}
-                    className="w-full h-[48px] px-6 font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black rounded-full transition-colors"
+                    className="w-full h-[48px] px-6 font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black hover:text-turbo-beige rounded-full transition-colors"
                   >
                     Get Notified of Beta Launch
                   </button>
@@ -668,7 +668,7 @@ export default function SignUp() {
 
           {/* Price Comparisons Section */}
           {currentTier.price !== 'FREE' && (
-            <div className="mt-16 bg-turbo-white rounded-xl p-6 sm:p-8 shadow-lg">
+            <div className="mt-16 bg-turbo-beige rounded-xl p-6 sm:p-8 shadow-lg">
               <h4 className="text-xl sm:text-2xl font-bold mb-8 text-turbo-black text-center">Less Expensive Than:</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
                 {PRICE_COMPARISONS[currentTier.price].map((comparison, index) => (
@@ -684,8 +684,8 @@ export default function SignUp() {
         </div>
       </section>
 
-      {/* Final CTA Section - Black */}
-      <section className="py-12 sm:py-24 px-4 bg-turbo-black text-turbo-beige">
+      {/* Final CTA Section - Now Beige */}
+      <section className="py-12 sm:py-24 px-4 bg-turbo-beige text-turbo-black">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl md:text-7xl font-bold mb-6 tracking-tight">
             Ready to Turbocharge Your Creative Business?
@@ -705,8 +705,8 @@ export default function SignUp() {
         </div>
       </section>
 
-      {/* Footer - Black */}
-      <footer className="py-8 sm:py-12 px-4 bg-turbo-black text-turbo-beige">
+      {/* Footer - Now Beige */}
+      <footer className="py-8 sm:py-12 px-4 bg-turbo-beige text-turbo-black">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center mb-4 md:mb-0">
             <a 
@@ -717,7 +717,7 @@ export default function SignUp() {
               <img 
                 src="/fm-logo.png" 
                 alt="Flickman Media Logo" 
-                className="h-12 sm:h-9 w-auto [filter:brightness(0)_saturate(100%)_invert(100%)_sepia(0%)_saturate(0%)_hue-rotate(0deg)_brightness(100%)_contrast(100%)]" 
+                className="h-12 sm:h-9 w-auto" 
               />
             </a>
           </div>

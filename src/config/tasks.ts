@@ -90,7 +90,8 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
         id: 'additionalNotes', 
         label: 'Additional Notes', 
         type: 'textarea', 
-        placeholder: 'Enter any specific requirements or additional information about the project'
+        placeholder: 'Enter any specific requirements or additional information about the project',
+        optional: 'projectType=*'
       }
     ],
     resultSections: [

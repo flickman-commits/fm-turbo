@@ -81,9 +81,8 @@ export const getUserPrompt = (taskType: TaskType, formData: FormData, userInfo: 
       return '' // No prompt needed for trending audios
 
     case 'contractorBrief':
-      return `Create a contractor brief email following this exact format and style:
-      Create a well-structured email following this exact format:
-
+      return `Send me back this exact email without any intro or outro messages:
+      
       Hey ${formData.contractorName},
 
       Excited to have you on board for this project! Here's everything you need to know:
