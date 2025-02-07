@@ -262,7 +262,7 @@ export default function SignUp() {
 
           <div className="mb-12 animate-on-scroll">
             <h3 className="text-xl font-semibold mb-6 text-turbo-blue">
-              Beta Launching Friday, February 7th
+              Beta is LIVE! Join now.
             </h3>
             
             <form 
@@ -275,7 +275,7 @@ export default function SignUp() {
                     className="h-[48px] px-4 rounded-full bg-white border border-turbo-black/10 w-full focus:outline-none focus:ring-2 focus:ring-turbo-blue transition-all" 
                     name="email_address" 
                     type="email"
-                    placeholder="Leave email to get notified of drop" 
+                    placeholder="Enter your email to join" 
                     required 
                   />
                 </div>
@@ -289,7 +289,7 @@ export default function SignUp() {
                       <div className="w-5 h-5 border-2 border-turbo-beige border-t-transparent rounded-full animate-spin"></div>
                     </div>
                   ) : (
-                    'Get Notified'
+                    'Join Now'
                   )}
                 </button>
               </div>
@@ -468,21 +468,21 @@ export default function SignUp() {
           </h2>
           <div className="space-y-8">
             <div className="flex items-start gap-6 p-6 rounded-lg bg-turbo-beige/5 hover:bg-turbo-beige/10 transition-colors">
-              <div className="text-5xl">🎨</div>
+              <div className="text-3xl text-turbo-blue">●</div>
               <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-turbo-blue">The Creative's Dilemma</h3>
+                <h3 className="text-xl font-semibold text-turbo-yellow">The Creative's Dilemma</h3>
                 <p>You didn't become a creative to spend hours on proposals and budgets. Save that for the finance bros.</p>
               </div>
             </div>
             <div className="flex items-start gap-6 p-6 rounded-lg bg-turbo-beige/5 hover:bg-turbo-beige/10 transition-colors">
-              <div className="text-5xl">⏰</div>
+              <div className="text-3xl text-turbo-blue">●</div>
               <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-turbo-green">The Time Trap</h3>
+                <h3 className="text-xl font-semibold text-turbo-yellow">The Time Trap</h3>
                 <p>Every hour spent on admin is an hour not spent creating. Free up your time by automating repeatable tasks.</p>
               </div>
             </div>
             <div className="flex items-start gap-6 p-6 rounded-lg bg-turbo-beige/5 hover:bg-turbo-beige/10 transition-colors">
-              <div className="text-5xl">🤖</div>
+              <div className="text-3xl text-turbo-blue">●</div>
               <div className="space-y-2">
                 <h3 className="text-xl font-semibold text-turbo-yellow">Generic AI Tools Suck</h3>
                 <p>You've been using ChatGPT but it can't seem to make anything useful. They don't understand the nuances of creative work.</p>
@@ -665,10 +665,10 @@ export default function SignUp() {
                     onClick={scrollToTop}
                     className="w-full h-[48px] px-6 font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black hover:text-turbo-beige rounded-full transition-colors"
                   >
-                    Get Notified of Beta Launch
+                    Join Beta Now
                   </button>
                   <p className="text-xs sm:text-sm text-turbo-black/60 mt-4">
-                    Get early access • Lock in this price forever
+                    Get immediate access • Lock in this price forever
                   </p>
                 </div>
               </div>
@@ -708,7 +708,7 @@ export default function SignUp() {
               onClick={scrollToTop}
               className="w-full h-[48px] px-6 font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black rounded-full transition-colors"
             >
-              Get Notified of Beta Launch
+              Join Beta Now
             </button>
           </div>
         </div>
