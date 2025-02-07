@@ -27,12 +27,17 @@ export default function Profile() {
   // Track current form state
   const [userInfo, setUserInfo] = useState<UserInfo>(() => {
     const saved = localStorage.getItem('userInfo')
-    return saved ? JSON.parse(saved) : (isMobile ? DEFAULT_USER_INFO : {
+    // If we're on mobile and no saved info exists, use default info
+    if (isMobile && !saved) {
+      setIsInfoSaved(true) // Set info as saved for mobile users
+      return DEFAULT_USER_INFO
+    }
+    return saved ? JSON.parse(saved) : {
       companyName: '',
       userName: '',
       businessType: '',
       email: ''
-    })
+    }
   })
 
   useEffect(() => {
@@ -49,7 +54,7 @@ export default function Profile() {
 
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
-  }, [])
+  }, [isMobile, setIsInfoSaved]) // Add dependencies
 
   const handleInfoChange = (field: keyof UserInfo, value: string) => {
     const newInfo = { ...userInfo, [field]: value }
@@ -96,13 +101,17 @@ export default function Profile() {
   return (
     <Layout>
       <div className="max-w-3xl mx-auto px-4 py-12">
-        <h1 className="text-4xl md:text-7xl font-bold mb-12 text-turbo-black tracking-tight">
+        <h1 className={`text-4xl md:text-7xl font-bold mb-12 text-turbo-black tracking-tight ${
+          !isInfoSaved ? 'opacity-50' : ''
+        }`}>
           My Profile
         </h1>
         
         <div className="space-y-8">
           {/* Company Info Section - Show form on mobile */}
-          <div className="p-6 bg-white rounded-xl border-2 border-turbo-black">
+          <div className={`p-6 bg-white rounded-xl border-2 ${
+            isInfoSaved ? 'border-turbo-black' : 'border-red-500'
+          }`}>
             <h2 className="text-xl font-semibold mb-4">Company Info</h2>
             <div className="space-y-6">
               <div className="flex items-center gap-4">
