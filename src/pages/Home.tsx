@@ -15,6 +15,10 @@ export default function Home() {
   const [credits, setCredits] = useState(creditsManager.getCredits())
   const [isCreditsHovered, setIsCreditsHovered] = useState(false)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  const [lastFeedbackCredit, setLastFeedbackCredit] = useState(() => {
+    const saved = localStorage.getItem('lastFeedbackCredit')
+    return saved ? parseInt(saved) : creditsManager.getCredits()
+  })
 
   useEffect(() => {
     const handleResize = () => {
@@ -28,11 +32,19 @@ export default function Home() {
     // Subscribe to credit changes
     const unsubscribe = creditsManager.addListener((newCredits) => {
       setCredits(newCredits)
+      
+      // Check if 10 or more credits have been used since last feedback
+      const creditsSinceLastFeedback = lastFeedbackCredit - newCredits
+      if (creditsSinceLastFeedback >= 10) {
+        setShowFeatureModal(true)
+        setLastFeedbackCredit(newCredits)
+        localStorage.setItem('lastFeedbackCredit', String(newCredits))
+      }
     })
 
     // Cleanup subscription on unmount
     return () => unsubscribe()
-  }, [])
+  }, [lastFeedbackCredit])
 
   const handleTaskSelect = (task: TaskType) => {
     // On mobile, allow task selection regardless of info saved state
