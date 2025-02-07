@@ -6,7 +6,6 @@ import { DottedDialog } from '@/components/ui/dotted-dialog-wrapper'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/components/ui/rainbow-toast'
 import { createChatCompletion } from '@/services/openai'
-import { getGoogleMapsLink, getWeatherData } from '@/services/location'
 import { NotionButton } from '@/components/ui/notion-button'
 import ReactMarkdown from 'react-markdown'
 import type { Components } from 'react-markdown'
@@ -183,15 +182,6 @@ const LoadingOverlay = () => {
   )
 }
 
-const defaultWeather = {
-  sunrise: '7:15 AM',
-  sunset: '4:30 PM',
-  temperature: 45,
-  conditions: 'partly cloudy',
-  high: 50,
-  low: 40
-}
-
 export function TaskModal({
   taskType,
   onClose,
@@ -206,6 +196,11 @@ export function TaskModal({
   const [result, setResult] = useState<TaskResult | null>(null)
   const [selectedFileName, setSelectedFileName] = useState('')
   const [copiedButtons, setCopiedButtons] = useState<Record<string, boolean>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isRegenerating, setIsRegenerating] = useState(false)
+  const [isTestDataFilled, setIsTestDataFilled] = useState(false)
+  const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false)
+  const [selectedVideos, setSelectedVideos] = useState<Video[]>([])
 
   if (!taskType) return null
   const config = taskConfigs[taskType]

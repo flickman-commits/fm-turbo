@@ -38,8 +38,8 @@ export const taskActionConfigs: Record<TaskType, TaskActionConfig[]> = {
     { type: 'copy', label: 'Copy to Clipboard' }
   ],
   timelineFromTranscript: [
-    { type: 'copy', label: 'Copy to Clipboard', primary: true },
-    { type: 'copy', label: 'Copy Highlighted Transcript' }
+    { type: 'notion', label: 'Duplicate to Notion', primary: true },
+    { type: 'copy', label: 'Copy to Clipboard' }
   ],
   trendingAudios: [
     { type: 'download', label: 'Download Now', primary: true }
