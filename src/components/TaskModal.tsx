@@ -52,11 +52,8 @@ Sunday, December 8th - Miami, FL (Shoot):
 3:30 PM - 6:30 PM Shoot Miami cityscape location
 7:00 PM Crew dinner
 5:30 PM Sunset`,
-    role: `Director of Photography (DP): You will be responsible for overseeing all the visual elements of the shoot. This includes setting up and operating camera equipment, framing and composing shots, selecting appropriate lenses, and managing lighting setups to achieve the desired aesthetic. You will work closely with the Matt and crew to ensure the visual style aligns with the creative vision of the project.`,
-    deliverables: `- All raw footage must be handed off to the Flickman Media team before you leave
-- Camera logs and shot lists must be completed and submitted
-- Memory cards should be properly labeled and organized
-- Any special setups or lighting diagrams should be documented`,
+    role: `Director of Photography (DP)`,
+    deliverables: `- All raw footage must be handed off to our team at the end of the shoot`,
     dailyRate: '1500',
     numberOfDays: '2'
   },
