@@ -217,6 +217,15 @@ export default function SignUp() {
     <main className="min-h-screen bg-[#F5F0E8] overflow-x-hidden relative">
       {/* Hero Section - Beige */}
       <section className="min-h-screen flex flex-col items-center px-4 relative overflow-hidden bg-turbo-beige">
+        {/* Turbo Logo */}
+        <div className="absolute top-4 left-4">
+          <img 
+            src="/turbo-logo.png" 
+            alt="Turbo Logo" 
+            className="h-9 w-auto"
+          />
+        </div>
+
         <div className="w-full h-[20vh]" ref={topRef}></div>
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-6xl md:text-8xl font-bold mb-6 text-turbo-black tracking-tight animate-on-scroll">
