@@ -153,7 +153,7 @@ export default function Home() {
             !isInfoSaved && !isMobile ? 'opacity-50 cursor-not-allowed hover:bg-turbo-beige hover:text-turbo-black' : ''
           }`}
         >
-          Submit Feature Request
+          Give Us Feedback
         </button>
 
         {selectedTask && (
