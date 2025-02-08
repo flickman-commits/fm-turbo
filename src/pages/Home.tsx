@@ -47,10 +47,6 @@ export default function Home() {
   }, [lastFeedbackCredit])
 
   const handleTaskSelect = (task: TaskType) => {
-    // On mobile, allow task selection regardless of info saved state
-    if (!isInfoSaved && !isMobile) {
-      return // Early return if info isn't saved and not on mobile
-    }
     setSelectedTask(task)
   }
 
@@ -62,7 +58,6 @@ export default function Home() {
 
   const tasks: { type: TaskType; label: string; beta?: boolean }[] = [
     { type: 'proposal', label: 'CONTENT PROPOSAL' },
-    { type: 'outreach', label: 'OUTREACH MESSAGE' },
     { type: 'runOfShow', label: 'RUN OF SHOW' },
     { type: 'budget', label: 'PRODUCTION BUDGET' },
     { type: 'contractorBrief', label: 'CONTRACTOR BRIEF' },
@@ -94,9 +89,7 @@ export default function Home() {
           )}
         </button>
 
-        <h1 className={`text-4xl md:text-7xl font-bold mb-12 tracking-tight ${
-          !isInfoSaved && !isMobile ? 'text-turbo-black/40' : 'text-turbo-black'
-        }`}>
+        <h1 className="text-4xl md:text-7xl font-bold mb-12 tracking-tight text-turbo-black">
           What would you like to create today?
         </h1>
         
@@ -104,17 +97,11 @@ export default function Home() {
           {tasks.map((task) => (
             <div 
               key={task.type}
-              className={`flex items-center justify-between border-b border-turbo-black pb-4 group ${
-                isInfoSaved || isMobile
-                  ? 'cursor-pointer hover:border-turbo-blue' 
-                  : 'opacity-50 cursor-not-allowed'
-              }`}
+              className="flex items-center justify-between border-b border-turbo-black pb-4 group cursor-pointer hover:border-turbo-blue"
               onClick={() => handleTaskSelect(task.type)}
             >
               <div className="flex items-center gap-2">
-                <h2 className={`text-xl md:text-2xl font-semibold tracking-tight text-turbo-black ${
-                  isInfoSaved || isMobile ? 'group-hover:text-turbo-blue' : ''
-                } transition-colors`}>
+                <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-turbo-black group-hover:text-turbo-blue transition-colors">
                   {task.label}
                 </h2>
                 {task.beta && (
@@ -124,13 +111,8 @@ export default function Home() {
                 )}
               </div>
               <button
-                className={`text-3xl text-turbo-black ${
-                  isInfoSaved || isMobile
-                    ? 'group-hover:text-turbo-blue hover:scale-110' 
-                    : 'cursor-not-allowed'
-                } transition-all`}
+                className="text-3xl text-turbo-black group-hover:text-turbo-blue hover:scale-110 transition-all"
                 aria-label={`Open ${task.label}`}
-                disabled={!isInfoSaved && !isMobile}
                 onClick={(e) => {
                   e.stopPropagation()
                   handleTaskSelect(task.type)
@@ -146,12 +128,7 @@ export default function Home() {
         <div className="text-center">
           <button
             onClick={() => setShowVideoModal(true)}
-            disabled={!isInfoSaved && !isMobile}
-            className={`text-sm font-medium underline transition-colors ${
-              isInfoSaved || isMobile
-                ? 'text-turbo-blue hover:text-turbo-black' 
-                : 'text-turbo-black/40 cursor-not-allowed'
-            }`}
+            className="text-sm font-medium underline transition-colors text-turbo-blue hover:text-turbo-black"
           >
             IF YOU NEED HELP USING TURBO CLICK HERE
           </button>
@@ -160,10 +137,7 @@ export default function Home() {
         {/* Feature Request Button */}
         <button
           onClick={() => setShowFeatureModal(true)}
-          disabled={!isInfoSaved && !isMobile}
-          className={`fixed right-4 bottom-4 h-10 px-4 font-medium text-turbo-black bg-turbo-beige hover:bg-turbo-blue hover:text-turbo-beige border border-turbo-black rounded-full transition-colors whitespace-nowrap z-10 text-sm mb-[calc(env(safe-area-inset-bottom)+64px)] md:bottom-8 md:right-8 md:mb-0 ${
-            !isInfoSaved && !isMobile ? 'opacity-50 cursor-not-allowed hover:bg-turbo-beige hover:text-turbo-black' : ''
-          }`}
+          className="fixed right-4 bottom-4 h-10 px-4 font-medium text-turbo-black bg-turbo-beige hover:bg-turbo-blue hover:text-turbo-beige border border-turbo-black rounded-full transition-colors whitespace-nowrap z-10 text-sm mb-[calc(env(safe-area-inset-bottom)+64px)] md:bottom-8 md:right-8 md:mb-0"
         >
           Give Us Feedback
         </button>

@@ -19,15 +19,38 @@ export async function queryPerplexity(recipientName: string, companyName: string
     throw new Error('Perplexity API key not found in environment variables')
   }
 
-  const prompt = `Research the following person and their company: \nName: ${recipientName} \nCompany: ${companyName} \na
-  
-  Provide a concise bullet-pointed list of information with the bolded header "Company & Person Info" including 3 of the most important facts about their
-  company (including news announcements, company updates, key employees) and then 3 bullet points about
-  the propspect (including educational background, location, and other relevant details for us to
-  create our outreach message with). After the bulleted list, create a bolded header called "Sources" and
-  place the URLs to the source links underneath that as bullet points.
-  Format the entire response in markdown.
-  If no relevant data is found, return 'Couldn't find any relevant data.'`
+  const prompt = `Research the following person and their company:
+Name: ${recipientName}
+Company: ${companyName}
+
+Please return the research results in the following JSON format EXACTLY:
+
+{
+  "companyInfo": [
+    "First important company fact",
+    "Second important company fact",
+    "Third important company fact"
+  ],
+  "personInfo": [
+    "First important person fact",
+    "Second important person fact",
+    "Third important person fact"
+  ],
+  "sources": [
+    "URL1",
+    "URL2",
+    "URL3"
+  ],
+  "title": "Current job title at the company"
+}
+
+Include:
+- For companyInfo: Recent news, company updates, key metrics, or notable achievements
+- For personInfo: Educational background, work history, location, and relevant professional details
+- For sources: URLs to the source material used
+- For title: The person's current job title at the company, if found. If not found, leave as empty string.
+
+Format the response as valid JSON only, with no additional text or markdown.`
 
   try {
     console.log('Sending request to Perplexity with payload:', {

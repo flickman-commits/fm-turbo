@@ -1026,10 +1026,10 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
                 <button
                   type="submit"
                   className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors disabled:opacity-80 disabled:bg-turbo-black/40 disabled:cursor-not-allowed disabled:text-turbo-beige group relative"
-                  disabled={isLoading || !isFormValid() || !isInfoSaved}
+                  disabled={isLoading || !isFormValid()}
                 >
                   <span className="flex items-center justify-center gap-2">
-                    {!isInfoSaved ? 'Complete Company Info First' : isLoading ? 'Generating...' : (
+                    {isLoading ? 'Generating...' : (
                       <>
                         Generate
                         <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-turbo-beige/30 bg-turbo-beige/10 px-1.5 font-mono text-[10px] font-medium text-turbo-beige opacity-50 group-hover:opacity-75">
