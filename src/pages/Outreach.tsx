@@ -97,8 +97,8 @@ export default function Outreach() {
   // Add new state for tracking emails sent today
   const [emailsSentToday, setEmailsSentToday] = useState(0)
 
-  // Fix isEditing declaration
-  const [isEditing, setIsEditing] = useState(false)
+  // Fix isEditing declaration - only use the value since setter is not needed
+  const isEditing = false
 
   // Add new state for queued emails
   const [queuedEmails, setQueuedEmails] = useState<QueuedEmail[]>([])
