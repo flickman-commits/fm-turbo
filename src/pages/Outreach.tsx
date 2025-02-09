@@ -8,7 +8,8 @@ import { Prospect, UserInfo, EmailTemplate, ProspectResearch } from '@/types/out
 import { DEFAULT_USER_INFO } from '@/config/constants'
 
 type OutreachType = 'getClients' | 'getJob' | 'getSpeakers'
-type OnboardingStep = 1 | 2 | 3
+type MessageStyle = 'direct' | 'casual' | 'storytelling'
+type OnboardingStep = 1 | 2 | 3 | 4
 type HasList = 'yes' | 'no' | null
 type SlideDirection = 'forward' | 'back' | null
 
@@ -52,9 +53,20 @@ const Question = ({ isActive, direction, children, step, currentStep }: Question
   )
 }
 
+// Add new state for queued emails
+interface QueuedEmail {
+  prospectId: string
+  prospectName: string
+  prospectEmail: string
+  subject: string
+  body: string
+  templateIndex: number  // Add this to track which template was queued
+}
+
 export default function Outreach() {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(1)
   const [outreachType, setOutreachType] = useState<OutreachType | null>(null)
+  const [messageStyle, setMessageStyle] = useState<MessageStyle | null>(null)
   const [hasList, setHasList] = useState<HasList>(null)
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [showMainUI, setShowMainUI] = useState(false)
@@ -89,9 +101,12 @@ export default function Outreach() {
   // Add new state for tracking if user is editing
   const [isEditing, setIsEditing] = useState(false)
 
+  // Add new state for queued emails
+  const [queuedEmails, setQueuedEmails] = useState<QueuedEmail[]>([])
+
   // Handle navigation
   const goToNextStep = () => {
-    setCurrentStep(prev => (prev < 3 ? (prev + 1) as OnboardingStep : prev))
+    setCurrentStep(prev => (prev < 4 ? (prev + 1) as OnboardingStep : prev))
     setSlideDirection('forward')
     // Reset direction after animation completes
     setTimeout(() => setSlideDirection(null), 500)
@@ -117,6 +132,25 @@ export default function Outreach() {
       ...userInfo,
       outreachType: type,
       outreachContext: getOutreachContext(type)
+    }
+    
+    // Save back to localStorage
+    localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo))
+    
+    goToNextStep()
+  }
+
+  const handleMessageStyleSelect = (style: MessageStyle) => {
+    setMessageStyle(style)
+    
+    // Get current user info
+    const currentUserInfo = localStorage.getItem('userInfo')
+    const userInfo = currentUserInfo ? JSON.parse(currentUserInfo) : DEFAULT_USER_INFO
+    
+    // Update messageStyle
+    const updatedUserInfo = {
+      ...userInfo,
+      messageStyle: style
     }
     
     // Save back to localStorage
@@ -178,7 +212,7 @@ export default function Outreach() {
               prospect.email = value
               break
             case 'company':
-              prospect.company = value
+              prospect.company = value.trim().replace(/^["']|["']$/g, '')
               break
             case 'industry':
               prospect.industry = value
@@ -446,6 +480,16 @@ export default function Outreach() {
 
   useEffect(() => {
     if (currentProspect && userInfo) {
+      // Reset template index when switching prospects
+      setCurrentTemplateIndex(0)
+      
+      // Update email templates if they exist for the current prospect
+      if (currentProspect.emailTemplates) {
+        setEmailTemplates(currentProspect.emailTemplates)
+      } else {
+        setEmailTemplates([])
+      }
+      
       // If current prospect isn't ready, process it immediately
       const status = prospectStatuses[currentProspect.id] || 'pending'
       if (status === 'pending' && !processingQueue.has(currentProspect.id)) {
@@ -480,14 +524,47 @@ export default function Outreach() {
     }
   }, [isLoading])
 
-  // Handle sending email
-  const handleSendEmail = () => {
+  // Add helper function to check if current template is queued
+  const isCurrentTemplateQueued = useCallback(() => {
+    return queuedEmails.some(
+      email => email.prospectId === currentProspect?.id && email.templateIndex === currentTemplateIndex
+    )
+  }, [queuedEmails, currentProspect?.id, currentTemplateIndex])
+
+  // Modify handleQueueEmail to include templateIndex
+  const handleQueueEmail = () => {
     const template = emailTemplates[currentTemplateIndex]
     if (template && currentProspect?.email) {
-      const mailtoLink = `mailto:${currentProspect.email}?subject=${encodeURIComponent(template.subject)}&body=${encodeURIComponent(template.body)}`
-      window.location.href = mailtoLink
-      setEmailsSentToday(prev => prev + 1)
+      const queuedEmail: QueuedEmail = {
+        prospectId: currentProspect.id,
+        prospectName: currentProspect.name,
+        prospectEmail: currentProspect.email,
+        subject: template.subject,
+        body: template.body,
+        templateIndex: currentTemplateIndex
+      }
+      setQueuedEmails(prev => [...prev, queuedEmail])
+      goToNextProspect()
     }
+  }
+
+  // Add function to remove from queue
+  const handleRemoveFromQueue = () => {
+    setQueuedEmails(prev => 
+      prev.filter(
+        email => !(email.prospectId === currentProspect?.id && email.templateIndex === currentTemplateIndex)
+      )
+    )
+  }
+
+  // Add batch send function
+  const handleBatchSend = () => {
+    queuedEmails.forEach(email => {
+      const mailtoLink = `mailto:${email.prospectEmail}?subject=${encodeURIComponent(email.subject)}&body=${encodeURIComponent(email.body)}`
+      window.open(mailtoLink, '_blank')
+    })
+    setEmailsSentToday(prev => prev + queuedEmails.length)
+    setQueuedEmails([])
   }
 
   // Keyboard navigation
@@ -497,21 +574,47 @@ export default function Outreach() {
       return
     }
 
-    // Handle template navigation with F/J
-    if (e.key.toLowerCase() === 'j') {
-      e.preventDefault()
-      if (!isResearching && currentTemplateIndex < emailTemplates.length - 1) {
-        goToNextTemplate()
-      }
-    } else if (e.key.toLowerCase() === 'f') {
-      e.preventDefault()
-      if (!isResearching && currentTemplateIndex > 0) {
-        goToPreviousTemplate()
-      }
-    } else if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-      handleSendEmail()
+    // Handle template and prospect navigation with IJKL
+    switch(e.key.toLowerCase()) {
+      case 'j':
+        e.preventDefault()
+        if (!isResearching && currentTemplateIndex > 0) {
+          goToPreviousTemplate()
+        }
+        break
+      case 'l':
+        e.preventDefault()
+        if (!isResearching && currentTemplateIndex < emailTemplates.length - 1) {
+          goToNextTemplate()
+        }
+        break
+      case 'i':
+        e.preventDefault()
+        if (currentProspectIndex > 0) {
+          goToPreviousProspect()
+        }
+        break
+      case 'k':
+        e.preventDefault()
+        if (currentProspectIndex < prospects.length - 1) {
+          goToNextProspect()
+        }
+        break
+      case 'enter':
+        if (e.metaKey || e.ctrlKey) {
+          handleQueueEmail()
+        }
+        break
     }
-  }, [emailTemplates, currentTemplateIndex, currentProspect?.email, isResearching, isEditing])
+
+    // Add batch send shortcut (Cmd/Ctrl + B)
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
+      e.preventDefault()
+      if (queuedEmails.length > 0) {
+        handleBatchSend()
+      }
+    }
+  }, [emailTemplates, currentTemplateIndex, currentProspect?.email, isResearching, isEditing, prospects.length, currentProspectIndex, queuedEmails.length])
 
   // Reset emails sent counter at midnight
   useEffect(() => {
@@ -538,7 +641,7 @@ export default function Outreach() {
         <Layout>
           <div className="h-screen flex flex-col items-center justify-center">
             <div className="w-8 h-8 border-4 border-turbo-blue border-t-transparent rounded-full animate-spin mb-4" />
-            <p className="text-lg text-turbo-black/60">Getting setup to Turbocharge your outreach</p>
+            <p className="text-lg text-turbo-black/60">Getting ready to Turbocharge your outreach</p>
           </div>
         </Layout>
       )
@@ -549,317 +652,362 @@ export default function Outreach() {
         {/* Inspirational Callout Bar */}
         <div className="bg-turbo-blue text-white py-3 px-4">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <p className="text-lg font-medium">100 outreach emails a day will make you rich.</p>
-            <div className="flex items-center gap-4">
-              <div className="text-sm">
-                {emailsSentToday}/100 emails sent today
-              </div>
-              <div className="w-32 h-2 bg-white/20 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-white transition-all duration-500 ease-out"
-                  style={{ width: `${Math.min((emailsSentToday / 100) * 100, 100)}%` }}
-                />
+            <p className="text-lg font-medium">50 outreach emails a day could change your business forever.</p>
+            <div className="flex items-center gap-6">
+              {queuedEmails.length > 0 && (
+                <button
+                  onClick={handleBatchSend}
+                  className="flex items-center gap-2 px-4 py-2 bg-white text-turbo-blue rounded-full hover:bg-white/90 transition-colors"
+                >
+                  Send {queuedEmails.length} Queued
+                  <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-turbo-blue/30 bg-turbo-blue/10 px-1.5 font-mono text-[10px] font-medium">
+                    <Command className="h-3 w-3" />
+                    <span className="text-xs">B</span>
+                  </kbd>
+                </button>
+              )}
+              <div className="flex items-center gap-4">
+                <div className="text-sm">
+                  {emailsSentToday}/50 emails sent today
+                </div>
+                <div className="w-32 h-2 bg-white/20 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-white transition-all duration-500 ease-out"
+                    style={{ width: `${Math.min((emailsSentToday / 50) * 100, 100)}%` }}
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="grid grid-cols-[350px_1fr_300px] gap-6 min-h-[calc(100vh-200px)]">
-            {/* Left Column - Prospect & Company Info */}
-            <div>
-              {/* Consolidated Prospect Card */}
-              <div className="rounded-lg border-2 border-turbo-black/10 p-6">
-                <h3 className="text-lg font-semibold mb-4">Current Prospect</h3>
-                
-                {/* Basic Info */}
-                <div className="space-y-2 mb-6">
-                  <p className="text-sm font-medium text-turbo-black">Basic Info</p>
-                  <div className="space-y-2">
-                    <p className="text-sm text-turbo-black/60">
-                      {currentProspect?.name || 'Name'}
-                    </p>
-                    <p className="text-sm text-turbo-black/60">
-                      {currentProspect?.title || 'Title'}
-                    </p>
-                    <p className="text-sm text-turbo-black/60">
-                      {currentProspect?.company || 'Company'}
-                    </p>
-                    <p className="text-sm text-turbo-black/60">
-                      {currentProspect?.email || 'Email'}
-                    </p>
+          <div className="grid grid-cols-[1fr_350px] gap-6 min-h-[calc(100vh-200px)]">
+            {/* Left Column - List + Email Composer */}
+            <div className="flex flex-col gap-4">
+              {/* Current Prospect Bar */}
+              <div className="flex items-center justify-between bg-white rounded-lg border-2 border-turbo-black/10 p-4 overflow-hidden">
+                <div className="flex items-center gap-3">
+                  <div className="flex flex-col relative h-[48px] w-[300px]">
+                    {prospects.map((prospect, index) => (
+                      <div
+                        key={prospect.id}
+                        className={cn(
+                          "absolute top-0 left-0 w-full h-full flex flex-col justify-center transition-all duration-300",
+                          index === currentProspectIndex 
+                            ? "translate-y-0 opacity-100 pointer-events-auto" 
+                            : index < currentProspectIndex
+                              ? "-translate-y-12 opacity-0 pointer-events-none"
+                              : "translate-y-12 opacity-0 pointer-events-none"
+                        )}
+                        style={{
+                          transform: `translateY(${index === currentProspectIndex ? 0 : index < currentProspectIndex ? -48 : 48}px)`
+                        }}
+                      >
+                        <div className="flex flex-col justify-center">
+                          <span className="text-sm font-medium text-turbo-black truncate leading-tight">{prospect.name}</span>
+                          <span className="text-xs text-turbo-black/60 truncate leading-tight">{prospect.company}</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
+                <div className="flex items-center gap-4">
+                  {/* Status Indicator */}
+                  <div className="flex items-center gap-1">
+                    {(() => {
+                      const status = prospectStatuses[currentProspect?.id || ''] || 'pending'
+                      if (status === 'researching' || status === 'generating_emails') {
+                        return (
+                          <div className="w-4 h-4 border-2 border-turbo-blue border-t-transparent rounded-full animate-spin" />
+                        )
+                      } else if (status === 'ready') {
+                        return (
+                          <svg className="w-4 h-4 text-turbo-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )
+                      } else {
+                        return (
+                          <svg className="w-4 h-4 text-turbo-black/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        )
+                      }
+                    })()}
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <div className="flex flex-col items-center">
+                      <button 
+                        onClick={goToPreviousProspect}
+                        disabled={currentProspectIndex === 0}
+                        className="p-1 text-turbo-black/40 hover:text-turbo-blue transition-colors disabled:opacity-30"
+                      >
+                        <ArrowLeft className="w-4 h-4 rotate-90" />
+                      </button>
+                      <kbd className="mt-1 inline-flex h-5 items-center gap-1 rounded border border-turbo-black/30 bg-turbo-black/5 px-1.5 font-mono text-[10px] font-medium text-turbo-black/60">
+                        I
+                      </kbd>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <button 
+                        onClick={goToNextProspect}
+                        disabled={currentProspectIndex === prospects.length - 1}
+                        className="p-1 text-turbo-black/40 hover:text-turbo-blue transition-colors disabled:opacity-30"
+                      >
+                        <ArrowLeft className="w-4 h-4 -rotate-90" />
+                      </button>
+                      <kbd className="mt-1 inline-flex h-5 items-center gap-1 rounded border border-turbo-black/30 bg-turbo-black/5 px-1.5 font-mono text-[10px] font-medium text-turbo-black/60">
+                        K
+                      </kbd>
+                    </div>
+                    <span className="text-sm text-turbo-black/60 ml-2">
+                      {currentProspectIndex + 1}/{prospects.length}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-                {/* Divider */}
-                <div className="h-px bg-turbo-black/10 my-6" />
+              {/* Email Composer */}
+              <div className="flex-1 rounded-lg border-2 border-turbo-black/10 p-6 overflow-hidden flex flex-col">
+                <h3 className="text-xl font-semibold mb-6 text-turbo-black">What You're Gonna Send</h3>
+                <div className="flex-1 relative">
+                  {isGeneratingEmails || (emailTemplates.length === 0 && (prospectStatuses[currentProspect?.id || ''] === 'researching' || prospectStatuses[currentProspect?.id || ''] === 'generating_emails')) ? (
+                    <div className="flex flex-col items-center justify-center h-full">
+                      <div className="w-8 h-8 border-4 border-turbo-blue border-t-transparent rounded-full animate-spin mb-4" />
+                      <p className="text-turbo-black/60">Writing email starters...</p>
+                    </div>
+                  ) : emailTemplates.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-turbo-black/40">
+                      <p>No email templates available yet</p>
+                    </div>
+                  ) : (
+                    <div 
+                      className="absolute inset-0 transition-transform duration-300 ease-in-out"
+                      style={{ transform: `translateX(${-currentTemplateIndex * 100}%)` }}
+                    >
+                      {emailTemplates.map((template, index) => (
+                        <div 
+                          key={index}
+                          className="absolute inset-0 w-full transition-opacity duration-300 flex flex-col"
+                          style={{ 
+                            transform: `translateX(${index * 100}%)`,
+                            opacity: currentTemplateIndex === index ? 1 : 0,
+                            pointerEvents: currentTemplateIndex === index ? 'auto' : 'none'
+                          }}
+                        >
+                          {queuedEmails.some(
+                            email => email.prospectId === currentProspect?.id && email.templateIndex === index
+                          ) && (
+                            <div className="absolute top-0 right-0 bg-turbo-black/5 text-turbo-black/60 px-3 py-1 rounded-bl-lg text-sm flex items-center gap-2">
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              Queued
+                            </div>
+                          )}
+                          <div className="relative group mb-4">
+                            <div className="flex items-center mb-4">
+                              <span className="font-bold text-turbo-black mr-2">Subject:</span>
+                              <input
+                                type="text"
+                                value={template?.subject || ''}
+                                onChange={(e) => {
+                                  const newTemplates = [...emailTemplates]
+                                  newTemplates[index] = {
+                                    ...template,
+                                    subject: e.target.value
+                                  }
+                                  setEmailTemplates(newTemplates)
+                                }}
+                                className="flex-1 p-2 border-b-2 border-transparent hover:border-turbo-black/10 focus:border-turbo-blue focus:outline-none transition-colors rounded-lg"
+                                placeholder="Subject line..."
+                              />
+                            </div>
+                          </div>
+                          <div className="relative group flex-1">
+                            <textarea
+                              value={template?.body || ''}
+                              onChange={(e) => {
+                                const newTemplates = [...emailTemplates]
+                                newTemplates[index] = {
+                                  ...template,
+                                  body: e.target.value
+                                }
+                                setEmailTemplates(newTemplates)
+                              }}
+                              className="w-full h-full p-4 text-turbo-black whitespace-pre-wrap resize-none border-2 border-transparent hover:border-turbo-black/10 focus:border-turbo-blue focus:outline-none transition-colors rounded-lg bg-[#FAF9F6]"
+                              placeholder="Email body content will go here..."
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-                {/* Personal Insights */}
-                {currentProspect?.research?.personInfo && currentProspect.research.personInfo.length > 0 && (
-                  <>
+                {/* Navigation and Send Controls */}
+                <div className="flex items-center justify-between mt-6 px-4">
+                  <div className="flex gap-4 items-center">
+                    <div className="flex flex-col items-center">
+                      <button 
+                        onClick={goToPreviousTemplate}
+                        disabled={currentTemplateIndex === 0 || isResearching}
+                        className="p-2 text-turbo-black/40 hover:text-turbo-blue transition-colors disabled:opacity-30 disabled:hover:text-turbo-black/40"
+                      >
+                        <ArrowLeft className="w-6 h-6" />
+                      </button>
+                      <kbd className="mt-1 inline-flex h-5 items-center gap-1 rounded border border-turbo-black/30 bg-turbo-black/5 px-1.5 font-mono text-[10px] font-medium text-turbo-black/60">
+                        J
+                      </kbd>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <button 
+                        onClick={goToNextTemplate}
+                        disabled={currentTemplateIndex === emailTemplates.length - 1 || isResearching}
+                        className="p-2 text-turbo-black/40 hover:text-turbo-blue transition-colors disabled:opacity-30 disabled:hover:text-turbo-black/40"
+                      >
+                        <ArrowLeft className="w-6 h-6 rotate-180" />
+                      </button>
+                      <kbd className="mt-1 inline-flex h-5 items-center gap-1 rounded border border-turbo-black/30 bg-turbo-black/5 px-1.5 font-mono text-[10px] font-medium text-turbo-black/60">
+                        L
+                      </kbd>
+                    </div>
+                  </div>
+
+                  {/* Template Position Indicators */}
+                  <div className="flex gap-2">
+                    {[0, 1, 2, 3, 4].map((index) => (
+                      <div
+                        key={index}
+                        className={cn(
+                          "w-2 h-2 rounded-full transition-colors",
+                          currentTemplateIndex === index
+                            ? "bg-turbo-blue"
+                            : index < emailTemplates.length
+                              ? "bg-turbo-black/20"
+                              : "bg-turbo-black/10"
+                        )}
+                      />
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={isCurrentTemplateQueued() ? handleRemoveFromQueue : handleQueueEmail}
+                    disabled={isResearching || !emailTemplates[currentTemplateIndex] || !currentProspect?.email}
+                    className={cn(
+                      "px-6 py-3 rounded-full flex items-center gap-2 transition-colors",
+                      isCurrentTemplateQueued()
+                        ? "bg-turbo-black/10 text-turbo-black hover:bg-turbo-black/20"
+                        : "bg-turbo-blue text-white hover:bg-turbo-blue/90",
+                      "disabled:opacity-50"
+                    )}
+                  >
+                    {isCurrentTemplateQueued() ? (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span>Queued</span>
+                        </div>
+                        <span className="text-xs opacity-60">(click to remove)</span>
+                      </>
+                    ) : (
+                      <>
+                        Queue Email
+                        <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-white/30 bg-white/10 px-1.5 font-mono text-[10px] font-medium">
+                          <Command className="h-3 w-3" />
+                          <span className="text-xs">↵</span>
+                        </kbd>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column - Prospect Info */}
+            <div className="rounded-lg border-2 border-turbo-black/10 p-6 bg-[#FAFAFA]">
+              {isResearching ? (
+                <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
+                  <div className="w-8 h-8 border-4 border-turbo-blue border-t-transparent rounded-full animate-spin mb-4" />
+                  <p className="text-turbo-black/60">Researching prospect...</p>
+                </div>
+              ) : (
+                <>
+                  <div className="mb-6 bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-4">
+                    <div className="flex items-start gap-4">
+                      <div className="w-14 h-14 rounded-full bg-turbo-black/5 flex items-center justify-center text-turbo-black/30 shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
+                        <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-turbo-black">{currentProspect?.name}</h2>
+                        <p className="text-lg text-turbo-black/60">{currentProspect?.title} at {currentProspect?.company}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Personal Insights */}
+                  {currentProspect?.research?.personInfo && currentProspect.research.personInfo.length > 0 && (
                     <div className="mb-6">
                       <p className="text-sm font-medium text-turbo-black mb-2">Personal Insights</p>
                       <div className="space-y-2">
                         {currentProspect.research.personInfo.map((info, index) => (
                           <div 
                             key={index}
-                            className="text-sm text-turbo-black/60 pl-2 border-l-2 border-turbo-blue/20"
+                            className="text-sm text-turbo-black/60 pl-4 relative"
                           >
+                            <div className="absolute left-0 top-[0.5em] w-1.5 h-1.5 rounded-full bg-turbo-blue" />
                             {info}
                           </div>
                         ))}
                       </div>
                     </div>
+                  )}
 
-                    {/* Divider */}
-                    <div className="h-px bg-turbo-black/10 my-6" />
-                  </>
-                )}
-
-                {/* Company Insights */}
-                {currentProspect?.research?.companyInfo && currentProspect.research.companyInfo.length > 0 && (
-                  <>
+                  {/* Company Insights */}
+                  {currentProspect?.research?.companyInfo && currentProspect.research.companyInfo.length > 0 && (
                     <div className="mb-6">
                       <p className="text-sm font-medium text-turbo-black mb-2">Company Insights</p>
                       <div className="space-y-2">
                         {currentProspect.research.companyInfo.map((info, index) => (
                           <div 
                             key={index}
-                            className="text-sm text-turbo-black/60 pl-2 border-l-2 border-turbo-blue/20"
+                            className="text-sm text-turbo-black/60 pl-4 relative"
                           >
+                            <div className="absolute left-0 top-[0.5em] w-1.5 h-1.5 rounded-full bg-turbo-blue" />
                             {info}
                           </div>
                         ))}
                       </div>
                     </div>
+                  )}
 
-                    {/* Divider */}
-                    <div className="h-px bg-turbo-black/10 my-6" />
-                  </>
-                )}
-
-                {/* Sources */}
-                {currentProspect?.research?.sources && currentProspect.research.sources.length > 0 && (
-                  <div>
-                    <p className="text-sm font-medium text-turbo-black mb-2">Sources</p>
-                    <div className="space-y-1">
-                      {currentProspect.research.sources.map((source, index) => (
-                        <a
-                          key={index}
-                          href={source}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-turbo-blue hover:underline block truncate"
-                        >
-                          {source}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Center Column - Email Content */}
-            <div className="flex flex-col">
-              <div className="flex-1 rounded-lg border-2 border-turbo-black/10 p-6 overflow-hidden">
-                <div className="mb-4 h-[300px] overflow-y-auto relative">
-                  <div 
-                    className="transition-transform duration-300 ease-in-out absolute inset-0"
-                    style={{ transform: `translateX(${-currentTemplateIndex * 100}%)` }}
-                  >
-                    {emailTemplates.map((template, index) => (
-                      <div 
-                        key={index}
-                        className="absolute inset-0 w-full transition-opacity duration-300"
-                        style={{ 
-                          transform: `translateX(${index * 100}%)`,
-                          opacity: currentTemplateIndex === index ? 1 : 0,
-                          pointerEvents: currentTemplateIndex === index ? 'auto' : 'none'
-                        }}
-                      >
-                        <div className="relative group">
-                          <div className="flex items-center mb-4">
-                            <span className="font-bold text-turbo-black mr-2">Subject:</span>
-                            <input
-                              type="text"
-                              value={template?.subject || ''}
-                              onChange={(e) => {
-                                const newTemplates = [...emailTemplates]
-                                newTemplates[index] = {
-                                  ...template,
-                                  subject: e.target.value
-                                }
-                                setEmailTemplates(newTemplates)
-                                setIsEditing(true)
-                              }}
-                              onFocus={() => setIsEditing(true)}
-                              onBlur={() => setIsEditing(false)}
-                              className="flex-1 p-2 border-b-2 border-transparent hover:border-turbo-black/10 focus:border-turbo-blue focus:outline-none transition-colors rounded-lg"
-                              placeholder="Subject line..."
-                            />
-                          </div>
-                          {isEditing && (
-                            <button
-                              onClick={() => setIsEditing(false)}
-                              className="absolute bottom-2 right-2 px-3 py-1.5 bg-turbo-blue text-white text-sm rounded-full flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              Save
-                              <span className="text-xs">↵</span>
-                            </button>
-                          )}
-                        </div>
-                        <div className="relative group h-[200px]">
-                          <textarea
-                            value={template?.body || ''}
-                            onChange={(e) => {
-                              const newTemplates = [...emailTemplates]
-                              newTemplates[index] = {
-                                ...template,
-                                body: e.target.value
-                              }
-                              setEmailTemplates(newTemplates)
-                              setIsEditing(true)
-                            }}
-                            onFocus={() => setIsEditing(true)}
-                            onBlur={() => setIsEditing(false)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                                e.preventDefault()
-                                setIsEditing(false)
-                              }
-                            }}
-                            className="w-full h-full p-2 text-turbo-black whitespace-pre-wrap resize-none border-2 border-transparent hover:border-turbo-black/10 focus:border-turbo-blue focus:outline-none transition-colors rounded-lg bg-[#FAF9F6]"
-                            placeholder="Email body content will go here..."
-                          />
-                          {isEditing && (
-                            <button
-                              onClick={() => setIsEditing(false)}
-                              className="absolute bottom-2 right-2 px-3 py-1.5 bg-turbo-blue text-white text-sm rounded-full flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              Save
-                              <span className="text-xs">↵</span>
-                            </button>
-                          )}
-                        </div>
+                  {/* Sources */}
+                  {currentProspect?.research?.sources && currentProspect.research.sources.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium text-turbo-black mb-2">Sources</p>
+                      <div className="space-y-1">
+                        {currentProspect.research.sources.map((source, index) => (
+                          <a
+                            key={index}
+                            href={source}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-turbo-blue hover:underline block truncate"
+                          >
+                            {source}
+                          </a>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                  {isResearching ? (
-                    <div className="flex flex-col items-center justify-center h-full">
-                      <div className="w-8 h-8 border-4 border-turbo-blue border-t-transparent rounded-full animate-spin mb-4" />
-                      <p className="text-turbo-black/60">Researching prospect...</p>
                     </div>
-                  ) : isGeneratingEmails ? (
-                    <div className="flex flex-col items-center justify-center h-full">
-                      <div className="w-8 h-8 border-4 border-turbo-blue border-t-transparent rounded-full animate-spin mb-4" />
-                      <p className="text-turbo-black/60">Writing email starters...</p>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-
-              {/* Navigation and Send Controls */}
-              <div className="flex items-center justify-between mt-4 px-4">
-                <div className="flex gap-4 items-center">
-                  <div className="flex flex-col items-center">
-                    <button 
-                      onClick={goToPreviousTemplate}
-                      disabled={currentTemplateIndex === 0 || isResearching}
-                      className="p-2 text-turbo-black/40 hover:text-turbo-blue transition-colors disabled:opacity-30 disabled:hover:text-turbo-black/40"
-                    >
-                      <ArrowLeft className="w-6 h-6" />
-                    </button>
-                    <kbd className="mt-1 inline-flex h-5 items-center gap-1 rounded border border-turbo-black/30 bg-turbo-black/5 px-1.5 font-mono text-[10px] font-medium text-turbo-black/60">
-                      F
-                    </kbd>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <button 
-                      onClick={goToNextTemplate}
-                      disabled={currentTemplateIndex === emailTemplates.length - 1 || isResearching}
-                      className="p-2 text-turbo-black/40 hover:text-turbo-blue transition-colors disabled:opacity-30 disabled:hover:text-turbo-black/40"
-                    >
-                      <ArrowLeft className="w-6 h-6 rotate-180" />
-                    </button>
-                    <kbd className="mt-1 inline-flex h-5 items-center gap-1 rounded border border-turbo-black/30 bg-turbo-black/5 px-1.5 font-mono text-[10px] font-medium text-turbo-black/60">
-                      J
-                    </kbd>
-                  </div>
-                </div>
-
-                {/* Template Position Indicators */}
-                <div className="flex gap-2">
-                  {[0, 1, 2, 3, 4].map((index) => (
-                    <div
-                      key={index}
-                      className={cn(
-                        "w-2 h-2 rounded-full transition-colors",
-                        currentTemplateIndex === index
-                          ? "bg-turbo-blue"
-                          : index < emailTemplates.length
-                            ? "bg-turbo-black/20"
-                            : "bg-turbo-black/10"
-                      )}
-                    />
-                  ))}
-                </div>
-
-                <button
-                  onClick={handleSendEmail}
-                  disabled={isResearching || !emailTemplates[currentTemplateIndex] || !currentProspect?.email}
-                  className="px-6 py-3 bg-turbo-blue text-white rounded-full hover:bg-turbo-blue/90 transition-colors flex items-center gap-2 disabled:opacity-50"
-                >
-                  Send
-                  <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-white/30 bg-white/10 px-1.5 font-mono text-[10px] font-medium">
-                    <Command className="h-3 w-3" />
-                    <span className="text-xs">↵</span>
-                  </kbd>
-                </button>
-              </div>
-            </div>
-
-            {/* Right Column - List Progress */}
-            <div className="rounded-lg border-2 border-turbo-black/10 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold">Your List</h3>
-                <span className="text-sm text-turbo-black/60">
-                  {currentProspectIndex + 1}/{prospects.length}
-                </span>
-              </div>
-              <div className="space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto">
-                {prospects.map((prospect, index) => (
-                  <div
-                    key={prospect.id}
-                    onClick={() => setCurrentProspectIndex(index)}
-                    className={cn(
-                      "p-3 rounded-lg cursor-pointer transition-colors",
-                      index === currentProspectIndex 
-                        ? "bg-turbo-black/5" 
-                        : "hover:bg-turbo-black/5",
-                      // Gray out prospects that aren't ready and aren't being processed
-                      prospectStatuses[prospect.id] !== 'ready' && !processingQueue.has(prospect.id) && "opacity-50"
-                    )}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium">{prospect.name}</p>
-                        <p className="text-xs text-turbo-black/60">{prospect.company}</p>
-                      </div>
-                      {// Only show spinner for prospects currently in the processing queue
-                      processingQueue.has(prospect.id) && (
-                        <div className="w-4 h-4 border-2 border-turbo-blue border-t-transparent rounded-full animate-spin" />
-                      )}
-                      {// Show checkmark for completed prospects
-                      prospectStatuses[prospect.id] === 'ready' && (
-                        <svg className="w-4 h-4 text-turbo-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -875,7 +1023,7 @@ export default function Outreach() {
           <div className="h-1 bg-turbo-black/10 rounded-full">
             <div 
               className="h-full bg-turbo-blue rounded-full transition-all duration-500"
-              style={{ width: `${(currentStep / 3) * 100}%` }}
+              style={{ width: `${(currentStep / 4) * 100}%` }}
             />
           </div>
         </div>
@@ -943,11 +1091,69 @@ export default function Outreach() {
               </div>
             </Question>
 
-            {/* Question 2 */}
+            {/* Question 2 - Message Style */}
             <Question 
               isActive={currentStep === 2} 
               direction={slideDirection}
               step={2}
+              currentStep={currentStep}
+            >
+              <div className="space-y-8">
+                <h2 className="text-4xl font-bold tracking-tight text-turbo-black">
+                  Choose which high-converting messaging style you want
+                </h2>
+                <div className="grid gap-4">
+                  <button
+                    onClick={() => handleMessageStyleSelect('direct')}
+                    className={cn(
+                      "p-6 text-left rounded-lg border-2 transition-colors",
+                      messageStyle === 'direct'
+                        ? 'border-turbo-blue bg-turbo-blue text-turbo-beige'
+                        : 'border-turbo-black hover:bg-turbo-black/5'
+                    )}
+                  >
+                    <div className="space-y-2">
+                      <div className="font-semibold">Direct & Professional</div>
+                      <p className="text-sm opacity-80">Clear and straight to the point. Perfect for busy executives and formal industries.</p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => handleMessageStyleSelect('casual')}
+                    className={cn(
+                      "p-6 text-left rounded-lg border-2 transition-colors",
+                      messageStyle === 'casual'
+                        ? 'border-turbo-blue bg-turbo-blue text-turbo-beige'
+                        : 'border-turbo-black hover:bg-turbo-black/5'
+                    )}
+                  >
+                    <div className="space-y-2">
+                      <div className="font-semibold">Casual & Friendly</div>
+                      <p className="text-sm opacity-80">Warm and conversational. Great for creative industries and building personal connections.</p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => handleMessageStyleSelect('storytelling')}
+                    className={cn(
+                      "p-6 text-left rounded-lg border-2 transition-colors",
+                      messageStyle === 'storytelling'
+                        ? 'border-turbo-blue bg-turbo-blue text-turbo-beige'
+                        : 'border-turbo-black hover:bg-turbo-black/5'
+                    )}
+                  >
+                    <div className="space-y-2">
+                      <div className="font-semibold">Story-Driven</div>
+                      <p className="text-sm opacity-80">Engaging and narrative-focused. Ideal for building emotional connections and memorable outreach.</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </Question>
+
+            {/* Question 3 - Has List (previously Question 2) */}
+            <Question 
+              isActive={currentStep === 3} 
+              direction={slideDirection}
+              step={3}
               currentStep={currentStep}
             >
               <div className="space-y-8">
@@ -981,11 +1187,11 @@ export default function Outreach() {
               </div>
             </Question>
 
-            {/* Question 3 */}
+            {/* Question 4 */}
             <Question 
-              isActive={currentStep === 3} 
+              isActive={currentStep === 4} 
               direction={slideDirection}
-              step={3}
+              step={4}
               currentStep={currentStep}
             >
               <div className="space-y-8">
