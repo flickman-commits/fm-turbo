@@ -3,30 +3,19 @@ import { TaskType } from '@/types/tasks'
 import { TaskModal } from '@/components/TaskModal'
 import { FeatureRequestModal } from '@/components/FeatureRequestModal'
 import { Layout } from '@/components/Layout'
-import { useCompanyInfo } from '@/contexts/CompanyInfoContext'
 import { VideoModal } from '@/components/VideoModal'
 import { creditsManager } from '@/utils/credits'
 
 export default function Home() {
-  const { isInfoSaved } = useCompanyInfo()
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null)
   const [showFeatureModal, setShowFeatureModal] = useState(false)
   const [showVideoModal, setShowVideoModal] = useState(false)
   const [credits, setCredits] = useState(creditsManager.getCredits())
   const [isCreditsHovered, setIsCreditsHovered] = useState(false)
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const [lastFeedbackCredit, setLastFeedbackCredit] = useState(() => {
     const saved = localStorage.getItem('lastFeedbackCredit')
     return saved ? parseInt(saved) : creditsManager.getCredits()
   })
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
 
   useEffect(() => {
     // Subscribe to credit changes

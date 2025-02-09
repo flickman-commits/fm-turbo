@@ -20,9 +20,8 @@ const DEFAULT_USER_INFO: UserInfo = {
 
 export default function Profile() {
   const { user } = useUser()
-  const { isInfoSaved, setIsInfoSaved } = useCompanyInfo()
+  const { setIsInfoSaved } = useCompanyInfo()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const [isEditing, setIsEditing] = useState(false)
   const [isEditingCompanyInfo, setIsEditingCompanyInfo] = useState(false)
   const [formData, setFormData] = useState<UserInfo>(() => {
@@ -40,14 +39,6 @@ export default function Profile() {
       localStorage.setItem('userInfo', JSON.stringify(DEFAULT_USER_INFO))
       setIsInfoSaved(true)
     }
-
-    // Handle window resize
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
   }, [setIsInfoSaved])
 
   const handleInfoChange = (field: keyof UserInfo, value: string) => {
@@ -71,7 +62,6 @@ export default function Profile() {
         // Save to localStorage
         localStorage.setItem('userInfo', JSON.stringify(updatedInfo))
         console.log('User Info saved:', updatedInfo)
-        setIsInfoSaved(true)
         setIsEditing(false)
         
         // Send to Google Sheets
@@ -114,7 +104,6 @@ export default function Profile() {
         // Save to localStorage
         localStorage.setItem('userInfo', JSON.stringify(updatedInfo))
         console.log('Company Info saved:', updatedInfo)
-        setIsInfoSaved(true)
         setIsEditingCompanyInfo(false)
       } catch (error) {
         console.error('Error saving info:', error)

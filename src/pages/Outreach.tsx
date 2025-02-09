@@ -86,7 +86,6 @@ export default function Outreach() {
 
   // Research queue management
   const RESEARCH_WINDOW_SIZE = 3
-  const [researchQueue, setResearchQueue] = useState<Set<string>>(new Set())
 
   // Add new state for tracking email generation
   const [isGeneratingEmails, setIsGeneratingEmails] = useState(false)
@@ -98,7 +97,7 @@ export default function Outreach() {
   // Add new state for tracking emails sent today
   const [emailsSentToday, setEmailsSentToday] = useState(0)
 
-  // Add new state for tracking if user is editing
+  // Fix isEditing declaration
   const [isEditing, setIsEditing] = useState(false)
 
   // Add new state for queued emails
