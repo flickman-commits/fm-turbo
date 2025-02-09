@@ -9,5 +9,6 @@ export const DEFAULT_USER_INFO: UserInfo = {
   email: '',
   conversationalStyle: 'friendly',
   outreachType: null,
-  outreachContext: 'discussing business opportunities'
+  outreachContext: 'discussing business opportunities',
+  messageStyle: 'direct'
 } 
