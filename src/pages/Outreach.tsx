@@ -685,7 +685,7 @@ export default function Outreach() {
             {/* Left Column - List + Email Composer */}
             <div className="flex flex-col gap-4">
               {/* Current Prospect Bar */}
-              <div className="flex items-center justify-between bg-white rounded-lg border-2 border-turbo-black/10 p-4 overflow-hidden">
+              <div className="flex items-center justify-between bg-[#FAFAFA] rounded-lg border-2 border-turbo-black/10 p-4 overflow-hidden">
                 <div className="flex items-center gap-3">
                   <div className="flex flex-col relative h-[48px] w-[300px]">
                     {prospects.map((prospect, index) => (
@@ -769,7 +769,7 @@ export default function Outreach() {
               </div>
 
               {/* Email Composer */}
-              <div className="flex-1 rounded-lg border-2 border-turbo-black/10 p-6 overflow-hidden flex flex-col">
+              <div className="flex-1 rounded-lg border-2 border-turbo-black/10 p-6 overflow-hidden flex flex-col bg-[#FAFAFA]">
                 <h3 className="text-xl font-semibold mb-6 text-turbo-black">What You're Gonna Send</h3>
                 <div className="flex-1 relative">
                   {isGeneratingEmails || (emailTemplates.length === 0 && (prospectStatuses[currentProspect?.id || ''] === 'researching' || prospectStatuses[currentProspect?.id || ''] === 'generating_emails')) ? (
@@ -936,17 +936,10 @@ export default function Outreach() {
                 </div>
               ) : (
                 <>
-                  <div className="mb-6 bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-4">
-                    <div className="flex items-start gap-4">
-                      <div className="w-14 h-14 rounded-full bg-turbo-black/5 flex items-center justify-center text-turbo-black/30 shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
-                        <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h2 className="text-2xl font-bold text-turbo-black">{currentProspect?.name}</h2>
-                        <p className="text-lg text-turbo-black/60">{currentProspect?.title} at {currentProspect?.company}</p>
-                      </div>
+                  <div className="mb-6">
+                    <div>
+                      <h2 className="text-2xl font-bold text-turbo-black">{currentProspect?.name}</h2>
+                      <p className="text-lg text-turbo-black/60">{currentProspect?.title} at {currentProspect?.company}</p>
                     </div>
                   </div>
 
