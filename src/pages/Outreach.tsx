@@ -103,6 +103,21 @@ export default function Outreach() {
   // Add new state for queued emails
   const [queuedEmails, setQueuedEmails] = useState<QueuedEmail[]>([])
 
+  // Add mobile check state
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Add effect to check for mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768) // 768px is standard tablet/mobile breakpoint
+    }
+    
+    checkMobile() // Check initially
+    window.addEventListener('resize', checkMobile) // Listen for resize
+    
+    return () => window.removeEventListener('resize', checkMobile) // Cleanup
+  }, [])
+
   // Handle navigation
   const goToNextStep = () => {
     setCurrentStep(prev => (prev < 4 ? (prev + 1) as OnboardingStep : prev))
@@ -633,6 +648,21 @@ export default function Outreach() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
+
+  if (isMobile) {
+    return (
+      <Layout>
+        <div className="h-screen flex flex-col items-center justify-center px-6 text-center">
+          <p className="text-xl font-medium text-turbo-black mb-4">
+            The Outreach feature is only available on Desktop currently.
+          </p>
+          <p className="text-turbo-black/60">
+            You can check out the other features on mobile.
+          </p>
+        </div>
+      </Layout>
+    )
+  }
 
   if (showMainUI) {
     if (isLoading) {
