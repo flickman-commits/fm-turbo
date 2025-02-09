@@ -1,13 +1,13 @@
 import { EmailTemplate, Prospect, UserInfo, ProspectResearch } from '@/types/outreach'
 import { getOutreachSystemPrompt, getOutreachUserPrompt } from '@/config/outreachPrompt'
-import { generateEmailTemplates as openaiGenerateTemplates } from '@/services/openai'
+import { generateEmailCopy } from '@/services/openai'
 
-export async function generateEmailTemplates(
+export async function createEmailTemplates(
   prospect: Prospect,
   research: ProspectResearch,
   userInfo: UserInfo
 ): Promise<EmailTemplate[]> {
-  const formData = {
+  const prospectData = {
     recipientName: prospect.name,
     company: prospect.company,
     role: prospect.title,
@@ -26,8 +26,9 @@ export async function generateEmailTemplates(
   }
 
   const systemPrompt = getOutreachSystemPrompt(promptUserInfo)
-  const userPrompt = getOutreachUserPrompt(formData)
+  const userPrompt = getOutreachUserPrompt(prospectData)
 
   // Make the actual OpenAI call
-  return await openaiGenerateTemplates(userPrompt, systemPrompt)
+  const templates = await generateEmailCopy(userPrompt, systemPrompt)
+  return templates
 } 

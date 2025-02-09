@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Command, ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { queryPerplexity } from '@/services/perplexity'
-import { generateEmailTemplates } from '@/services/email'
+import { createEmailTemplates } from '@/services/email'
 import { Prospect, UserInfo, EmailTemplate, ProspectResearch } from '@/types/outreach'
 import { DEFAULT_USER_INFO } from '@/config/constants'
 
@@ -363,7 +363,7 @@ export default function Outreach() {
         }
       })
 
-      const templates = await generateEmailTemplates(prospect, research, userInfo)
+      const templates = await createEmailTemplates(prospect, research, userInfo)
 
       // Log the generated email templates
       console.log('✉️ Generated Email Templates:', {
@@ -878,30 +878,37 @@ export default function Outreach() {
 
                 {/* Navigation and Send Controls */}
                 <div className="flex items-center justify-between mt-6 px-4">
-                  <div className="flex gap-4 items-center">
-                    <div className="flex flex-col items-center">
-                      <button 
-                        onClick={goToPreviousTemplate}
-                        disabled={currentTemplateIndex === 0 || isResearching}
-                        className="p-2 text-turbo-black/40 hover:text-turbo-blue transition-colors disabled:opacity-30 disabled:hover:text-turbo-black/40"
-                      >
-                        <ArrowLeft className="w-6 h-6" />
-                      </button>
-                      <kbd className="mt-1 inline-flex h-5 items-center gap-1 rounded border border-turbo-black/30 bg-turbo-black/5 px-1.5 font-mono text-[10px] font-medium text-turbo-black/60">
-                        J
-                      </kbd>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <button 
-                        onClick={goToNextTemplate}
-                        disabled={currentTemplateIndex === emailTemplates.length - 1 || isResearching}
-                        className="p-2 text-turbo-black/40 hover:text-turbo-blue transition-colors disabled:opacity-30 disabled:hover:text-turbo-black/40"
-                      >
-                        <ArrowLeft className="w-6 h-6 rotate-180" />
-                      </button>
-                      <kbd className="mt-1 inline-flex h-5 items-center gap-1 rounded border border-turbo-black/30 bg-turbo-black/5 px-1.5 font-mono text-[10px] font-medium text-turbo-black/60">
-                        L
-                      </kbd>
+                  <div className="flex flex-col items-center">
+                    <span className="text-[10px] text-turbo-black/40 whitespace-nowrap mb-2">Browse through email starters</span>
+                    <div className="flex gap-8 items-center">
+                      <div className="flex flex-col items-center">
+                        <button 
+                          onClick={goToPreviousTemplate}
+                          disabled={currentTemplateIndex === 0 || isResearching}
+                          className="p-2 text-turbo-black/40 hover:text-turbo-blue transition-colors disabled:opacity-30 disabled:hover:text-turbo-black/40"
+                        >
+                          <ArrowLeft className="w-6 h-6" />
+                        </button>
+                        <div className="flex flex-col items-center gap-1">
+                          <kbd className="inline-flex h-5 items-center gap-1 rounded border border-turbo-black/30 bg-turbo-black/5 px-1.5 font-mono text-[10px] font-medium text-turbo-black/60">
+                            J
+                          </kbd>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <button 
+                          onClick={goToNextTemplate}
+                          disabled={currentTemplateIndex === emailTemplates.length - 1 || isResearching}
+                          className="p-2 text-turbo-black/40 hover:text-turbo-blue transition-colors disabled:opacity-30 disabled:hover:text-turbo-black/40"
+                        >
+                          <ArrowLeft className="w-6 h-6 rotate-180" />
+                        </button>
+                        <div className="flex flex-col items-center gap-1">
+                          <kbd className="inline-flex h-5 items-center gap-1 rounded border border-turbo-black/30 bg-turbo-black/5 px-1.5 font-mono text-[10px] font-medium text-turbo-black/60">
+                            L
+                          </kbd>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -1226,6 +1233,7 @@ export default function Outreach() {
                       "flex flex-col items-center justify-center w-full h-32",
                       "border-2 border-dashed rounded-lg",
                       "cursor-pointer transition-colors",
+                      "border-turbo-black hover:bg-turbo-black/5",
                       csvFile 
                         ? 'border-turbo-blue bg-turbo-blue/5' 
                         : 'border-turbo-black hover:bg-turbo-black/5'
