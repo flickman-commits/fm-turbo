@@ -19,7 +19,7 @@ const mockUser = {
 export default function App() {
   return (
     <BrowserRouter>
-      <UserProvider>
+      <UserProvider initialUser={mockUser}>
         <CompanyInfoProvider>
           <Routes>
             <Route path="/" element={<Home />} />
