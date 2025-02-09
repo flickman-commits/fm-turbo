@@ -685,7 +685,7 @@ export default function Outreach() {
             {/* Left Column - List + Email Composer */}
             <div className="flex flex-col gap-4">
               {/* Current Prospect Bar */}
-              <div className="flex items-center justify-between bg-[#FAFAFA] rounded-lg border-2 border-turbo-black/10 p-4 overflow-hidden">
+              <div className="flex items-center justify-between bg-white rounded-lg border-2 border-turbo-black/10 p-4 overflow-hidden">
                 <div className="flex items-center gap-3">
                   <div className="flex flex-col relative h-[48px] w-[300px]">
                     {prospects.map((prospect, index) => (
@@ -769,7 +769,7 @@ export default function Outreach() {
               </div>
 
               {/* Email Composer */}
-              <div className="flex-1 rounded-lg border-2 border-turbo-black/10 p-6 overflow-hidden flex flex-col bg-[#FAFAFA]">
+              <div className="flex-1 rounded-lg border-2 border-turbo-black/10 p-6 overflow-hidden flex flex-col bg-white">
                 <h3 className="text-xl font-semibold mb-6 text-turbo-black">What You're Gonna Send</h3>
                 <div className="flex-1 relative">
                   {isGeneratingEmails || (emailTemplates.length === 0 && (prospectStatuses[currentProspect?.id || ''] === 'researching' || prospectStatuses[currentProspect?.id || ''] === 'generating_emails')) ? (
@@ -928,7 +928,7 @@ export default function Outreach() {
             </div>
 
             {/* Right Column - Prospect Info */}
-            <div className="rounded-lg border-2 border-turbo-black/10 p-6 bg-[#FAFAFA]">
+            <div className="rounded-lg border-2 border-turbo-black/10 p-6 bg-white">
               {isResearching ? (
                 <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
                   <div className="w-8 h-8 border-4 border-turbo-blue border-t-transparent rounded-full animate-spin mb-4" />
