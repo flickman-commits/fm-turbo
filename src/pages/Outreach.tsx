@@ -565,14 +565,16 @@ export default function Outreach() {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="grid grid-cols-[350px_1fr] gap-6 min-h-[calc(100vh-200px)]">
-            {/* Left Column - Prospect Info */}
-            <div className="rounded-lg border-2 border-turbo-black/10 p-6">
-              <h3 className="text-lg font-semibold mb-4">Current Prospect</h3>
-              <div className="space-y-6">
+          <div className="grid grid-cols-[350px_1fr_300px] gap-6 min-h-[calc(100vh-200px)]">
+            {/* Left Column - Prospect & Company Info */}
+            <div>
+              {/* Consolidated Prospect Card */}
+              <div className="rounded-lg border-2 border-turbo-black/10 p-6">
+                <h3 className="text-lg font-semibold mb-4">Current Prospect</h3>
+                
                 {/* Basic Info */}
-                <div>
-                  <p className="text-sm font-medium text-turbo-black mb-2">Basic Info</p>
+                <div className="space-y-2 mb-6">
+                  <p className="text-sm font-medium text-turbo-black">Basic Info</p>
                   <div className="space-y-2">
                     <p className="text-sm text-turbo-black/60">
                       {currentProspect?.name || 'Name'}
@@ -590,47 +592,51 @@ export default function Outreach() {
                 </div>
 
                 {/* Divider */}
-                <div className="border-t border-turbo-black/10" />
+                <div className="h-px bg-turbo-black/10 my-6" />
 
                 {/* Personal Insights */}
                 {currentProspect?.research?.personInfo && currentProspect.research.personInfo.length > 0 && (
-                  <div>
-                    <p className="text-sm font-medium text-turbo-black mb-2">Personal Insights</p>
-                    <div className="space-y-2">
-                      {currentProspect.research.personInfo.map((info, index) => (
-                        <div 
-                          key={index}
-                          className="text-sm text-turbo-black/60 pl-2 border-l-2 border-turbo-blue/20"
-                        >
-                          {info}
-                        </div>
-                      ))}
+                  <>
+                    <div className="mb-6">
+                      <p className="text-sm font-medium text-turbo-black mb-2">Personal Insights</p>
+                      <div className="space-y-2">
+                        {currentProspect.research.personInfo.map((info, index) => (
+                          <div 
+                            key={index}
+                            className="text-sm text-turbo-black/60 pl-2 border-l-2 border-turbo-blue/20"
+                          >
+                            {info}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
 
-                {/* Divider */}
-                <div className="border-t border-turbo-black/10" />
+                    {/* Divider */}
+                    <div className="h-px bg-turbo-black/10 my-6" />
+                  </>
+                )}
 
                 {/* Company Insights */}
                 {currentProspect?.research?.companyInfo && currentProspect.research.companyInfo.length > 0 && (
-                  <div>
-                    <p className="text-sm font-medium text-turbo-black mb-2">Company Insights</p>
-                    <div className="space-y-2">
-                      {currentProspect.research.companyInfo.map((info, index) => (
-                        <div 
-                          key={index}
-                          className="text-sm text-turbo-black/60 pl-2 border-l-2 border-turbo-blue/20"
-                        >
-                          {info}
-                        </div>
-                      ))}
+                  <>
+                    <div className="mb-6">
+                      <p className="text-sm font-medium text-turbo-black mb-2">Company Insights</p>
+                      <div className="space-y-2">
+                        {currentProspect.research.companyInfo.map((info, index) => (
+                          <div 
+                            key={index}
+                            className="text-sm text-turbo-black/60 pl-2 border-l-2 border-turbo-blue/20"
+                          >
+                            {info}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
 
-                {/* Divider */}
-                <div className="border-t border-turbo-black/10" />
+                    {/* Divider */}
+                    <div className="h-px bg-turbo-black/10 my-6" />
+                  </>
+                )}
 
                 {/* Sources */}
                 {currentProspect?.research?.sources && currentProspect.research.sources.length > 0 && (
@@ -654,10 +660,10 @@ export default function Outreach() {
               </div>
             </div>
 
-            {/* Right Column - Email Content */}
+            {/* Center Column - Email Content */}
             <div className="flex flex-col">
               <div className="flex-1 rounded-lg border-2 border-turbo-black/10 p-6 overflow-hidden">
-                <div className="mb-6 h-[400px] overflow-y-auto relative">
+                <div className="mb-4 h-[300px] overflow-y-auto relative">
                   <div 
                     className="transition-transform duration-300 ease-in-out absolute inset-0"
                     style={{ transform: `translateX(${-currentTemplateIndex * 100}%)` }}
@@ -689,7 +695,7 @@ export default function Outreach() {
                               }}
                               onFocus={() => setIsEditing(true)}
                               onBlur={() => setIsEditing(false)}
-                              className="flex-1 p-2 border-b-2 border-transparent hover:border-turbo-black/10 focus:border-turbo-blue focus:outline-none transition-colors"
+                              className="flex-1 p-2 border-b-2 border-transparent hover:border-turbo-black/10 focus:border-turbo-blue focus:outline-none transition-colors rounded-lg"
                               placeholder="Subject line..."
                             />
                           </div>
@@ -703,7 +709,7 @@ export default function Outreach() {
                             </button>
                           )}
                         </div>
-                        <div className="relative group h-[300px]">
+                        <div className="relative group h-[200px]">
                           <textarea
                             value={template?.body || ''}
                             onChange={(e) => {
@@ -723,7 +729,7 @@ export default function Outreach() {
                                 setIsEditing(false)
                               }
                             }}
-                            className="w-full h-full p-2 text-turbo-black whitespace-pre-wrap resize-none border-2 border-transparent hover:border-turbo-black/10 focus:border-turbo-blue focus:outline-none transition-colors rounded-lg"
+                            className="w-full h-full p-2 text-turbo-black whitespace-pre-wrap resize-none border-2 border-transparent hover:border-turbo-black/10 focus:border-turbo-blue focus:outline-none transition-colors rounded-lg bg-[#FAF9F6]"
                             placeholder="Email body content will go here..."
                           />
                           {isEditing && (
@@ -810,6 +816,49 @@ export default function Outreach() {
                     <span className="text-xs">↵</span>
                   </kbd>
                 </button>
+              </div>
+            </div>
+
+            {/* Right Column - List Progress */}
+            <div className="rounded-lg border-2 border-turbo-black/10 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold">Your List</h3>
+                <span className="text-sm text-turbo-black/60">
+                  {currentProspectIndex + 1}/{prospects.length}
+                </span>
+              </div>
+              <div className="space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto">
+                {prospects.map((prospect, index) => (
+                  <div
+                    key={prospect.id}
+                    onClick={() => setCurrentProspectIndex(index)}
+                    className={cn(
+                      "p-3 rounded-lg cursor-pointer transition-colors",
+                      index === currentProspectIndex 
+                        ? "bg-turbo-black/5" 
+                        : "hover:bg-turbo-black/5",
+                      // Gray out prospects that aren't ready and aren't being processed
+                      prospectStatuses[prospect.id] !== 'ready' && !processingQueue.has(prospect.id) && "opacity-50"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium">{prospect.name}</p>
+                        <p className="text-xs text-turbo-black/60">{prospect.company}</p>
+                      </div>
+                      {// Only show spinner for prospects currently in the processing queue
+                      processingQueue.has(prospect.id) && (
+                        <div className="w-4 h-4 border-2 border-turbo-blue border-t-transparent rounded-full animate-spin" />
+                      )}
+                      {// Show checkmark for completed prospects
+                      prospectStatuses[prospect.id] === 'ready' && (
+                        <svg className="w-4 h-4 text-turbo-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

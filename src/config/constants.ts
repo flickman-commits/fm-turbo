@@ -4,7 +4,7 @@ export const DEFAULT_USER_INFO: UserInfo = {
   name: 'User',
   company: 'Your Company',
   companyName: 'Your Company',
-  businessType: 'Video Production', // The actual business type/industry
+  businessType: 'business',
   role: 'Professional',
   email: '',
   conversationalStyle: 'friendly',
