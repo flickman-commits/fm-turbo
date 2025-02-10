@@ -64,7 +64,7 @@ export default function Outreach() {
   // Move chat interface state inside component
   const [chatMode, setChatMode] = useState(() => {
     const saved = localStorage.getItem('outreachChatMode')
-    return saved ? JSON.parse(saved) : false
+    return saved ? JSON.parse(saved) : true
   })
   const [inputMode, setInputMode] = useState<InputMode>(() => {
     const saved = localStorage.getItem('outreachInputMode')
@@ -970,14 +970,30 @@ export default function Outreach() {
                 <div>
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-xl font-semibold text-turbo-black">Who You Want to Talk To</h3>
-                    <a 
-                      href="https://www.youtube.com/watch?v=S7YrRcAkGf8" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-sm text-turbo-blue hover:text-turbo-black transition-colors"
+                    <label 
+                      className="text-sm text-turbo-blue hover:text-turbo-black transition-colors cursor-pointer flex items-center gap-2"
                     >
-                      learn how to get their email
-                    </a>
+                      Import List
+                      <input 
+                        type="file" 
+                        className="hidden" 
+                        accept=".csv"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file && file.type === 'text/csv') {
+                            setCsvFile(file)
+                            setIsLoading(true)
+                            setChatMode(false)
+                            parseCSV(file).then(() => {
+                              setShowMainUI(true)
+                            }).catch((error) => {
+                              console.error('Error parsing CSV:', error)
+                              setIsLoading(false)
+                            })
+                          }
+                        }}
+                      />
+                    </label>
                   </div>
                   <div className="flex items-center justify-between bg-white rounded-lg border-2 border-turbo-black/10 p-6 overflow-hidden min-h-[72px]">
                     <div className="flex-1 flex items-center gap-4 relative">
