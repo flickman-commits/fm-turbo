@@ -21,10 +21,15 @@ export async function createEmailTemplates(
   // Map our UserInfo to the format expected by the prompt functions
   const promptUserInfo = {
     companyName: userInfo.companyName,
-    userName: userInfo.name,
+    name: userInfo.name,
     businessType: userInfo.businessType,
     outreachType: userInfo.outreachType,
-    messageStyle: userInfo.messageStyle
+    messageStyle: userInfo.messageStyle,
+    company: userInfo.company,
+    role: userInfo.role,
+    email: userInfo.email,
+    conversationalStyle: userInfo.conversationalStyle,
+    outreachContext: userInfo.outreachContext
   }
 
   const systemPrompt = getOutreachSystemPrompt(promptUserInfo)

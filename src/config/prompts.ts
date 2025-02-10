@@ -2,6 +2,7 @@ import { TaskType } from '@/types/tasks'
 import { WeatherData } from '@/services/location'
 import { Video, FormDataValue } from '@/types/forms'
 import { getOutreachSystemPrompt, getOutreachUserPrompt } from './outreachPrompt'
+import { UserInfo } from '@/types/outreach'
 
 // Type definitions
 interface FormData {
@@ -27,11 +28,8 @@ interface FormData {
   deliverables?: string
 }
 
-export interface UserInfo {
-  companyName: string
-  userName: string
-  businessType: string
-}
+// Export UserInfo type from types/outreach
+export type { UserInfo } from '@/types/outreach'
 
 // Helper function to get user info from localStorage
 export const getUserInfoFromLocalStorage = (): UserInfo | null => {

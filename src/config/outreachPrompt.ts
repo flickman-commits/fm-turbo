@@ -1,6 +1,6 @@
 import { WeatherData } from '@/services/location'
 import { FormDataValue } from '@/types/forms'
-import { UserInfo as BaseUserInfo } from '@/config/prompts'
+import { UserInfo } from '@/types/outreach'
 
 interface FormData {
   [key: string]: FormDataValue | WeatherData | undefined
@@ -13,15 +13,7 @@ interface FormData {
   keyPointsToEmphasize?: string
 }
 
-interface OutreachPromptUserInfo {
-  businessType: string
-  companyName: string
-  userName: string
-  outreachType: 'getClients' | 'getJob' | 'getSpeakers'
-  messageStyle: 'direct' | 'casual' | 'storytelling'
-}
-
-export const getOutreachSystemPrompt = (userInfo: OutreachPromptUserInfo): string => {
+export const getOutreachSystemPrompt = (userInfo: UserInfo): string => {
   // Get the purpose based on outreach type
   const purpose = {
     getClients: "looking to establish new client relationships",

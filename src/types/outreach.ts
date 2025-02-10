@@ -5,8 +5,8 @@ export interface UserInfo {
   companyName: string  // This should be the same as company, we should consolidate these
   businessType: string // The type of business/industry (e.g., "Video Production")
   role: string
-  email?: string
-  conversationalStyle?: string
+  email: string
+  conversationalStyle: string
   messageStyle: 'direct' | 'casual' | 'storytelling'  // Now required
   
   // Outreach Context
