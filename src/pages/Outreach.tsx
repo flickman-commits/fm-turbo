@@ -62,28 +62,67 @@ interface QueuedEmail {
 
 export default function Outreach() {
   // Move chat interface state inside component
-  const [chatMode, setChatMode] = useState(false)
-  const [inputMode, setInputMode] = useState<InputMode>('name')
-  const [prospectName, setProspectName] = useState('')
-  const [prospectCompany, setProspectCompany] = useState('')
+  const [chatMode, setChatMode] = useState(() => {
+    const saved = localStorage.getItem('outreachChatMode')
+    return saved ? JSON.parse(saved) : false
+  })
+  const [inputMode, setInputMode] = useState<InputMode>(() => {
+    const saved = localStorage.getItem('outreachInputMode')
+    return saved ? JSON.parse(saved) : 'name'
+  })
+  const [prospectName, setProspectName] = useState(() => {
+    const saved = localStorage.getItem('outreachProspectName')
+    return saved ? JSON.parse(saved) : ''
+  })
+  const [prospectCompany, setProspectCompany] = useState(() => {
+    const saved = localStorage.getItem('outreachProspectCompany')
+    return saved ? JSON.parse(saved) : ''
+  })
 
-  const [currentStep, setCurrentStep] = useState<OnboardingStep>(1)
-  const [outreachType, setOutreachType] = useState<OutreachType>(null)
-  const [messageStyle, setMessageStyle] = useState<MessageStyle>(null)
-  const [hasList, setHasList] = useState<HasList>(null)
+  const [currentStep, setCurrentStep] = useState<OnboardingStep>(() => {
+    const saved = localStorage.getItem('outreachCurrentStep')
+    return saved ? JSON.parse(saved) : 1
+  })
+  const [outreachType, setOutreachType] = useState<OutreachType>(() => {
+    const saved = localStorage.getItem('outreachType')
+    return saved ? JSON.parse(saved) : null
+  })
+  const [messageStyle, setMessageStyle] = useState<MessageStyle>(() => {
+    const saved = localStorage.getItem('outreachMessageStyle')
+    return saved ? JSON.parse(saved) : null
+  })
+  const [hasList, setHasList] = useState<HasList>(() => {
+    const saved = localStorage.getItem('outreachHasList')
+    return saved ? JSON.parse(saved) : null
+  })
   const [csvFile, setCsvFile] = useState<File | null>(null)
-  const [showMainUI, setShowMainUI] = useState(false)
+  const [showMainUI, setShowMainUI] = useState(() => {
+    const saved = localStorage.getItem('outreachShowMainUI')
+    return saved ? JSON.parse(saved) : false
+  })
   const [slideDirection, setSlideDirection] = useState<SlideDirection>(null)
   const [isLoading, setIsLoading] = useState(false)
   
   // New state for prospects
-  const [prospects, setProspects] = useState<Prospect[]>([])
-  const [currentProspectIndex, setCurrentProspectIndex] = useState(0)
+  const [prospects, setProspects] = useState<Prospect[]>(() => {
+    const saved = localStorage.getItem('outreachProspects')
+    return saved ? JSON.parse(saved) : []
+  })
+  const [currentProspectIndex, setCurrentProspectIndex] = useState(() => {
+    const saved = localStorage.getItem('outreachCurrentProspectIndex')
+    return saved ? JSON.parse(saved) : 0
+  })
   const currentProspect = prospects[currentProspectIndex]
 
   // New state for email templates and research
-  const [currentTemplateIndex, setCurrentTemplateIndex] = useState(0)
-  const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([])
+  const [currentTemplateIndex, setCurrentTemplateIndex] = useState(() => {
+    const saved = localStorage.getItem('outreachCurrentTemplateIndex')
+    return saved ? JSON.parse(saved) : 0
+  })
+  const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>(() => {
+    const saved = localStorage.getItem('outreachEmailTemplates')
+    return saved ? JSON.parse(saved) : []
+  })
   const [isResearching, setIsResearching] = useState(false)
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
 
@@ -95,16 +134,25 @@ export default function Outreach() {
 
   // Add new state for process tracking
   const [processingQueue, setProcessingQueue] = useState<Set<string>>(new Set())
-  const [prospectStatuses, setProspectStatuses] = useState<Record<string, ProspectStatus>>({})
+  const [prospectStatuses, setProspectStatuses] = useState<Record<string, ProspectStatus>>(() => {
+    const saved = localStorage.getItem('outreachProspectStatuses')
+    return saved ? JSON.parse(saved) : {}
+  })
 
   // Add new state for tracking emails sent today
-  const [emailsSentToday, setEmailsSentToday] = useState(0)
+  const [emailsSentToday, setEmailsSentToday] = useState(() => {
+    const saved = localStorage.getItem('outreachEmailsSentToday')
+    return saved ? JSON.parse(saved) : 0
+  })
 
   // Fix isEditing declaration - only use the value since setter is not needed
   const isEditing = false
 
   // Add new state for queued emails
-  const [queuedEmails, setQueuedEmails] = useState<QueuedEmail[]>([])
+  const [queuedEmails, setQueuedEmails] = useState<QueuedEmail[]>(() => {
+    const saved = localStorage.getItem('outreachQueuedEmails')
+    return saved ? JSON.parse(saved) : []
+  })
 
   // Add mobile check state
   const [isMobile, setIsMobile] = useState(false)
@@ -123,14 +171,14 @@ export default function Outreach() {
 
   // Handle navigation
   const goToNextStep = () => {
-    setCurrentStep(prev => (prev < 4 ? (prev + 1) as OnboardingStep : prev))
+    setCurrentStep((prev: OnboardingStep) => (prev < 4 ? (prev + 1) as OnboardingStep : prev))
     setSlideDirection('forward')
     // Reset direction after animation completes
     setTimeout(() => setSlideDirection(null), 500)
   }
 
   const goToPreviousStep = () => {
-    setCurrentStep(prev => (prev > 1 ? (prev - 1) as OnboardingStep : prev))
+    setCurrentStep((prev: OnboardingStep) => (prev > 1 ? (prev - 1) as OnboardingStep : prev))
     setSlideDirection('back')
     // Reset direction after animation completes
     setTimeout(() => setSlideDirection(null), 500)
@@ -646,7 +694,7 @@ export default function Outreach() {
 
   // Add function to remove from queue
   const handleRemoveFromQueue = () => {
-    setQueuedEmails(prev => 
+    setQueuedEmails((prev: QueuedEmail[]) => 
       prev.filter(
         email => !(email.prospectId === currentProspect?.id && email.templateIndex === currentTemplateIndex)
       )
@@ -659,7 +707,7 @@ export default function Outreach() {
       const mailtoLink = `mailto:${email.prospectEmail}?subject=${encodeURIComponent(email.subject)}&body=${encodeURIComponent(email.body)}`
       window.open(mailtoLink, '_blank')
     })
-    setEmailsSentToday(prev => prev + queuedEmails.length)
+    setEmailsSentToday((prev: number) => prev + queuedEmails.length)
     setQueuedEmails([])
   }
 
@@ -744,7 +792,7 @@ export default function Outreach() {
     const timeUntilMidnight = tomorrow.getTime() - now.getTime()
 
     const timer = setTimeout(() => {
-      setEmailsSentToday(0)
+      setEmailsSentToday((prev: number) => 0)
     }, timeUntilMidnight)
 
     return () => clearTimeout(timer)
@@ -755,6 +803,97 @@ export default function Outreach() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
+
+  // Add effects to persist state changes
+  useEffect(() => {
+    localStorage.setItem('outreachChatMode', JSON.stringify(chatMode))
+  }, [chatMode])
+
+  useEffect(() => {
+    localStorage.setItem('outreachInputMode', JSON.stringify(inputMode))
+  }, [inputMode])
+
+  useEffect(() => {
+    localStorage.setItem('outreachProspectName', JSON.stringify(prospectName))
+  }, [prospectName])
+
+  useEffect(() => {
+    localStorage.setItem('outreachProspectCompany', JSON.stringify(prospectCompany))
+  }, [prospectCompany])
+
+  useEffect(() => {
+    localStorage.setItem('outreachCurrentStep', JSON.stringify(currentStep))
+  }, [currentStep])
+
+  useEffect(() => {
+    localStorage.setItem('outreachType', JSON.stringify(outreachType))
+  }, [outreachType])
+
+  useEffect(() => {
+    localStorage.setItem('outreachMessageStyle', JSON.stringify(messageStyle))
+  }, [messageStyle])
+
+  useEffect(() => {
+    localStorage.setItem('outreachHasList', JSON.stringify(hasList))
+  }, [hasList])
+
+  useEffect(() => {
+    localStorage.setItem('outreachShowMainUI', JSON.stringify(showMainUI))
+  }, [showMainUI])
+
+  useEffect(() => {
+    localStorage.setItem('outreachProspects', JSON.stringify(prospects))
+  }, [prospects])
+
+  useEffect(() => {
+    localStorage.setItem('outreachCurrentProspectIndex', JSON.stringify(currentProspectIndex))
+  }, [currentProspectIndex])
+
+  useEffect(() => {
+    localStorage.setItem('outreachEmailTemplates', JSON.stringify(emailTemplates))
+  }, [emailTemplates])
+
+  // Add effects to persist the new states
+  useEffect(() => {
+    localStorage.setItem('outreachQueuedEmails', JSON.stringify(queuedEmails))
+  }, [queuedEmails])
+
+  useEffect(() => {
+    localStorage.setItem('outreachEmailsSentToday', JSON.stringify(emailsSentToday))
+  }, [emailsSentToday])
+
+  useEffect(() => {
+    localStorage.setItem('outreachProspectStatuses', JSON.stringify(prospectStatuses))
+  }, [prospectStatuses])
+
+  useEffect(() => {
+    localStorage.setItem('outreachCurrentTemplateIndex', JSON.stringify(currentTemplateIndex))
+  }, [currentTemplateIndex])
+
+  // Update the beforeUnload handler to include new items
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent): void => {
+      localStorage.removeItem('outreachChatMode')
+      localStorage.removeItem('outreachInputMode')
+      localStorage.removeItem('outreachProspectName')
+      localStorage.removeItem('outreachProspectCompany')
+      localStorage.removeItem('outreachCurrentStep')
+      localStorage.removeItem('outreachType')
+      localStorage.removeItem('outreachMessageStyle')
+      localStorage.removeItem('outreachHasList')
+      localStorage.removeItem('outreachShowMainUI')
+      localStorage.removeItem('outreachProspects')
+      localStorage.removeItem('outreachCurrentProspectIndex')
+      localStorage.removeItem('outreachEmailTemplates')
+      localStorage.removeItem('outreachQueuedEmails')
+      localStorage.removeItem('outreachEmailsSentToday')
+      localStorage.removeItem('outreachProspectStatuses')
+      localStorage.removeItem('outreachCurrentTemplateIndex')
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [])
 
   if (isMobile) {
     return (
