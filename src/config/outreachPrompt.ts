@@ -79,11 +79,16 @@ Write a concise, friendly, casual, and purposeful email that is just supposed to
 
   console.log('📧 OpenAI Email Generation Prompt:', {
     systemPrompt: getOutreachSystemPrompt({ 
-      businessType: 'unknown', 
+      name: 'unknown',
+      company: 'unknown',
       companyName: 'unknown',
-      userName: 'unknown',
+      businessType: 'unknown',
+      role: 'unknown',
+      email: '',
+      conversationalStyle: 'friendly',
       outreachType: 'getClients',
-      messageStyle: 'direct'
+      messageStyle: 'direct',
+      outreachContext: 'discussing business opportunities'
     }),
     userPrompt: prompt,
     formData

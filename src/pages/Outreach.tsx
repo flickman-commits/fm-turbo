@@ -473,12 +473,14 @@ export default function Outreach() {
       const defaultUserInfo: UserInfo = {
         name: 'User',
         company: 'Your Company',
+        companyName: 'Your Company',
         role: 'Professional',
+        email: '',
+        conversationalStyle: 'friendly',
         businessType: outreachType || 'business',
         outreachContext: getOutreachContext(outreachType),
-        companyName: 'Your Company',
-        messageStyle: 'direct',  // Default to direct style
-        outreachType: outreachType || 'getClients'  // Use selected type or default to getClients
+        messageStyle: 'direct',
+        outreachType: outreachType || 'getClients'
       }
       localStorage.setItem('userInfo', JSON.stringify(defaultUserInfo))
       setUserInfo(defaultUserInfo)
@@ -579,9 +581,14 @@ export default function Outreach() {
     
     // Only clear prospects if in chat mode to preserve list functionality
     if (chatMode) {
-      // Create a new prospect with a unique ID using timestamp
       const newProspectId = `single-prospect-${Date.now()}`
-      setProspects([])
+      setProspects([{
+        id: newProspectId,
+        name: '',
+        company: '',
+        title: '',
+        email: ''
+      }])
       // Also clear the prospect status to ensure fresh UI state
       setProspectStatuses({})
     }
@@ -1150,7 +1157,13 @@ export default function Outreach() {
                   </div>
 
                 <button
-                    onClick={chatMode ? handleQueueSingleEmail : handleQueueEmail}
+                    onClick={() => {
+                      if (isCurrentTemplateQueued()) {
+                        handleRemoveFromQueue()
+                      } else {
+                        chatMode ? handleQueueSingleEmail() : handleQueueEmail()
+                      }
+                    }}
                     disabled={isResearching || !emailTemplates[currentTemplateIndex] || (!currentProspect?.email && !chatMode)}
                     className={cn(
                       "px-6 py-3 rounded-full flex items-center gap-2 transition-colors",
@@ -1175,10 +1188,10 @@ export default function Outreach() {
                     ) : (
                       <>
                         Queue Email
-                  <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-white/30 bg-white/10 px-1.5 font-mono text-[10px] font-medium">
-                    <Command className="h-3 w-3" />
-                    <span className="text-xs">↵</span>
-                  </kbd>
+                        <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-white/30 bg-white/10 px-1.5 font-mono text-[10px] font-medium">
+                          <Command className="h-3 w-3" />
+                          <span className="text-xs">↵</span>
+                        </kbd>
                       </>
                     )}
                 </button>
