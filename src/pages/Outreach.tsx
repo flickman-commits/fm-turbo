@@ -66,7 +66,6 @@ export default function Outreach() {
   const [inputMode, setInputMode] = useState<InputMode>('name')
   const [prospectName, setProspectName] = useState('')
   const [prospectCompany, setProspectCompany] = useState('')
-  const [isSubmitted, setIsSubmitted] = useState(false)
 
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(1)
   const [outreachType, setOutreachType] = useState<OutreachType>('getClients')
@@ -571,7 +570,6 @@ export default function Outreach() {
     setProspectName('')
     setProspectCompany('')
     setInputMode('name')
-    setIsSubmitted(false)
     
     // Clear email templates and reset all template-related states
     setEmailTemplates([])
@@ -601,7 +599,6 @@ export default function Outreach() {
   const handleChatSubmit = async () => {
     if (!userInfo) return
 
-    setIsSubmitted(true)
     setInputMode('display')
     setIsResearching(true)
 
