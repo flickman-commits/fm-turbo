@@ -7,8 +7,8 @@ import { createEmailTemplates } from '@/services/email'
 import { Prospect, UserInfo, EmailTemplate, ProspectResearch } from '@/types/outreach'
 import { DEFAULT_USER_INFO } from '@/config/constants'
 
-type OutreachType = 'getClients' | 'getJob' | 'getSpeakers'
-type MessageStyle = 'direct' | 'casual' | 'storytelling'
+type OutreachType = 'getClients' | 'getJob' | 'getSpeakers' | null
+type MessageStyle = 'direct' | 'casual' | 'storytelling' | null
 type OnboardingStep = 1 | 2 | 3 | 4
 type HasList = 'yes' | 'no' | null
 type SlideDirection = 'forward' | 'back' | null
@@ -68,8 +68,8 @@ export default function Outreach() {
   const [prospectCompany, setProspectCompany] = useState('')
 
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(1)
-  const [outreachType, setOutreachType] = useState<OutreachType>('getClients')
-  const [messageStyle, setMessageStyle] = useState<MessageStyle>('direct')
+  const [outreachType, setOutreachType] = useState<OutreachType>(null)
+  const [messageStyle, setMessageStyle] = useState<MessageStyle>(null)
   const [hasList, setHasList] = useState<HasList>(null)
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [showMainUI, setShowMainUI] = useState(false)
@@ -137,7 +137,7 @@ export default function Outreach() {
   }
 
   // Handle selections
-  const handleOutreachTypeSelect = (type: OutreachType) => {
+  const handleOutreachTypeSelect = (type: NonNullable<OutreachType>) => {
     setOutreachType(type)
     
     // Get current user info
@@ -149,7 +149,7 @@ export default function Outreach() {
       ...userInfo,
       outreachType: type,
       outreachContext: getOutreachContext(type),
-      messageStyle: messageStyle
+      messageStyle: messageStyle || 'direct' // Provide default if null
     }
     
     // Save back to localStorage
@@ -158,7 +158,7 @@ export default function Outreach() {
     goToNextStep()
   }
 
-  const handleMessageStyleSelect = (style: MessageStyle) => {
+  const handleMessageStyleSelect = (style: NonNullable<MessageStyle>) => {
     setMessageStyle(style)
     
     // Get current user info
@@ -365,15 +365,15 @@ export default function Outreach() {
         userInfo: {
           ...userInfo,
           outreachContext: userInfo.outreachContext,
-          outreachType: outreachType,
-          messageStyle: messageStyle
+          outreachType: outreachType || 'getClients', // Provide default if null
+          messageStyle: messageStyle || 'direct' // Provide default if null
         }
       })
 
       const templates = await createEmailTemplates(prospect, research, {
         ...userInfo,
-        outreachType: outreachType,
-        messageStyle: messageStyle
+        outreachType: outreachType || 'getClients', // Provide default if null
+        messageStyle: messageStyle || 'direct' // Provide default if null
       })
 
       // Log the generated email templates
@@ -487,7 +487,7 @@ export default function Outreach() {
   }, [outreachType])
 
   // Helper function to get outreach context based on type
-  const getOutreachContext = (type: OutreachType | null): string => {
+  const getOutreachContext = (type: OutreachType): string => {
     switch (type) {
       case 'getClients':
         return 'discussing potential collaboration opportunities'
@@ -827,7 +827,7 @@ export default function Outreach() {
             <div className="flex flex-col gap-4">
               {/* Chat Bar or Current Prospect Bar */}
               {chatMode ? (
-                    <div>
+                <div>
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-xl font-semibold text-turbo-black">Who You Want to Talk To</h3>
                     <a 
@@ -873,7 +873,7 @@ export default function Outreach() {
                           >
                             Next
                           </button>
-                          </div>
+                        </div>
 
                         {/* Company Input */}
                         <div 
@@ -903,7 +903,7 @@ export default function Outreach() {
                           >
                             Submit
                           </button>
-                      </div>
+                        </div>
 
                         {/* Display State */}
                         <div 
@@ -915,7 +915,7 @@ export default function Outreach() {
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-bold text-turbo-black">{prospectName}</span>
                             <span className="text-sm text-turbo-black/60">at {prospectCompany}</span>
-                </div>
+                          </div>
                           <button
                             onClick={handleNewContact}
                             className="px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-blue/90 rounded-full transition-colors flex items-center gap-2"
@@ -926,9 +926,14 @@ export default function Outreach() {
                               <span className="text-xs">H</span>
                             </kbd>
                           </button>
-              </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
+                  <div className="mt-2 text-left">
+                    <a href="/profile" className="text-xs text-turbo-blue/60 hover:text-turbo-blue transition-colors">
+                      Change sender info
+                    </a>
                   </div>
                 </div>
               ) : (
