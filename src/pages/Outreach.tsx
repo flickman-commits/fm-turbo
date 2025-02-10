@@ -8,6 +8,7 @@ import { Prospect, UserInfo, EmailTemplate, ProspectResearch } from '@/types/out
 import { DEFAULT_USER_INFO } from '@/config/constants'
 
 type OutreachType = 'getClients' | 'getJob' | 'getSpeakers' | null
+type NonNullOutreachType = 'getClients' | 'getJob' | 'getSpeakers'
 type MessageStyle = 'direct' | 'casual' | 'storytelling' | null
 type OnboardingStep = 1 | 2 | 3 | 4
 type HasList = 'yes' | 'no' | null
@@ -184,6 +185,22 @@ export default function Outreach() {
     setTimeout(() => setSlideDirection(null), 500)
   }
 
+  // Helper function to get outreach context based on type
+  const getOutreachContext = (type: OutreachType): string => {
+    if (!type) return 'discussing business opportunities'
+    
+    switch (type) {
+      case 'getClients':
+        return 'discussing potential collaboration opportunities'
+      case 'getJob':
+        return 'exploring career opportunities'
+      case 'getSpeakers':
+        return 'inviting speakers to our event'
+      default:
+        return 'discussing business opportunities'
+    }
+  }
+
   // Handle selections
   const handleOutreachTypeSelect = (type: NonNullable<OutreachType>) => {
     setOutreachType(type)
@@ -301,15 +318,27 @@ export default function Outreach() {
   }
 
   // Navigation functions
+  const goToNextTemplate = () => {
+    if (currentTemplateIndex < emailTemplates.length - 1) {
+      setCurrentTemplateIndex((prev: number) => prev + 1)
+    }
+  }
+
+  const goToPreviousTemplate = () => {
+    if (currentTemplateIndex > 0) {
+      setCurrentTemplateIndex((prev: number) => prev - 1)
+    }
+  }
+
   const goToNextProspect = () => {
     if (currentProspectIndex < prospects.length - 1) {
-      setCurrentProspectIndex(prev => prev + 1)
+      setCurrentProspectIndex((prev: number) => prev + 1)
     }
   }
 
   const goToPreviousProspect = () => {
     if (currentProspectIndex > 0) {
-      setCurrentProspectIndex(prev => prev - 1)
+      setCurrentProspectIndex((prev: number) => prev - 1)
     }
   }
 
@@ -534,20 +563,6 @@ export default function Outreach() {
     }
   }, [outreachType])
 
-  // Helper function to get outreach context based on type
-  const getOutreachContext = (type: OutreachType): string => {
-    switch (type) {
-      case 'getClients':
-        return 'discussing potential collaboration opportunities'
-      case 'getJob':
-        return 'exploring career opportunities'
-      case 'getSpeakers':
-        return 'inviting speakers to our event'
-      default:
-        return 'discussing business opportunities'
-    }
-  }
-
   // Update the useEffect hooks
   useEffect(() => {
     if (showMainUI && prospects.length > 0 && userInfo) {
@@ -576,19 +591,6 @@ export default function Outreach() {
       processQueue()
     }
   }, [currentProspectIndex, userInfo])
-
-  // Navigation functions for email templates
-  const goToNextTemplate = () => {
-    if (currentTemplateIndex < emailTemplates.length - 1) {
-      setCurrentTemplateIndex(prev => prev + 1)
-    }
-  }
-
-  const goToPreviousTemplate = () => {
-    if (currentTemplateIndex > 0) {
-      setCurrentTemplateIndex(prev => prev - 1)
-    }
-  }
 
   // Loading effect
   useEffect(() => {

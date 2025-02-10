@@ -15,18 +15,18 @@ interface FormData {
 
 export const getOutreachSystemPrompt = (userInfo: UserInfo): string => {
   // Get the purpose based on outreach type
-  const purpose = {
+  const purpose = userInfo.outreachType ? {
     getClients: "looking to establish new client relationships",
     getJob: "seeking new career opportunities",
     getSpeakers: "looking to connect with potential speakers for an event"
-  }[userInfo.outreachType]
+  }[userInfo.outreachType] : "looking to establish new business relationships"
 
   // Get the tone based on message style
-  const tone = {
+  const tone = userInfo.messageStyle ? {
     direct: "Your tone should be professional, clear, and straight to the point. Focus on value and efficiency in communication.",
     casual: "Your tone should be friendly, conversational, and relatable, using a more personal touch.",
     storytelling: "Your tone should be engaging and narrative-focused. Weave in relevant anecdotes or examples while maintaining professionalism."
-  }[userInfo.messageStyle]
+  }[userInfo.messageStyle] : "Your tone should be professional, clear, and straight to the point. Focus on value and efficiency in communication."
 
   return `You are the best ${purpose === "seeking new career opportunities" ? "job seeker" : "outreach specialist"} at ${userInfo.companyName}. ${purpose}. ${tone}
 
