@@ -1446,7 +1446,21 @@ export default function Outreach() {
                     <label className="block text-xs font-medium text-turbo-black mb-1">Outreach Type</label>
                     <select
                       value={outreachType || 'getClients'}
-                      onChange={(e) => setOutreachType(e.target.value as OutreachType)}
+                      onChange={(e) => {
+                        const newType = e.target.value as OutreachType
+                        setOutreachType(newType)
+                        
+                        // Update userInfo with new type and context
+                        if (userInfo) {
+                          const updatedUserInfo = {
+                            ...userInfo,
+                            outreachType: newType,
+                            outreachContext: getOutreachContext(newType)
+                          }
+                          setUserInfo(updatedUserInfo)
+                          localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo))
+                        }
+                      }}
                       className="w-full px-2 py-1.5 text-sm rounded-lg border-2 border-turbo-black/10 focus:border-turbo-blue focus:outline-none transition-colors"
                     >
                       <option value="getClients">Get New Clients</option>
@@ -1460,7 +1474,20 @@ export default function Outreach() {
                     <label className="block text-xs font-medium text-turbo-black mb-1">Message Style</label>
                     <select
                       value={messageStyle || 'casual'}
-                      onChange={(e) => setMessageStyle(e.target.value as MessageStyle)}
+                      onChange={(e) => {
+                        const newStyle = e.target.value as MessageStyle
+                        setMessageStyle(newStyle)
+                        
+                        // Update userInfo with new style
+                        if (userInfo) {
+                          const updatedUserInfo = {
+                            ...userInfo,
+                            messageStyle: newStyle
+                          }
+                          setUserInfo(updatedUserInfo)
+                          localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo))
+                        }
+                      }}
                       className="w-full px-2 py-1.5 text-sm rounded-lg border-2 border-turbo-black/10 focus:border-turbo-blue focus:outline-none transition-colors"
                     >
                       <option value="direct">Direct & Professional</option>
