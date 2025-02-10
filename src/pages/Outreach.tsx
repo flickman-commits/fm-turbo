@@ -85,20 +85,20 @@ export default function Outreach() {
   })
   const [outreachType, setOutreachType] = useState<OutreachType>(() => {
     const saved = localStorage.getItem('outreachType')
-    return saved ? JSON.parse(saved) : null
+    return saved ? JSON.parse(saved) : 'getClients'
   })
   const [messageStyle, setMessageStyle] = useState<MessageStyle>(() => {
     const saved = localStorage.getItem('outreachMessageStyle')
-    return saved ? JSON.parse(saved) : null
+    return saved ? JSON.parse(saved) : 'casual'
   })
   const [hasList, setHasList] = useState<HasList>(() => {
     const saved = localStorage.getItem('outreachHasList')
-    return saved ? JSON.parse(saved) : null
+    return saved ? JSON.parse(saved) : 'no'
   })
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [showMainUI, setShowMainUI] = useState(() => {
     const saved = localStorage.getItem('outreachShowMainUI')
-    return saved ? JSON.parse(saved) : false
+    return saved ? JSON.parse(saved) : true
   })
   const [slideDirection, setSlideDirection] = useState<SlideDirection>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -962,7 +962,7 @@ export default function Outreach() {
         </div>
         
         <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="grid grid-cols-[1fr_350px] gap-6 min-h-[calc(100vh-200px)]">
+          <div className="grid grid-cols-[1fr_350px] gap-6">
             {/* Left Column - List + Email Composer */}
             <div className="flex flex-col gap-4">
               {/* Chat Bar or Current Prospect Bar */}
@@ -1337,87 +1337,123 @@ export default function Outreach() {
             </div>
 
             {/* Right Column - Prospect Info */}
-            <div className="rounded-lg border-2 border-turbo-black/10 p-6 bg-white">
-              {isResearching ? (
-                <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
-                  <div className="w-8 h-8 border-4 border-turbo-blue border-t-transparent rounded-full animate-spin mb-4" />
-                  <p className="text-turbo-black/60">Researching this lovely person...</p>
-                  <p className="text-sm text-turbo-black/40 mt-2">Finding all the good stuff about them</p>
-              </div>
-              ) : !currentProspect ? (
-                <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
-                  <p className="text-turbo-black/40">No personal or company insights yet.</p>
+            <div className="flex flex-col gap-4">
+              {/* Prospect Info Panel */}
+              <div className="rounded-lg border-2 border-turbo-black/10 p-6 bg-white h-[calc(100vh-200px)] sticky top-4 overflow-y-auto">
+                {isResearching ? (
+                  <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
+                    <div className="w-8 h-8 border-4 border-turbo-blue border-t-transparent rounded-full animate-spin mb-4" />
+                    <p className="text-turbo-black/60">Researching this lovely person...</p>
+                    <p className="text-sm text-turbo-black/40 mt-2">Finding all the good stuff about them</p>
                 </div>
-              ) : (
-                <>
-                  <div className="mb-6">
-                    <div>
-                      <h2 className="text-2xl font-bold text-turbo-black">{currentProspect?.name}</h2>
-                      <p className="text-lg text-turbo-black/60">
-                        {currentProspect?.title} 
-                        {currentProspect?.title && currentProspect?.company && ' at '}
-                        {currentProspect?.company}
-                      </p>
-                    </div>
+                ) : !currentProspect ? (
+                  <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
+                    <p className="text-turbo-black/40">No personal or company insights yet.</p>
                   </div>
-
-                  {/* Personal Insights */}
-                  {currentProspect?.research?.personInfo && currentProspect.research.personInfo.length > 0 && (
+                ) : (
+                  <>
                     <div className="mb-6">
-                      <p className="text-sm font-medium text-turbo-black mb-2">Personal Insights</p>
-                      <div className="space-y-2">
-                        {currentProspect.research.personInfo.map((info, index) => (
-                          <div 
-                            key={index}
-                            className="text-sm text-turbo-black/60 pl-4 relative"
-                          >
-                            <div className="absolute left-0 top-[0.5em] w-1.5 h-1.5 rounded-full bg-turbo-blue" />
-                            {info}
-                      </div>
-                        ))}
+                      <div>
+                        <h2 className="text-2xl font-bold text-turbo-black">{currentProspect?.name}</h2>
+                        <p className="text-lg text-turbo-black/60">
+                          {currentProspect?.title} 
+                          {currentProspect?.title && currentProspect?.company && ' at '}
+                          {currentProspect?.company}
+                        </p>
                       </div>
                     </div>
-                  )}
 
-                  {/* Company Insights */}
-                  {currentProspect?.research?.companyInfo && currentProspect.research.companyInfo.length > 0 && (
-                    <div className="mb-6">
-                      <p className="text-sm font-medium text-turbo-black mb-2">Company Insights</p>
-                      <div className="space-y-2">
-                        {currentProspect.research.companyInfo.map((info, index) => (
-                          <div 
-                            key={index}
-                            className="text-sm text-turbo-black/60 pl-4 relative"
-                          >
-                            <div className="absolute left-0 top-[0.5em] w-1.5 h-1.5 rounded-full bg-turbo-blue" />
-                            {info}
-                    </div>
-                        ))}
-                  </div>
-                    </div>
-                  )}
+                    {/* Personal Insights */}
+                    {currentProspect?.research?.personInfo && currentProspect.research.personInfo.length > 0 && (
+                      <div className="mb-6">
+                        <p className="text-sm font-medium text-turbo-black mb-2">Personal Insights</p>
+                        <div className="space-y-2">
+                          {currentProspect.research.personInfo.map((info, index) => (
+                            <div 
+                              key={index}
+                              className="text-sm text-turbo-black/60 pl-4 relative"
+                            >
+                              <div className="absolute left-0 top-[0.5em] w-1.5 h-1.5 rounded-full bg-turbo-blue" />
+                              {info}
+                        </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
-                  {/* Sources */}
-                  {currentProspect?.research?.sources && currentProspect.research.sources.length > 0 && (
-                    <div>
-                      <p className="text-sm font-medium text-turbo-black mb-2">Sources</p>
-                      <div className="space-y-1">
-                        {currentProspect.research.sources.map((source, index) => (
-                          <a
-                            key={index}
-                            href={source}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-turbo-blue hover:underline block truncate"
-                          >
-                            {source}
-                          </a>
-                ))}
+                    {/* Company Insights */}
+                    {currentProspect?.research?.companyInfo && currentProspect.research.companyInfo.length > 0 && (
+                      <div className="mb-6">
+                        <p className="text-sm font-medium text-turbo-black mb-2">Company Insights</p>
+                        <div className="space-y-2">
+                          {currentProspect.research.companyInfo.map((info, index) => (
+                            <div 
+                              key={index}
+                              className="text-sm text-turbo-black/60 pl-4 relative"
+                            >
+                              <div className="absolute left-0 top-[0.5em] w-1.5 h-1.5 rounded-full bg-turbo-blue" />
+                              {info}
+                      </div>
+                          ))}
+                    </div>
+                      </div>
+                    )}
+
+                    {/* Sources */}
+                    {currentProspect?.research?.sources && currentProspect.research.sources.length > 0 && (
+                      <div>
+                        <p className="text-sm font-medium text-turbo-black mb-2">Sources</p>
+                        <div className="space-y-1">
+                          {currentProspect.research.sources.map((source, index) => (
+                            <a
+                              key={index}
+                              href={source}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-turbo-blue hover:underline block truncate"
+                            >
+                              {source}
+                            </a>
+                  ))}
+                </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
-                    </div>
-                  )}
-                </>
-              )}
+
+              {/* New Settings Panel - More Compact */}
+              <div className="rounded-lg border-2 border-turbo-black/10 p-4 bg-white sticky top-[calc(100vh-100px)]">
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Outreach Type Selector */}
+                  <div>
+                    <label className="block text-xs font-medium text-turbo-black mb-1">Outreach Type</label>
+                    <select
+                      value={outreachType || 'getClients'}
+                      onChange={(e) => setOutreachType(e.target.value as OutreachType)}
+                      className="w-full px-2 py-1.5 text-sm rounded-lg border-2 border-turbo-black/10 focus:border-turbo-blue focus:outline-none transition-colors"
+                    >
+                      <option value="getClients">Get New Clients</option>
+                      <option value="getJob">Land a New Job</option>
+                      <option value="getSpeakers">Get Event Speakers</option>
+                    </select>
+                  </div>
+
+                  {/* Message Style Selector */}
+                  <div>
+                    <label className="block text-xs font-medium text-turbo-black mb-1">Message Style</label>
+                    <select
+                      value={messageStyle || 'casual'}
+                      onChange={(e) => setMessageStyle(e.target.value as MessageStyle)}
+                      className="w-full px-2 py-1.5 text-sm rounded-lg border-2 border-turbo-black/10 focus:border-turbo-blue focus:outline-none transition-colors"
+                    >
+                      <option value="direct">Direct & Professional</option>
+                      <option value="casual">Casual & Friendly</option>
+                      <option value="storytelling">Story-Driven</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
