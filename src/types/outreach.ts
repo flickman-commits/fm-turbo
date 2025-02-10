@@ -7,10 +7,10 @@ export interface UserInfo {
   role: string
   email?: string
   conversationalStyle?: string
-  messageStyle?: 'direct' | 'casual' | 'storytelling'
+  messageStyle: 'direct' | 'casual' | 'storytelling'  // Now required
   
   // Outreach Context
-  outreachType?: 'getClients' | 'getJob' | 'getSpeakers' | null // Type of outreach campaign
+  outreachType: 'getClients' | 'getJob' | 'getSpeakers'  // Now required and removed null
   outreachContext: string // The context message used in emails
 }
 

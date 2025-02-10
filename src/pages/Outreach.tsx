@@ -15,6 +15,7 @@ type SlideDirection = 'forward' | 'back' | null
 
 // Add new state types and enums
 type ProspectStatus = 'pending' | 'researching' | 'research_complete' | 'generating_emails' | 'ready'
+type InputMode = 'name' | 'company' | 'display'
 
 interface QuestionProps {
   isActive: boolean
@@ -30,21 +31,17 @@ const Question = ({ isActive, direction, children, step, currentStep }: Question
     <div
       className={cn(
         "absolute inset-0 transition-transform duration-500 ease-in-out",
-        // When not active and no direction (initial state)
         !isActive && direction === null && "translate-x-full opacity-0",
-        // When not active and going forward
         !isActive && direction === 'forward' && (
           currentStep > step 
-            ? "-translate-x-full opacity-0"  // Previous question slides left
-            : "translate-x-full opacity-0"   // Next question waits on right
+            ? "-translate-x-full opacity-0"
+            : "translate-x-full opacity-0"
         ),
-        // When not active and going back
         !isActive && direction === 'back' && (
           currentStep < step
-            ? "translate-x-full opacity-0"   // Next question slides right
-            : "-translate-x-full opacity-0"  // Previous question waits on left
+            ? "translate-x-full opacity-0"
+            : "-translate-x-full opacity-0"
         ),
-        // Active state is always centered
         isActive && "translate-x-0 opacity-100"
       )}
     >
@@ -60,10 +57,17 @@ interface QueuedEmail {
   prospectEmail: string
   subject: string
   body: string
-  templateIndex: number  // Add this to track which template was queued
+  templateIndex: number
 }
 
 export default function Outreach() {
+  // Move chat interface state inside component
+  const [chatMode, setChatMode] = useState(false)
+  const [inputMode, setInputMode] = useState<InputMode>('name')
+  const [prospectName, setProspectName] = useState('')
+  const [prospectCompany, setProspectCompany] = useState('')
+  const [isSubmitted, setIsSubmitted] = useState(false)
+
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(1)
   const [outreachType, setOutreachType] = useState<OutreachType | null>(null)
   const [messageStyle, setMessageStyle] = useState<MessageStyle | null>(null)
@@ -176,6 +180,7 @@ export default function Outreach() {
   const handleHasListSelect = (value: HasList) => {
     setHasList(value)
     if (value === 'no') {
+      setChatMode(true)
       setIsLoading(true)
       setShowMainUI(true)
     } else {
@@ -359,11 +364,17 @@ export default function Outreach() {
         },
         userInfo: {
           ...userInfo,
-          outreachContext: userInfo.outreachContext
+          outreachContext: userInfo.outreachContext,
+          outreachType: outreachType || 'getClients',
+          messageStyle: messageStyle || 'direct'
         }
       })
 
-      const templates = await createEmailTemplates(prospect, research, userInfo)
+      const templates = await createEmailTemplates(prospect, research, {
+        ...userInfo,
+        outreachType: outreachType || 'getClients',
+        messageStyle: messageStyle || 'direct'
+      })
 
       // Log the generated email templates
       console.log('✉️ Generated Email Templates:', {
@@ -464,7 +475,9 @@ export default function Outreach() {
         role: 'Professional',
         businessType: outreachType || 'business',
         outreachContext: getOutreachContext(outreachType),
-        companyName: 'Your Company'
+        companyName: 'Your Company',
+        messageStyle: 'direct',  // Default to direct style
+        outreachType: outreachType || 'getClients'  // Use selected type or default to getClients
       }
       localStorage.setItem('userInfo', JSON.stringify(defaultUserInfo))
       setUserInfo(defaultUserInfo)
@@ -545,6 +558,22 @@ export default function Outreach() {
     )
   }, [queuedEmails, currentProspect?.id, currentTemplateIndex])
 
+  // Add new function to handle single prospect queue
+  const handleQueueSingleEmail = () => {
+    const template = emailTemplates[currentTemplateIndex]
+    if (template && currentProspect) {
+      const queuedEmail: QueuedEmail = {
+        prospectId: currentProspect.id,
+        prospectName: currentProspect.name,
+        prospectEmail: currentProspect.email || '', // Handle empty email for single prospect
+        subject: template.subject,
+        body: template.body,
+        templateIndex: currentTemplateIndex
+      }
+      setQueuedEmails(prev => [...prev, queuedEmail])
+    }
+  }
+
   // Modify handleQueueEmail to include templateIndex
   const handleQueueEmail = () => {
     const template = emailTemplates[currentTemplateIndex]
@@ -581,10 +610,49 @@ export default function Outreach() {
     setQueuedEmails([])
   }
 
-  // Keyboard navigation
+  // Add new contact handler
+  const handleNewContact = () => {
+    // Log queued emails before clearing state
+    console.log('Currently queued emails:', queuedEmails)
+    
+    // Reset all input and UI states
+    setProspectName('')
+    setProspectCompany('')
+    setInputMode('name')
+    setIsSubmitted(false)
+    
+    // Clear email templates and reset all template-related states
+    setEmailTemplates([])
+    setCurrentTemplateIndex(0)
+    setIsResearching(false)
+    setIsGeneratingEmails(false)
+    
+    // Only clear prospects if in chat mode to preserve list functionality
+    if (chatMode) {
+      setProspects([])
+      // Also clear the prospect status to ensure fresh UI state
+      setProspectStatuses({})
+      // Remove any queued emails for the current prospect
+      if (currentProspect) {
+        setQueuedEmails(prev => prev.filter(email => email.prospectId !== currentProspect.id))
+      }
+    }
+    
+    // Log queued emails after clearing state to verify they're preserved
+    console.log('Queued emails after reset:', queuedEmails)
+  }
+
+  // Update the keyboard navigation handler
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     // Don't trigger shortcuts if user is editing text
     if (isEditing || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) {
+      return
+    }
+
+    // Change new contact shortcut from N to H (Cmd/Ctrl + H)
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'h') {
+      e.preventDefault() // Prevent browser's history
+      handleNewContact()
       return
     }
 
@@ -615,8 +683,13 @@ export default function Outreach() {
         }
         break
       case 'enter':
-        if (e.metaKey || e.ctrlKey) {
-          handleQueueEmail()
+        if ((e.metaKey || e.ctrlKey) && !isResearching && emailTemplates[currentTemplateIndex]) {
+          e.preventDefault()
+          if (chatMode) {
+            handleQueueSingleEmail()
+          } else if (currentProspect?.email) {
+            handleQueueEmail()
+          }
         }
         break
     }
@@ -628,7 +701,20 @@ export default function Outreach() {
         handleBatchSend()
       }
     }
-  }, [emailTemplates, currentTemplateIndex, currentProspect?.email, isResearching, isEditing, prospects.length, currentProspectIndex, queuedEmails.length])
+  }, [
+    emailTemplates, 
+    currentTemplateIndex, 
+    currentProspect?.email, 
+    isResearching, 
+    isEditing, 
+    prospects.length, 
+    currentProspectIndex, 
+    queuedEmails.length,
+    chatMode,
+    handleQueueEmail,
+    handleQueueSingleEmail,
+    handleBatchSend
+  ])
 
   // Reset emails sent counter at midnight
   useEffect(() => {
@@ -648,6 +734,28 @@ export default function Outreach() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
+
+  // Update the chat submit handler
+  const handleChatSubmit = async () => {
+    if (!userInfo) return
+
+    setIsSubmitted(true)
+    setInputMode('display')
+    setIsResearching(true)
+
+    // Create a single prospect
+    const newProspect: Prospect = {
+      id: 'single-prospect',
+      name: prospectName,
+      company: prospectCompany,
+      title: '',
+      email: '',
+    }
+
+    setProspects([newProspect])
+    setCurrentProspectIndex(0)
+    await processProspect(newProspect, true)
+  }
 
   if (isMobile) {
     return (
@@ -683,18 +791,22 @@ export default function Outreach() {
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <p className="text-lg font-medium">50 outreach emails a day could change your business forever.</p>
             <div className="flex items-center gap-6">
-              {queuedEmails.length > 0 && (
-                <button
-                  onClick={handleBatchSend}
-                  className="flex items-center gap-2 px-4 py-2 bg-white text-turbo-blue rounded-full hover:bg-white/90 transition-colors"
-                >
-                  Send {queuedEmails.length} Queued
-                  <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-turbo-blue/30 bg-turbo-blue/10 px-1.5 font-mono text-[10px] font-medium">
-                    <Command className="h-3 w-3" />
-                    <span className="text-xs">B</span>
-                  </kbd>
-                </button>
-              )}
+              <button
+                onClick={handleBatchSend}
+                disabled={queuedEmails.length === 0}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-full transition-colors",
+                  queuedEmails.length > 0 
+                    ? "bg-white text-turbo-blue hover:bg-white/90"
+                    : "bg-white/20 text-white/60 cursor-not-allowed"
+                )}
+              >
+                Send {queuedEmails.length} Queued
+                <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-current/30 bg-current/10 px-1.5 font-mono text-[10px] font-medium">
+                  <Command className="h-3 w-3" />
+                  <span className="text-xs">B</span>
+                </kbd>
+              </button>
               <div className="flex items-center gap-4">
                 <div className="text-sm">
                   {emailsSentToday}/50 emails sent today
@@ -709,104 +821,212 @@ export default function Outreach() {
             </div>
           </div>
         </div>
-
+        
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="grid grid-cols-[1fr_350px] gap-6 min-h-[calc(100vh-200px)]">
             {/* Left Column - List + Email Composer */}
             <div className="flex flex-col gap-4">
-              {/* Current Prospect Bar */}
-              <div className="flex items-center justify-between bg-white rounded-lg border-2 border-turbo-black/10 p-4 overflow-hidden">
-                <div className="flex items-center gap-3">
-                  <div className="flex flex-col relative h-[48px] w-[300px]">
-                    {prospects.map((prospect, index) => (
-                      <div
-                        key={prospect.id}
-                        className={cn(
-                          "absolute top-0 left-0 w-full h-full flex flex-col justify-center transition-all duration-300",
-                          index === currentProspectIndex 
-                            ? "translate-y-0 opacity-100 pointer-events-auto" 
-                            : index < currentProspectIndex
-                              ? "-translate-y-12 opacity-0 pointer-events-none"
-                              : "translate-y-12 opacity-0 pointer-events-none"
-                        )}
-                        style={{
-                          transform: `translateY(${index === currentProspectIndex ? 0 : index < currentProspectIndex ? -48 : 48}px)`
-                        }}
-                      >
-                        <div className="flex flex-col justify-center">
-                          <span className="text-sm font-medium text-turbo-black truncate leading-tight">{prospect.name}</span>
-                          <span className="text-xs text-turbo-black/60 truncate leading-tight">{prospect.company}</span>
-                        </div>
+              {/* Chat Bar or Current Prospect Bar */}
+              {chatMode ? (
+                    <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-semibold text-turbo-black">Who You Want to Talk To</h3>
+                    <a 
+                      href="https://www.youtube.com/watch?v=S7YrRcAkGf8" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm text-turbo-blue hover:text-turbo-black transition-colors"
+                    >
+                      learn how to get their email
+                    </a>
+                  </div>
+                  <div className="flex items-center justify-between bg-white rounded-lg border-2 border-turbo-black/10 p-6 overflow-hidden min-h-[72px]">
+                    <div className="flex-1 flex items-center gap-4 relative">
+                      <div className="w-full flex items-center gap-4">
+                        {/* Name Input */}
+                        <div 
+                          className={cn(
+                            "w-full flex items-center gap-4 absolute inset-0 transition-all duration-300",
+                            inputMode === 'name' ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
+                          )}
+                        >
+                          <input
+                            type="text"
+                            value={prospectName}
+                            onChange={(e) => setProspectName(e.target.value)}
+                            placeholder="Who do you want to reach out to?"
+                            className="flex-1 px-4 py-3 text-sm bg-transparent focus:outline-none"
+                            onKeyDown={(e) => {
+                              if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && prospectName) {
+                                e.preventDefault()
+                                setInputMode('company')
+                              }
+                            }}
+                          />
+                          <button
+                            onClick={() => {
+                              if (prospectName) {
+                                setInputMode('company')
+                              }
+                            }}
+                            disabled={!prospectName}
+                            className="px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-blue/90 disabled:opacity-50 rounded-full transition-colors"
+                          >
+                            Next
+                          </button>
+                          </div>
+
+                        {/* Company Input */}
+                        <div 
+                          className={cn(
+                            "w-full flex items-center gap-4 absolute inset-0 transition-all duration-300",
+                            inputMode === 'company' ? "translate-x-0 opacity-100" : 
+                            inputMode === 'name' ? "translate-x-full opacity-0" : "-translate-x-full opacity-0"
+                          )}
+                        >
+                          <input
+                            type="text"
+                            value={prospectCompany}
+                            onChange={(e) => setProspectCompany(e.target.value)}
+                            placeholder="What company are they at?"
+                            className="flex-1 px-4 py-3 text-sm bg-transparent focus:outline-none"
+                            onKeyDown={(e) => {
+                              if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && prospectCompany) {
+                                e.preventDefault()
+                                handleChatSubmit()
+                              }
+                            }}
+                          />
+                          <button
+                            onClick={handleChatSubmit}
+                            disabled={!prospectCompany}
+                            className="px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-blue/90 disabled:opacity-50 rounded-full transition-colors"
+                          >
+                            Submit
+                          </button>
                       </div>
-                    ))}
+
+                        {/* Display State */}
+                        <div 
+                          className={cn(
+                            "w-full flex items-center justify-between absolute inset-0 transition-all duration-300",
+                            inputMode === 'display' ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
+                          )}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-turbo-black">{prospectName}</span>
+                            <span className="text-sm text-turbo-black/60">at {prospectCompany}</span>
+                </div>
+                          <button
+                            onClick={handleNewContact}
+                            className="px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-blue/90 rounded-full transition-colors flex items-center gap-2"
+                          >
+                            New Contact
+                            <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-white/30 bg-white/10 px-1.5 font-mono text-[10px] font-medium">
+                              <Command className="h-3 w-3" />
+                              <span className="text-xs">H</span>
+                            </kbd>
+                          </button>
+              </div>
+                    </div>
+                  </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  {/* Status Indicator */}
-                  <div className="flex items-center gap-1">
-                    {(() => {
-                      const status = prospectStatuses[currentProspect?.id || ''] || 'pending'
-                      if (status === 'researching' || status === 'generating_emails') {
-                        return (
-                          <div className="w-4 h-4 border-2 border-turbo-blue border-t-transparent rounded-full animate-spin" />
-                        )
-                      } else if (status === 'ready') {
-                        return (
-                          <svg className="w-4 h-4 text-turbo-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        )
-                      } else {
-                        return (
-                          <svg className="w-4 h-4 text-turbo-black/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        )
-                      }
-                    })()}
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <div className="flex flex-col items-center">
-                      <button 
-                        onClick={goToPreviousProspect}
-                        disabled={currentProspectIndex === 0}
-                        className="p-1 text-turbo-black/40 hover:text-turbo-blue transition-colors disabled:opacity-30"
-                      >
-                        <ArrowLeft className="w-4 h-4 rotate-90" />
-                      </button>
-                      <kbd className="mt-1 inline-flex h-5 items-center gap-1 rounded border border-turbo-black/30 bg-turbo-black/5 px-1.5 font-mono text-[10px] font-medium text-turbo-black/60">
-                        I
-                      </kbd>
+              ) : (
+                // Original Current Prospect Bar
+                <div className="flex items-center justify-between bg-white rounded-lg border-2 border-turbo-black/10 p-4 overflow-hidden">
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col relative h-[48px] w-[300px]">
+                      {prospects.map((prospect, index) => (
+                        <div
+                          key={prospect.id}
+                          className={cn(
+                            "absolute top-0 left-0 w-full h-full flex flex-col justify-center transition-all duration-300",
+                            index === currentProspectIndex 
+                              ? "translate-y-0 opacity-100 pointer-events-auto" 
+                              : index < currentProspectIndex
+                                ? "-translate-y-12 opacity-0 pointer-events-none"
+                                : "translate-y-12 opacity-0 pointer-events-none"
+                          )}
+                          style={{
+                            transform: `translateY(${index === currentProspectIndex ? 0 : index < currentProspectIndex ? -48 : 48}px)`
+                          }}
+                        >
+                          <div className="flex flex-col justify-center">
+                            <span className="text-sm font-medium text-turbo-black truncate leading-tight">{prospect.name}</span>
+                            <span className="text-xs text-turbo-black/60 truncate leading-tight">{prospect.company}</span>
+                          </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex flex-col items-center">
-                      <button 
-                        onClick={goToNextProspect}
-                        disabled={currentProspectIndex === prospects.length - 1}
-                        className="p-1 text-turbo-black/40 hover:text-turbo-blue transition-colors disabled:opacity-30"
-                      >
-                        <ArrowLeft className="w-4 h-4 -rotate-90" />
-                      </button>
-                      <kbd className="mt-1 inline-flex h-5 items-center gap-1 rounded border border-turbo-black/30 bg-turbo-black/5 px-1.5 font-mono text-[10px] font-medium text-turbo-black/60">
-                        K
-                      </kbd>
+                  <div className="flex items-center gap-4">
+                    {/* Status Indicator */}
+                    <div className="flex items-center gap-1">
+                      {(() => {
+                        const status = prospectStatuses[currentProspect?.id || ''] || 'pending'
+                        if (status === 'researching' || status === 'generating_emails') {
+                          return (
+                            <div className="w-4 h-4 border-2 border-turbo-blue border-t-transparent rounded-full animate-spin" />
+                          )
+                        } else if (status === 'ready') {
+                          return (
+                            <svg className="w-4 h-4 text-turbo-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )
+                        } else {
+                          return (
+                            <svg className="w-4 h-4 text-turbo-black/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          )
+                        }
+                      })()}
                     </div>
-                    <span className="text-sm text-turbo-black/60 ml-2">
-                      {currentProspectIndex + 1}/{prospects.length}
-                    </span>
-                  </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <div className="flex flex-col items-center">
+                        <button 
+                          onClick={goToPreviousProspect}
+                          disabled={currentProspectIndex === 0}
+                          className="p-1 text-turbo-black/40 hover:text-turbo-blue transition-colors disabled:opacity-30"
+                        >
+                          <ArrowLeft className="w-4 h-4 rotate-90" />
+                        </button>
+                        <kbd className="mt-1 inline-flex h-5 items-center gap-1 rounded border border-turbo-black/30 bg-turbo-black/5 px-1.5 font-mono text-[10px] font-medium text-turbo-black/60">
+                          I
+                        </kbd>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <button 
+                          onClick={goToNextProspect}
+                          disabled={currentProspectIndex === prospects.length - 1}
+                          className="p-1 text-turbo-black/40 hover:text-turbo-blue transition-colors disabled:opacity-30"
+                        >
+                          <ArrowLeft className="w-4 h-4 -rotate-90" />
+                        </button>
+                        <kbd className="mt-1 inline-flex h-5 items-center gap-1 rounded border border-turbo-black/30 bg-turbo-black/5 px-1.5 font-mono text-[10px] font-medium text-turbo-black/60">
+                          K
+                        </kbd>
+                    </div>
+                      <span className="text-sm text-turbo-black/60 ml-2">
+                        {currentProspectIndex + 1}/{prospects.length}
+                      </span>
                 </div>
               </div>
+            </div>
+              )}
 
               {/* Email Composer */}
               <div className="flex-1 rounded-lg border-2 border-turbo-black/10 p-6 overflow-hidden flex flex-col bg-white">
-                <h3 className="text-xl font-semibold mb-6 text-turbo-black">What You're Gonna Send</h3>
+                <h3 className="text-xl font-semibold mb-6 text-turbo-black">What You're Going to Send <span className="text-turbo-black/60">(editable)</span></h3>
                 <div className="flex-1 relative">
                   {isGeneratingEmails || (emailTemplates.length === 0 && (prospectStatuses[currentProspect?.id || ''] === 'researching' || prospectStatuses[currentProspect?.id || ''] === 'generating_emails')) ? (
-                    <div className="flex flex-col items-center justify-center h-full">
-                      <div className="w-8 h-8 border-4 border-turbo-blue border-t-transparent rounded-full animate-spin mb-4" />
-                      <p className="text-turbo-black/60">Writing email starters...</p>
-                    </div>
+                      <div className="flex flex-col items-center justify-center h-full">
+                        <div className="w-8 h-8 border-4 border-turbo-blue border-t-transparent rounded-full animate-spin mb-4" />
+                        <p className="text-turbo-black/60">Writing email starters...</p>
+                      </div>
                   ) : emailTemplates.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-turbo-black/40">
                       <p>No email templates available yet</p>
@@ -853,8 +1073,8 @@ export default function Outreach() {
                                 className="flex-1 p-2 border-b-2 border-transparent hover:border-turbo-black/10 focus:border-turbo-blue focus:outline-none transition-colors rounded-lg"
                                 placeholder="Subject line..."
                               />
-                            </div>
-                          </div>
+                  </div>
+                </div>
                           <div className="relative group flex-1">
                             <textarea
                               value={template?.body || ''}
@@ -874,21 +1094,21 @@ export default function Outreach() {
                       ))}
                     </div>
                   )}
-                </div>
+              </div>
 
-                {/* Navigation and Send Controls */}
+              {/* Navigation and Send Controls */}
                 <div className="flex items-center justify-between mt-6 px-4">
                   <div className="flex flex-col items-center">
                     <span className="text-[10px] text-turbo-black/40 whitespace-nowrap mb-2">Browse through email starters</span>
                     <div className="flex gap-8 items-center">
                       <div className="flex flex-col items-center">
-                        <button 
-                          onClick={goToPreviousTemplate}
-                          disabled={currentTemplateIndex === 0 || isResearching}
-                          className="p-2 text-turbo-black/40 hover:text-turbo-blue transition-colors disabled:opacity-30 disabled:hover:text-turbo-black/40"
-                        >
-                          <ArrowLeft className="w-6 h-6" />
-                        </button>
+                  <button 
+                    onClick={goToPreviousTemplate}
+                    disabled={currentTemplateIndex === 0 || isResearching}
+                    className="p-2 text-turbo-black/40 hover:text-turbo-blue transition-colors disabled:opacity-30 disabled:hover:text-turbo-black/40"
+                  >
+                    <ArrowLeft className="w-6 h-6" />
+                  </button>
                         <div className="flex flex-col items-center gap-1">
                           <kbd className="inline-flex h-5 items-center gap-1 rounded border border-turbo-black/30 bg-turbo-black/5 px-1.5 font-mono text-[10px] font-medium text-turbo-black/60">
                             J
@@ -896,18 +1116,18 @@ export default function Outreach() {
                         </div>
                       </div>
                       <div className="flex flex-col items-center">
-                        <button 
-                          onClick={goToNextTemplate}
-                          disabled={currentTemplateIndex === emailTemplates.length - 1 || isResearching}
-                          className="p-2 text-turbo-black/40 hover:text-turbo-blue transition-colors disabled:opacity-30 disabled:hover:text-turbo-black/40"
-                        >
-                          <ArrowLeft className="w-6 h-6 rotate-180" />
-                        </button>
+                  <button 
+                    onClick={goToNextTemplate}
+                    disabled={currentTemplateIndex === emailTemplates.length - 1 || isResearching}
+                    className="p-2 text-turbo-black/40 hover:text-turbo-blue transition-colors disabled:opacity-30 disabled:hover:text-turbo-black/40"
+                  >
+                    <ArrowLeft className="w-6 h-6 rotate-180" />
+                  </button>
                         <div className="flex flex-col items-center gap-1">
                           <kbd className="inline-flex h-5 items-center gap-1 rounded border border-turbo-black/30 bg-turbo-black/5 px-1.5 font-mono text-[10px] font-medium text-turbo-black/60">
                             L
                           </kbd>
-                        </div>
+                </div>
                       </div>
                     </div>
                   </div>
@@ -929,15 +1149,17 @@ export default function Outreach() {
                     ))}
                   </div>
 
-                  <button
-                    onClick={isCurrentTemplateQueued() ? handleRemoveFromQueue : handleQueueEmail}
-                    disabled={isResearching || !emailTemplates[currentTemplateIndex] || !currentProspect?.email}
+                <button
+                    onClick={chatMode ? handleQueueSingleEmail : handleQueueEmail}
+                    disabled={isResearching || !emailTemplates[currentTemplateIndex] || (!currentProspect?.email && !chatMode)}
                     className={cn(
                       "px-6 py-3 rounded-full flex items-center gap-2 transition-colors",
                       isCurrentTemplateQueued()
                         ? "bg-turbo-black/10 text-turbo-black hover:bg-turbo-black/20"
                         : "bg-turbo-blue text-white hover:bg-turbo-blue/90",
-                      "disabled:opacity-50"
+                      "disabled:opacity-50",
+                      // Hide button during name/company input
+                      (inputMode === 'name' || inputMode === 'company') && "hidden"
                     )}
                   >
                     {isCurrentTemplateQueued() ? (
@@ -953,13 +1175,13 @@ export default function Outreach() {
                     ) : (
                       <>
                         Queue Email
-                        <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-white/30 bg-white/10 px-1.5 font-mono text-[10px] font-medium">
-                          <Command className="h-3 w-3" />
-                          <span className="text-xs">↵</span>
-                        </kbd>
+                  <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-white/30 bg-white/10 px-1.5 font-mono text-[10px] font-medium">
+                    <Command className="h-3 w-3" />
+                    <span className="text-xs">↵</span>
+                  </kbd>
                       </>
                     )}
-                  </button>
+                </button>
                 </div>
               </div>
             </div>
@@ -969,14 +1191,23 @@ export default function Outreach() {
               {isResearching ? (
                 <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
                   <div className="w-8 h-8 border-4 border-turbo-blue border-t-transparent rounded-full animate-spin mb-4" />
-                  <p className="text-turbo-black/60">Researching prospect...</p>
+                  <p className="text-turbo-black/60">Researching this lovely person...</p>
+                  <p className="text-sm text-turbo-black/40 mt-2">Finding all the good stuff about them</p>
+              </div>
+              ) : !currentProspect ? (
+                <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
+                  <p className="text-turbo-black/40">No personal or company insights yet.</p>
                 </div>
               ) : (
                 <>
                   <div className="mb-6">
                     <div>
                       <h2 className="text-2xl font-bold text-turbo-black">{currentProspect?.name}</h2>
-                      <p className="text-lg text-turbo-black/60">{currentProspect?.title} at {currentProspect?.company}</p>
+                      <p className="text-lg text-turbo-black/60">
+                        {currentProspect?.title} 
+                        {currentProspect?.title && currentProspect?.company && ' at '}
+                        {currentProspect?.company}
+                      </p>
                     </div>
                   </div>
 
@@ -992,7 +1223,7 @@ export default function Outreach() {
                           >
                             <div className="absolute left-0 top-[0.5em] w-1.5 h-1.5 rounded-full bg-turbo-blue" />
                             {info}
-                          </div>
+                      </div>
                         ))}
                       </div>
                     </div>
@@ -1010,9 +1241,9 @@ export default function Outreach() {
                           >
                             <div className="absolute left-0 top-[0.5em] w-1.5 h-1.5 rounded-full bg-turbo-blue" />
                             {info}
-                          </div>
+                    </div>
                         ))}
-                      </div>
+                  </div>
                     </div>
                   )}
 
@@ -1031,8 +1262,8 @@ export default function Outreach() {
                           >
                             {source}
                           </a>
-                        ))}
-                      </div>
+                ))}
+              </div>
                     </div>
                   )}
                 </>
@@ -1234,6 +1465,7 @@ export default function Outreach() {
                       "border-2 border-dashed rounded-lg",
                       "cursor-pointer transition-colors",
                       "border-turbo-black hover:bg-turbo-black/5",
+                      "border-turbo-blue hover:bg-turbo-blue/5",
                       csvFile 
                         ? 'border-turbo-blue bg-turbo-blue/5' 
                         : 'border-turbo-black hover:bg-turbo-black/5'

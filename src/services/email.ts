@@ -22,7 +22,9 @@ export async function createEmailTemplates(
   const promptUserInfo = {
     companyName: userInfo.companyName,
     userName: userInfo.name,
-    businessType: userInfo.businessType
+    businessType: userInfo.businessType,
+    outreachType: userInfo.outreachType,
+    messageStyle: userInfo.messageStyle
   }
 
   const systemPrompt = getOutreachSystemPrompt(promptUserInfo)
