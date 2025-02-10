@@ -8,7 +8,7 @@ export const DEFAULT_USER_INFO: UserInfo = {
   role: 'Professional',
   email: '',
   conversationalStyle: 'friendly',
-  outreachType: null,
+  outreachType: 'getClients',
   outreachContext: 'discussing business opportunities',
   messageStyle: 'direct'
 } 

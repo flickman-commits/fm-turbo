@@ -10,12 +10,13 @@ const DEFAULT_USER_INFO: UserInfo = {
   name: 'User',
   company: 'Your Company',
   companyName: 'Your Company',
-  businessType: 'Video Production', // The actual business type/industry
+  businessType: 'Video Production',
   role: 'Professional',
   email: '',
   conversationalStyle: 'friendly',
-  outreachType: null,
-  outreachContext: 'discussing business opportunities'
+  outreachType: 'getClients',
+  outreachContext: 'discussing business opportunities',
+  messageStyle: 'direct'
 }
 
 export default function Profile() {

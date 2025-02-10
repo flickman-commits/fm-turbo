@@ -69,8 +69,8 @@ export default function Outreach() {
   const [isSubmitted, setIsSubmitted] = useState(false)
 
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(1)
-  const [outreachType, setOutreachType] = useState<OutreachType | null>(null)
-  const [messageStyle, setMessageStyle] = useState<MessageStyle | null>(null)
+  const [outreachType, setOutreachType] = useState<OutreachType>('getClients')
+  const [messageStyle, setMessageStyle] = useState<MessageStyle>('direct')
   const [hasList, setHasList] = useState<HasList>(null)
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [showMainUI, setShowMainUI] = useState(false)
@@ -149,7 +149,8 @@ export default function Outreach() {
     const updatedUserInfo = {
       ...userInfo,
       outreachType: type,
-      outreachContext: getOutreachContext(type)
+      outreachContext: getOutreachContext(type),
+      messageStyle: messageStyle
     }
     
     // Save back to localStorage
@@ -365,15 +366,15 @@ export default function Outreach() {
         userInfo: {
           ...userInfo,
           outreachContext: userInfo.outreachContext,
-          outreachType: outreachType || 'getClients',
-          messageStyle: messageStyle || 'direct'
+          outreachType: outreachType,
+          messageStyle: messageStyle
         }
       })
 
       const templates = await createEmailTemplates(prospect, research, {
         ...userInfo,
-        outreachType: outreachType || 'getClients',
-        messageStyle: messageStyle || 'direct'
+        outreachType: outreachType,
+        messageStyle: messageStyle
       })
 
       // Log the generated email templates
@@ -551,12 +552,65 @@ export default function Outreach() {
     }
   }, [isLoading])
 
-  // Add helper function to check if current template is queued
+  // Update the isCurrentTemplateQueued function to be more specific
   const isCurrentTemplateQueued = useCallback(() => {
+    if (!currentProspect) return false
     return queuedEmails.some(
-      email => email.prospectId === currentProspect?.id && email.templateIndex === currentTemplateIndex
+      email => email.prospectId === currentProspect.id && email.templateIndex === currentTemplateIndex
     )
   }, [queuedEmails, currentProspect?.id, currentTemplateIndex])
+
+  // Update handleNewContact to generate a unique ID for new contacts
+  const handleNewContact = () => {
+    // Log queued emails before clearing state
+    console.log('Currently queued emails:', queuedEmails)
+    
+    // Reset all input and UI states
+    setProspectName('')
+    setProspectCompany('')
+    setInputMode('name')
+    setIsSubmitted(false)
+    
+    // Clear email templates and reset all template-related states
+    setEmailTemplates([])
+    setCurrentTemplateIndex(0)
+    setIsResearching(false)
+    setIsGeneratingEmails(false)
+    
+    // Only clear prospects if in chat mode to preserve list functionality
+    if (chatMode) {
+      // Create a new prospect with a unique ID using timestamp
+      const newProspectId = `single-prospect-${Date.now()}`
+      setProspects([])
+      // Also clear the prospect status to ensure fresh UI state
+      setProspectStatuses({})
+    }
+    
+    // Log queued emails after clearing state to verify they're preserved
+    console.log('Queued emails after reset:', queuedEmails)
+  }
+
+  // Update handleChatSubmit to use unique IDs
+  const handleChatSubmit = async () => {
+    if (!userInfo) return
+
+    setIsSubmitted(true)
+    setInputMode('display')
+    setIsResearching(true)
+
+    // Create a single prospect with a unique ID
+    const newProspect: Prospect = {
+      id: `single-prospect-${Date.now()}`,
+      name: prospectName,
+      company: prospectCompany,
+      title: '',
+      email: '',
+    }
+
+    setProspects([newProspect])
+    setCurrentProspectIndex(0)
+    await processProspect(newProspect, true)
+  }
 
   // Add new function to handle single prospect queue
   const handleQueueSingleEmail = () => {
@@ -608,38 +662,6 @@ export default function Outreach() {
     })
     setEmailsSentToday(prev => prev + queuedEmails.length)
     setQueuedEmails([])
-  }
-
-  // Add new contact handler
-  const handleNewContact = () => {
-    // Log queued emails before clearing state
-    console.log('Currently queued emails:', queuedEmails)
-    
-    // Reset all input and UI states
-    setProspectName('')
-    setProspectCompany('')
-    setInputMode('name')
-    setIsSubmitted(false)
-    
-    // Clear email templates and reset all template-related states
-    setEmailTemplates([])
-    setCurrentTemplateIndex(0)
-    setIsResearching(false)
-    setIsGeneratingEmails(false)
-    
-    // Only clear prospects if in chat mode to preserve list functionality
-    if (chatMode) {
-      setProspects([])
-      // Also clear the prospect status to ensure fresh UI state
-      setProspectStatuses({})
-      // Remove any queued emails for the current prospect
-      if (currentProspect) {
-        setQueuedEmails(prev => prev.filter(email => email.prospectId !== currentProspect.id))
-      }
-    }
-    
-    // Log queued emails after clearing state to verify they're preserved
-    console.log('Queued emails after reset:', queuedEmails)
   }
 
   // Update the keyboard navigation handler
@@ -734,28 +756,6 @@ export default function Outreach() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
-
-  // Update the chat submit handler
-  const handleChatSubmit = async () => {
-    if (!userInfo) return
-
-    setIsSubmitted(true)
-    setInputMode('display')
-    setIsResearching(true)
-
-    // Create a single prospect
-    const newProspect: Prospect = {
-      id: 'single-prospect',
-      name: prospectName,
-      company: prospectCompany,
-      title: '',
-      email: '',
-    }
-
-    setProspects([newProspect])
-    setCurrentProspectIndex(0)
-    await processProspect(newProspect, true)
-  }
 
   if (isMobile) {
     return (
