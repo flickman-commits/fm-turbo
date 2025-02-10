@@ -8,7 +8,6 @@ import { Prospect, UserInfo, EmailTemplate, ProspectResearch } from '@/types/out
 import { DEFAULT_USER_INFO } from '@/config/constants'
 
 type OutreachType = 'getClients' | 'getJob' | 'getSpeakers' | null
-type NonNullOutreachType = 'getClients' | 'getJob' | 'getSpeakers'
 type MessageStyle = 'direct' | 'casual' | 'storytelling' | null
 type OnboardingStep = 1 | 2 | 3 | 4
 type HasList = 'yes' | 'no' | null
@@ -794,7 +793,7 @@ export default function Outreach() {
     const timeUntilMidnight = tomorrow.getTime() - now.getTime()
 
     const timer = setTimeout(() => {
-      setEmailsSentToday((prev: number) => 0)
+      setEmailsSentToday(0)
     }, timeUntilMidnight)
 
     return () => clearTimeout(timer)
@@ -874,7 +873,7 @@ export default function Outreach() {
 
   // Update the beforeUnload handler to include new items
   useEffect(() => {
-    const handleBeforeUnload = (event: BeforeUnloadEvent): void => {
+    const handleBeforeUnload = () => {
       localStorage.removeItem('outreachChatMode')
       localStorage.removeItem('outreachInputMode')
       localStorage.removeItem('outreachProspectName')
