@@ -579,14 +579,9 @@ export default function Outreach() {
     
     // Only clear prospects if in chat mode to preserve list functionality
     if (chatMode) {
-      const newProspectId = `single-prospect-${Date.now()}`
-      setProspects([{
-        id: newProspectId,
-        name: '',
-        company: '',
-        title: '',
-        email: ''
-      }])
+      // Instead of creating an empty prospect, we'll clear the prospects array
+      // This prevents the useEffect from triggering email generation
+      setProspects([])
       // Also clear the prospect status to ensure fresh UI state
       setProspectStatuses({})
     }
