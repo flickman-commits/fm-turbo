@@ -1411,15 +1411,15 @@ export default function Outreach() {
                         chatMode ? handleQueueSingleEmail() : handleQueueEmail()
                       }
                     }}
-                    disabled={isResearching || !emailTemplates[currentTemplateIndex] || (!currentProspect?.email && !chatMode)}
+                    disabled={isResearching || !emailTemplates[currentTemplateIndex]}
                     className={cn(
                       "px-6 py-3 rounded-full flex items-center gap-2 transition-colors",
                       isCurrentTemplateQueued()
                         ? "bg-turbo-black/10 text-turbo-black hover:bg-turbo-black/20"
                         : "bg-turbo-blue text-white hover:bg-turbo-blue/90",
                       "disabled:opacity-50",
-                      // Hide button during name/company input
-                      (inputMode === 'name' || inputMode === 'company') && "hidden"
+                      // Only hide button during name/company input in chat mode
+                      (chatMode && (inputMode === 'name' || inputMode === 'company')) && "hidden"
                     )}
                   >
                     {isCurrentTemplateQueued() ? (
