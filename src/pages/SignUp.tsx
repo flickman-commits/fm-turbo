@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { links } from '@/config/links'
 import { PRICING_TIERS, getCurrentPricingTier, getSliderPosition } from '@/utils/pricing'
 import { PRICE_COMPARISONS } from '@/utils/priceComparisons'
+import { useNavigate } from 'react-router-dom'
 
 // Toast component
 const Toast = ({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) => {
@@ -92,6 +93,7 @@ async function getServerCount() {
 }
 
 export default function SignUp() {
+  const navigate = useNavigate()
   // Start with 10 as a fallback to indicate we're waiting for the server count
   const [usersAtLaunch, setUsersAtLaunch] = useState<number>(10)
   const [isCountLoaded, setIsCountLoaded] = useState(false)
@@ -151,9 +153,14 @@ export default function SignUp() {
 
       form.reset()
       setToast({
-        message: 'Thanks for signing up! We\'ll notify you when we launch.',
+        message: 'Thanks for signing up! Redirecting you to the app...',
         type: 'success'
       })
+
+      // Wait for 1 second before redirecting
+      setTimeout(() => {
+        navigate('/')
+      }, 1000)
     } catch (error) {
       console.error('Error submitting form:', error)
       setToast({

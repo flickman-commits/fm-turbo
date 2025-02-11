@@ -26,7 +26,7 @@ export default function App() {
             <Route path="/outreach" element={<Outreach />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="/signup" element={<SignUp />} />
+            <Route path="/sign-up" element={<SignUp />} />
           </Routes>
           <Toaster 
             position="bottom-center"
