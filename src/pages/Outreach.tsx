@@ -76,16 +76,6 @@ const COLUMN_MAPPINGS: ColumnMappings = {
   size: ['size', 'company size', 'employees', 'team size', 'company_size']
 }
 
-// Helper function to find matching column
-const findMatchingColumn = (headers: string[], targetField: ColumnKey): number => {
-  const variations = COLUMN_MAPPINGS[targetField]
-  return headers.findIndex(header => 
-    variations.some((variation: string) => 
-      header.toLowerCase().trim() === variation.toLowerCase()
-    )
-  )
-}
-
 // Helper function to split full name into first and last name
 const splitFullName = (fullName: string): { firstName: string; lastName: string } => {
   const parts = fullName.trim().split(/\s+/)
@@ -97,8 +87,34 @@ const splitFullName = (fullName: string): { firstName: string; lastName: string 
   return { firstName, lastName }
 }
 
+// Helper function to find matching column
+const findMatchingColumn = (headers: string[], targetField: ColumnKey): number => {
+  const variations = COLUMN_MAPPINGS[targetField]
+  const headerIndex = headers.findIndex(header => {
+    if (!header) return false
+    const cleanHeader = header.toLowerCase().trim()
+    return variations.some(variation => 
+      cleanHeader === variation.toLowerCase() ||
+      cleanHeader.includes(variation.toLowerCase())
+    )
+  })
+  console.log(`Looking for ${targetField} column:`, {
+    variations,
+    headers,
+    foundIndex: headerIndex
+  })
+  return headerIndex
+}
+
+// Helper function to safely extract value from CSV row
+const extractValue = (values: string[], columnIndex: number): string => {
+  if (columnIndex < 0 || columnIndex >= values.length) return ''
+  const value = values[columnIndex]
+  return value ? value.trim().replace(/^["']|["']$/g, '') : ''
+}
+
 export default function Outreach() {
-  // Move chat interface state inside component
+  // Move all state declarations to the top
   const [chatMode, setChatMode] = useState(() => {
     const saved = localStorage.getItem('outreachChatMode')
     return saved ? JSON.parse(saved) : true
@@ -301,107 +317,6 @@ export default function Outreach() {
         console.error('Error parsing CSV:', error)
         setIsLoading(false)
       }
-    }
-  }
-
-  // Parse CSV function
-  const parseCSV = async (file: File) => {
-    console.log('🔄 Starting CSV parsing...')
-    try {
-      const text = await file.text()
-      const rows = text.split('\n')
-      if (rows.length === 0) {
-        throw new Error('CSV file is empty')
-      }
-
-      // Clean and normalize headers
-      const headers = rows[0].split(',').map(header => header?.trim().toLowerCase() || '')
-      if (headers.length === 0) {
-        throw new Error('No headers found in CSV file')
-      }
-      
-      console.log('📊 Found headers:', headers)
-      
-      // Find indices for our required columns
-      const columnIndices = {
-        firstName: findMatchingColumn(headers, 'firstName'),
-        lastName: findMatchingColumn(headers, 'lastName'),
-        fullName: findMatchingColumn(headers, 'fullName'),
-        email: findMatchingColumn(headers, 'email'),
-        company: findMatchingColumn(headers, 'company'),
-        title: findMatchingColumn(headers, 'title'),
-        industry: findMatchingColumn(headers, 'industry'),
-        size: findMatchingColumn(headers, 'size')
-      }
-
-      console.log('📊 Mapped columns:', columnIndices)
-
-      const parsedProspects = rows.slice(1)
-        .filter(row => row.trim()) // Skip empty rows
-        .map((row, index) => {
-          // Split the row and clean each value
-          const values = row.split(',').map(value => value?.trim() || '')
-          
-          // Safely get values with null checks
-          const getValue = (columnIndex: number): string => {
-            if (columnIndex < 0 || !values[columnIndex]) return ''
-            return values[columnIndex].trim()
-          }
-
-          // Handle name fields
-          let firstName = ''
-          let lastName = ''
-          
-          // First try to get first name and last name from separate columns
-          const firstNameValue = getValue(columnIndices.firstName)
-          const lastNameValue = getValue(columnIndices.lastName)
-          
-          if (firstNameValue || lastNameValue) {
-            firstName = firstNameValue
-            lastName = lastNameValue
-          } else {
-            // If separate name fields aren't found, try to split full name
-            const fullNameValue = getValue(columnIndices.fullName)
-            if (fullNameValue) {
-              const { firstName: fn, lastName: ln } = splitFullName(fullNameValue)
-              firstName = fn
-              lastName = ln
-            }
-          }
-
-          // Safely handle company name with quotes
-          const companyValue = getValue(columnIndices.company)
-          const cleanCompanyName = companyValue ? companyValue.replace(/^["']|["']$/g, '') : ''
-          
-          // Create prospect object
-          const prospect = {
-            id: `prospect-${index}`,
-            firstName,
-            lastName,
-            name: `${firstName} ${lastName}`.trim(),
-            email: getValue(columnIndices.email),
-            company: cleanCompanyName,
-            title: getValue(columnIndices.title),
-            industry: getValue(columnIndices.industry),
-            size: getValue(columnIndices.size)
-          }
-
-          console.log(`📊 Parsed prospect ${index + 1}:`, prospect)
-          return prospect
-        })
-        .filter(prospect => prospect.firstName || prospect.lastName || prospect.email || prospect.company) // Only keep rows with at least some data
-
-      if (parsedProspects.length === 0) {
-        throw new Error('No valid prospects found in CSV. Please check the file format.')
-      }
-
-      console.log(`✅ Successfully parsed ${parsedProspects.length} prospects from CSV`)
-      setProspects(parsedProspects)
-      setCurrentProspectIndex(0)
-      return parsedProspects
-    } catch (error) {
-      console.error('Error parsing CSV:', error)
-      throw error
     }
   }
 
@@ -989,6 +904,112 @@ export default function Outreach() {
     window.addEventListener('beforeunload', handleBeforeUnload)
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [])
+
+  // Parse CSV function
+  const parseCSV = async (file: File) => {
+    console.log('🔄 Starting CSV parsing...')
+    try {
+      const text = await file.text()
+      const rows = text.split('\n').map(row => row.trim()).filter(row => row)
+      
+      if (rows.length === 0) {
+        throw new Error('CSV file is empty')
+      }
+
+      // Clean and normalize headers
+      const headers = rows[0].split(',').map(header => header?.trim().toLowerCase() || '')
+      console.log('📊 Found headers:', headers)
+
+      // Find indices for our required columns
+      const columnIndices = {
+        firstName: findMatchingColumn(headers, 'firstName'),
+        lastName: findMatchingColumn(headers, 'lastName'),
+        fullName: findMatchingColumn(headers, 'fullName'),
+        email: findMatchingColumn(headers, 'email'),
+        company: findMatchingColumn(headers, 'company'),
+        title: findMatchingColumn(headers, 'title'),
+        industry: findMatchingColumn(headers, 'industry'),
+        size: findMatchingColumn(headers, 'size')
+      }
+
+      console.log('📊 Column mapping results:', columnIndices)
+
+      const parsedProspects = rows.slice(1)
+        .map((row, index) => {
+          try {
+            // Split the row and clean each value
+            const values = row.split(',').map(value => value?.trim() || '')
+            
+            // Handle name fields
+            let firstName = ''
+            let lastName = ''
+            
+            // First try to get first name and last name from separate columns
+            if (columnIndices.firstName >= 0 || columnIndices.lastName >= 0) {
+              firstName = extractValue(values, columnIndices.firstName)
+              lastName = extractValue(values, columnIndices.lastName)
+            }
+            
+            // If separate name fields aren't found or are empty, try to split full name
+            if ((!firstName && !lastName) && columnIndices.fullName >= 0) {
+              const fullName = extractValue(values, columnIndices.fullName)
+              if (fullName) {
+                const nameParts = fullName.split(/\s+/)
+                firstName = nameParts[0] || ''
+                lastName = nameParts.slice(1).join(' ') || ''
+              }
+            }
+
+            // Create prospect object with all available data
+            const prospect: Prospect = {
+              id: `prospect-${Date.now()}-${index}`,
+              firstName: firstName || '',
+              lastName: lastName || '',
+              name: `${firstName} ${lastName}`.trim() || extractValue(values, columnIndices.fullName) || 'Unknown',
+              email: extractValue(values, columnIndices.email),
+              company: extractValue(values, columnIndices.company),
+              title: extractValue(values, columnIndices.title),
+              industry: extractValue(values, columnIndices.industry),
+              size: extractValue(values, columnIndices.size)
+            }
+
+            // Log each parsed prospect for debugging
+            console.log(`📊 Parsed prospect ${index + 1}:`, prospect)
+            
+            return prospect
+          } catch (error) {
+            console.error(`Error parsing row ${index + 1}:`, error)
+            return null
+          }
+        })
+        .filter((prospect): prospect is Prospect => {
+          if (!prospect) return false
+          
+          // Ensure we have at least some valid data
+          const hasName = prospect.firstName || prospect.lastName || prospect.name
+          const hasIdentifier = hasName || prospect.email || prospect.company
+          
+          if (!hasIdentifier) {
+            console.warn('Skipping prospect with no identifying information:', prospect)
+            return false
+          }
+          
+          return true
+        })
+
+      if (parsedProspects.length === 0) {
+        throw new Error('No valid prospects found in CSV. Please check the file format.')
+      }
+
+      console.log(`✅ Successfully parsed ${parsedProspects.length} prospects from CSV`)
+      setProspects(parsedProspects)
+      setCurrentProspectIndex(0)
+      return parsedProspects
+    } catch (error) {
+      console.error('Error parsing CSV:', error)
+      throw error
+    }
+  }
 
   if (isMobile) {
     return (
