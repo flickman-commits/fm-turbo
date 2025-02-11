@@ -94,12 +94,11 @@ async function getServerCount() {
 
 export default function SignUp() {
   const navigate = useNavigate()
-  // Start with 10 as a fallback to indicate we're waiting for the server count
   const [usersAtLaunch, setUsersAtLaunch] = useState<number>(10)
   const [isCountLoaded, setIsCountLoaded] = useState(false)
-  
   const [activeTestimonial, setActiveTestimonial] = useState(0)
   const [isPricingVisible, setIsPricingVisible] = useState(false)
+  const [wantsSMS, setWantsSMS] = useState(false)
   const pricingSliderRef = useRef<HTMLDivElement>(null)
   const topRef = useRef<HTMLDivElement>(null)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
@@ -134,6 +133,7 @@ export default function SignUp() {
       const form = e.currentTarget
       const formData = new FormData(form)
       const email = formData.get('email_address')
+      const phoneNumber = wantsSMS ? formData.get('phone_number') : null
       const date = new Date().toLocaleDateString()
       const time = new Date().toLocaleTimeString()
 
@@ -146,6 +146,8 @@ export default function SignUp() {
         },
         body: JSON.stringify({
           email,
+          wantsSMS,
+          phoneNumber,
           date,
           time
         })
@@ -276,7 +278,7 @@ export default function SignUp() {
               onSubmit={handleEmailSubmit}
               className="max-w-md mx-auto"
             >
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col gap-3">
                 <div className="flex-1">
                   <input 
                     className="h-[48px] px-4 rounded-full bg-white border border-turbo-black/10 w-full focus:outline-none focus:ring-2 focus:ring-turbo-blue transition-all" 
@@ -285,6 +287,39 @@ export default function SignUp() {
                     placeholder="Enter your email to join" 
                     required 
                   />
+                </div>
+                <div className="flex items-center gap-2 px-2">
+                  <input
+                    type="checkbox"
+                    name="wantsSMS"
+                    id="wantsSMS"
+                    checked={wantsSMS}
+                    onChange={(e) => setWantsSMS(e.target.checked)}
+                    className="h-4 w-4 rounded border-turbo-black/10 text-turbo-blue focus:ring-turbo-blue"
+                  />
+                  <label htmlFor="wantsSMS" className="text-sm text-turbo-black/80">
+                    Send me a daily SMS reminder to do my outreach
+                  </label>
+                </div>
+                <div 
+                  className="phone-input-container transition-all overflow-hidden"
+                  style={{ 
+                    maxHeight: wantsSMS ? '200px' : '0',
+                    opacity: wantsSMS ? '1' : '0',
+                    marginTop: wantsSMS ? '8px' : '0'
+                  }}
+                >
+                  <input 
+                    className="h-[48px] px-4 rounded-full bg-white border border-turbo-black/10 w-full focus:outline-none focus:ring-2 focus:ring-turbo-blue transition-all" 
+                    name="phone_number" 
+                    type="tel"
+                    pattern="[0-9]{10}"
+                    placeholder="Enter your phone number (10 digits)" 
+                    required={wantsSMS}
+                  />
+                  <p className="text-xs text-turbo-black/60 mt-1 px-2">
+                    Format: 1234567890 (no spaces or special characters)
+                  </p>
                 </div>
                 <button 
                   type="submit"

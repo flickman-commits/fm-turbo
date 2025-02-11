@@ -29,13 +29,14 @@ export interface ProspectResearch {
 
 export interface Prospect {
   id: string
+  firstName: string
+  lastName: string
   name: string
-  title: string
   email: string
   company: string
+  title: string
   industry?: string
   size?: string
   research?: ProspectResearch
   emailTemplates?: EmailTemplate[]
-  [key: string]: string | undefined | ProspectResearch | EmailTemplate[] // Allow for flexible CSV columns
 } 
