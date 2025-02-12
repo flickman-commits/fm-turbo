@@ -931,7 +931,7 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
                         ) : field.type === 'textarea' ? (
                           <textarea
                             id={field.id}
-                            className="flex min-h-[100px] w-full rounded-md border border-turbo-black bg-turbo-beige px-3 py-2 text-sm text-turbo-black placeholder:text-turbo-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-turbo-blue focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex min-h-[100px] w-full rounded-md border border-turbo-black bg-turbo-beige px-3 py-2 text-base text-turbo-black placeholder:text-turbo-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-turbo-blue focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             placeholder={field.placeholder}
                             value={typeof formData[field.id] === 'string' ? formData[field.id] as string : ''}
                             onChange={(e) => handleFieldChange(field.id, e.target.value)}
@@ -1011,28 +1011,11 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
                         ) : field.type === 'select' ? (
                           <select
                             id={field.id}
-                            className="flex h-10 w-full rounded-md border border-turbo-black bg-turbo-beige px-3 py-2 text-sm text-turbo-black placeholder:text-turbo-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-turbo-blue focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex h-10 w-full rounded-md border border-turbo-black bg-turbo-beige px-3 py-2 text-base text-turbo-black placeholder:text-turbo-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-turbo-blue focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             value={typeof formData[field.id] === 'string' ? formData[field.id] as string : field.options?.find(opt => opt.default)?.value || ''}
                             onChange={(e) => handleFieldChange(field.id, e.target.value)}
                             required={isFieldRequired(field)}
                             enterKeyHint="next"
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                const inputs = Array.from(document.querySelectorAll('input:not([type="file"]), textarea, select'));
-                                const currentIndex = inputs.indexOf(e.target as HTMLElement);
-                                const nextInput = inputs[currentIndex + 1] as HTMLElement;
-                                if (nextInput) {
-                                  nextInput.focus();
-                                } else {
-                                  // If it's the last field and form is valid, submit
-                                  if (isFormValid()) {
-                                    const form = document.querySelector('form');
-                                    form?.requestSubmit();
-                                  }
-                                }
-                              }
-                            }}
                           >
                             {field.options?.map((option) => (
                               <option key={option.value} value={option.value}>
@@ -1044,7 +1027,7 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
                           <input
                             id={field.id}
                             type={field.type}
-                            className="flex h-10 w-full rounded-md border border-turbo-black bg-turbo-beige px-3 py-2 text-sm text-turbo-black placeholder:text-turbo-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-turbo-blue focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex h-10 w-full rounded-md border border-turbo-black bg-turbo-beige px-3 py-2 text-base text-turbo-black placeholder:text-turbo-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-turbo-blue focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             placeholder={field.placeholder}
                             value={typeof formData[field.id] === 'string' ? formData[field.id] as string : ''}
                             onChange={(e) => handleFieldChange(field.id, e.target.value)}
