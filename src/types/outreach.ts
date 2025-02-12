@@ -10,7 +10,7 @@ export interface UserInfo {
   messageStyle: 'direct' | 'casual' | 'storytelling' | null
   
   // Outreach Context
-  outreachType: 'getClients' | 'getJob' | 'getSpeakers' | null
+  outreachType: 'getClients' | 'getJob' | 'getSpeakers' | 'getHotelStay' | 'getSponsors' | null
   outreachContext: string // The context message used in emails
 }
 

@@ -7,7 +7,7 @@ import { createEmailTemplates } from '@/services/email'
 import { Prospect, UserInfo, EmailTemplate, ProspectResearch } from '@/types/outreach'
 import { DEFAULT_USER_INFO } from '@/config/constants'
 
-type OutreachType = 'getClients' | 'getJob' | 'getSpeakers' | null
+type OutreachType = 'getClients' | 'getJob' | 'getSpeakers' | 'getHotelStay' | 'getSponsors' | null
 type MessageStyle = 'direct' | 'casual' | 'storytelling' | null
 type OnboardingStep = 1 | 2 | 3 | 4
 type HasList = 'yes' | 'no' | null
@@ -248,6 +248,10 @@ export default function Outreach() {
         return 'exploring career opportunities'
       case 'getSpeakers':
         return 'inviting speakers to our event'
+      case 'getHotelStay':
+        return 'discussing content creation partnership opportunities'
+      case 'getSponsors':
+        return 'exploring project sponsorship opportunities'
       default:
         return 'discussing business opportunities'
     }
@@ -256,6 +260,7 @@ export default function Outreach() {
   // Handle selections
   const handleOutreachTypeSelect = (type: NonNullable<OutreachType>) => {
     setOutreachType(type)
+    console.log('📝 Outreach type changed:', { from: outreachType, to: type })
     
     // Get current user info
     const currentUserInfo = localStorage.getItem('userInfo')
@@ -277,6 +282,7 @@ export default function Outreach() {
 
   const handleMessageStyleSelect = (style: NonNullable<MessageStyle>) => {
     setMessageStyle(style)
+    console.log('📝 Message style changed:', { from: messageStyle, to: style })
     
     // Get current user info
     const currentUserInfo = localStorage.getItem('userInfo')
@@ -445,15 +451,15 @@ export default function Outreach() {
         userInfo: {
           ...userInfo,
           outreachContext: userInfo.outreachContext,
-          outreachType: outreachType || 'getClients', // Provide default if null
-          messageStyle: messageStyle || 'direct' // Provide default if null
+          outreachType: outreachType || 'getClients',
+          messageStyle: messageStyle || 'direct'
         }
       })
 
       const templates = await createEmailTemplates(prospect, research, {
         ...userInfo,
-        outreachType: outreachType || 'getClients', // Provide default if null
-        messageStyle: messageStyle || 'direct' // Provide default if null
+        outreachType: outreachType || 'getClients',
+        messageStyle: messageStyle || 'direct'
       })
 
       // Log the generated email templates
@@ -1011,6 +1017,47 @@ export default function Outreach() {
     }
   }
 
+  // Helper function to regenerate emails for current prospect
+  const regenerateEmailsForCurrentProspect = async (newOutreachType?: OutreachType, newMessageStyle?: MessageStyle) => {
+    if (!currentProspect?.research || !userInfo) return
+    
+    console.log('🔄 Regenerating emails with new settings...')
+    setIsGeneratingEmails(true)
+    
+    try {
+      const templates = await createEmailTemplates(
+        currentProspect,
+        currentProspect.research,
+        {
+          ...userInfo,
+          outreachType: newOutreachType || outreachType || 'getClients',
+          messageStyle: newMessageStyle || messageStyle || 'direct'
+        }
+      )
+      
+      // Update the prospects array with new templates
+      setProspects(prevProspects => {
+        const updatedProspects = [...prevProspects]
+        const index = updatedProspects.findIndex(p => p.id === currentProspect.id)
+        if (index !== -1) {
+          updatedProspects[index] = {
+            ...updatedProspects[index],
+            emailTemplates: templates
+          }
+        }
+        return updatedProspects
+      })
+      
+      // Update current email templates
+      setEmailTemplates(templates)
+      setCurrentTemplateIndex(0)
+    } catch (error) {
+      console.error('Error regenerating emails:', error)
+    } finally {
+      setIsGeneratingEmails(false)
+    }
+  }
+
   if (isMobile) {
     return (
       <Layout>
@@ -1124,7 +1171,7 @@ export default function Outreach() {
                             type="text"
                             value={prospectName}
                             onChange={(e) => setProspectName(e.target.value)}
-                            placeholder="Who do you want to reach out to?"
+                            placeholder="Name of person"
                             className="flex-1 px-4 py-3 text-sm bg-transparent focus:outline-none"
                             onKeyDown={(e) => {
                               if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && prospectName) {
@@ -1292,6 +1339,76 @@ export default function Outreach() {
               </div>
             </div>
               )}
+
+              {/* Settings Panel */}
+              <div className="rounded-lg border-2 border-turbo-black/10 p-4 bg-white">
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Context of Outreach Selector */}
+                  <div>
+                    <label className="block text-xs font-medium text-turbo-black mb-1">Context of Outreach</label>
+                    <select
+                      value={outreachType || 'getClients'}
+                      onChange={async (e) => {
+                        const newType = e.target.value as OutreachType
+                        setOutreachType(newType)
+                        console.log('📝 Outreach type changed:', { from: outreachType, to: newType })
+                        
+                        // Update userInfo with new type and context
+                        if (userInfo) {
+                          const updatedUserInfo = {
+                            ...userInfo,
+                            outreachType: newType,
+                            outreachContext: getOutreachContext(newType)
+                          }
+                          setUserInfo(updatedUserInfo)
+                          localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo))
+                          
+                          // Regenerate emails with new type
+                          await regenerateEmailsForCurrentProspect(newType, messageStyle)
+                        }
+                      }}
+                      className="w-full px-2 py-1.5 text-sm rounded-lg border-2 border-turbo-black/10 focus:border-turbo-blue focus:outline-none transition-colors"
+                    >
+                      <option value="getClients">Get New Clients</option>
+                      <option value="getJob">Land a New Job</option>
+                      <option value="getSpeakers">Get Event Speakers</option>
+                      <option value="getHotelStay">Get Hotel Stay</option>
+                      <option value="getSponsors">Get Sponsors</option>
+                    </select>
+                  </div>
+
+                  {/* Message Style Selector */}
+                  <div>
+                    <label className="block text-xs font-medium text-turbo-black mb-1">Message Style</label>
+                    <select
+                      value={messageStyle || 'casual'}
+                      onChange={async (e) => {
+                        const newStyle = e.target.value as MessageStyle
+                        setMessageStyle(newStyle)
+                        console.log('📝 Message style changed:', { from: messageStyle, to: newStyle })
+                        
+                        // Update userInfo with new style
+                        if (userInfo) {
+                          const updatedUserInfo = {
+                            ...userInfo,
+                            messageStyle: newStyle
+                          }
+                          setUserInfo(updatedUserInfo)
+                          localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo))
+                          
+                          // Regenerate emails with new style
+                          await regenerateEmailsForCurrentProspect(outreachType, newStyle)
+                        }
+                      }}
+                      className="w-full px-2 py-1.5 text-sm rounded-lg border-2 border-turbo-black/10 focus:border-turbo-blue focus:outline-none transition-colors"
+                    >
+                      <option value="direct">Direct & Professional</option>
+                      <option value="casual">Casual & Friendly</option>
+                      <option value="storytelling">Story-Driven</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
 
               {/* Email Composer */}
               <div className="flex-1 rounded-lg border-2 border-turbo-black/10 p-6 overflow-hidden flex flex-col bg-white">
@@ -1476,7 +1593,7 @@ export default function Outreach() {
                     <div className="w-8 h-8 border-4 border-turbo-blue border-t-transparent rounded-full animate-spin mb-4" />
                     <p className="text-turbo-black/60">Researching this lovely person...</p>
                     <p className="text-sm text-turbo-black/40 mt-2">Finding all the good stuff about them</p>
-                </div>
+                  </div>
                 ) : !currentProspect ? (
                   <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
                     <p className="text-turbo-black/40">No personal or company insights yet.</p>
@@ -1551,66 +1668,6 @@ export default function Outreach() {
                     )}
                   </>
                 )}
-              </div>
-
-              {/* New Settings Panel - More Compact */}
-              <div className="rounded-lg border-2 border-turbo-black/10 p-4 bg-white sticky top-[calc(100vh-100px)]">
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Outreach Type Selector */}
-                  <div>
-                    <label className="block text-xs font-medium text-turbo-black mb-1">Outreach Type</label>
-                    <select
-                      value={outreachType || 'getClients'}
-                      onChange={(e) => {
-                        const newType = e.target.value as OutreachType
-                        setOutreachType(newType)
-                        
-                        // Update userInfo with new type and context
-                        if (userInfo) {
-                          const updatedUserInfo = {
-                            ...userInfo,
-                            outreachType: newType,
-                            outreachContext: getOutreachContext(newType)
-                          }
-                          setUserInfo(updatedUserInfo)
-                          localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo))
-                        }
-                      }}
-                      className="w-full px-2 py-1.5 text-sm rounded-lg border-2 border-turbo-black/10 focus:border-turbo-blue focus:outline-none transition-colors"
-                    >
-                      <option value="getClients">Get New Clients</option>
-                      <option value="getJob">Land a New Job</option>
-                      <option value="getSpeakers">Get Event Speakers</option>
-                    </select>
-                  </div>
-
-                  {/* Message Style Selector */}
-                  <div>
-                    <label className="block text-xs font-medium text-turbo-black mb-1">Message Style</label>
-                    <select
-                      value={messageStyle || 'casual'}
-                      onChange={(e) => {
-                        const newStyle = e.target.value as MessageStyle
-                        setMessageStyle(newStyle)
-                        
-                        // Update userInfo with new style
-                        if (userInfo) {
-                          const updatedUserInfo = {
-                            ...userInfo,
-                            messageStyle: newStyle
-                          }
-                          setUserInfo(updatedUserInfo)
-                          localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo))
-                        }
-                      }}
-                      className="w-full px-2 py-1.5 text-sm rounded-lg border-2 border-turbo-black/10 focus:border-turbo-blue focus:outline-none transition-colors"
-                    >
-                      <option value="direct">Direct & Professional</option>
-                      <option value="casual">Casual & Friendly</option>
-                      <option value="storytelling">Story-Driven</option>
-                    </select>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -1690,6 +1747,28 @@ export default function Outreach() {
                     )}
                   >
                     Get speakers for an event
+                  </button>
+                  <button
+                    onClick={() => handleOutreachTypeSelect('getHotelStay')}
+                    className={cn(
+                      "p-4 text-left rounded-lg border-2 transition-colors",
+                      outreachType === 'getHotelStay'
+                        ? 'border-turbo-blue bg-turbo-blue text-turbo-beige'
+                        : 'border-turbo-black hover:bg-turbo-black/5'
+                    )}
+                  >
+                    Get free hotel stay for content
+                  </button>
+                  <button
+                    onClick={() => handleOutreachTypeSelect('getSponsors')}
+                    className={cn(
+                      "p-4 text-left rounded-lg border-2 transition-colors",
+                      outreachType === 'getSponsors'
+                        ? 'border-turbo-blue bg-turbo-blue text-turbo-beige'
+                        : 'border-turbo-black hover:bg-turbo-black/5'
+                    )}
+                  >
+                    Get sponsors for a project
                   </button>
                 </div>
               </div>

@@ -1,6 +1,7 @@
 import { WeatherData } from '@/services/location'
 import { FormDataValue } from '@/types/forms'
 import { UserInfo } from '@/types/outreach'
+import { userInfo } from 'os'
 
 interface FormData {
   [key: string]: FormDataValue | WeatherData | undefined
@@ -18,17 +19,19 @@ export const getOutreachSystemPrompt = (userInfo: UserInfo): string => {
   const purpose = userInfo.outreachType ? {
     getClients: "looking to establish new client relationships",
     getJob: "seeking new career opportunities",
-    getSpeakers: "looking to connect with potential speakers for an event"
+    getSpeakers: "looking to connect with potential speakers for an event you are hosting",
+    getHotelStay: "looking to secure hotel accommodations in exchange for content creation",
+    getSponsors: "looking to connect with potential sponsors for a project you are working on"
   }[userInfo.outreachType] : "looking to establish new business relationships"
 
   // Get the tone based on message style
   const tone = userInfo.messageStyle ? {
-    direct: "Your tone should be professional, clear, and straight to the point. Focus on value and efficiency in communication.",
+    direct: "Your tone should be professional, clear, and straight to the point. No fluff.Focus on value and efficiency in communication.",
     casual: "Your tone should be friendly, conversational, and relatable, using a more personal touch.",
     storytelling: "Your tone should be engaging and narrative-focused. Weave in relevant anecdotes or examples while maintaining professionalism."
   }[userInfo.messageStyle] : "Your tone should be professional, clear, and straight to the point. Focus on value and efficiency in communication."
 
-  return `You are the best ${purpose === "seeking new career opportunities" ? "job seeker" : "outreach specialist"} at ${userInfo.companyName}. ${purpose}. ${tone}
+  return `You are the best ${userInfo.outreachType === "getClients" ? "salesman" : userInfo.outreachType === "getJob" ? "job seeker" : userInfo.outreachType === "getSpeakers" ? "event coordinator" : userInfo.outreachType === "getHotelStay" ? "travel content creator" : userInfo.outreachType === "getSponsors" ? "producer" : "outreach specialist"} at ${userInfo.companyName} (a ${userInfo.businessType} company)${purpose}. ${tone}
 
 You will take in a research report summary about the recipient and their company including: name, company, role, familiarity & key points.
 
@@ -56,28 +59,31 @@ ${formData.perplexityResearch || 'No additional research available.'}
 Recipient: ${formData.recipientName}
 Company: ${formData.company}
 Role: ${formData.role}
-Familiarity Level: ${formData.familiarity}
 Key Points: ${formData.keyPoints}
 Key Points to Emphasize: ${formData.keyPointsToEmphasize}
 Deliverables: ${formData.deliverables}
 
-Write a concise, friendly, casual, and purposeful email that is just supposed to get the other party to respond -- not necessarily close a deal. Include a short, casual subject line. Do not include any name at the end. Your email should follow these guidlines:
+Write an email that is designed to get the other party to respond using the following guidelines:
 
-
-1. For sales messages, write a very simple message with a clear value prop and offer. Add 1 line of context explaining why you are reaching out and what value you have to offer.
-2. For sales messages, always add value first by offering to do something for free or giving some actionable advice without worrying about or charging for it.
-3. Gain trust and show the recipient that you really can provide some great value before you try to sell.
-4. Try to make some sort of personal connection with the prospect - don't use any filler opening lines like "Hope you've been well" or "I hope you're doing great".
-5. End the email with a question that is relevant to the work that you guys could do together
-6. Your email body should be no longer than 150 words. And your email subject lines should be 7 words max (ideally 4-6)
+1. Include a short, casual subject line (7 words max, ideally 4-6)
+2. Put the receiptents name first in the email, and then start the email body two lines down
+3. Do not include any name or signature at the end
+4. Try to make some sort of personal connection with the prospect
+6. Your email body should be no longer than 150 words.
 7. Use the research summary to tailor the message to the recipient's background and company context but only explicitly mention something from the research summary if it's relevant to the work that you guys could do together.
 8. Avoid clichés like "Your work is so inspiring" or "I love what you're doing"
-9. Skip fluff greetings like "I hope you're well"
+9. Don't include any fluff greetings like "I hope you're well"
 10. Don't include overly specific data from the research summary
-11. Each template should have a different approach/angle
+11. Each template should have a slighlty different approach/angle
 12. Generate exactly 5 templates
 13. The response must be valid JSON only, with no additional text, markdown, or code block indicators`
 
+//if (userInfo.outreachType === 'getClients') {
+//  prompt += `
+//1. Write a very simple message with a clear value prop and offer. Add 1 line of context explaining why you are reaching out and what value you have to offer.
+//2. Gain trust and show the recipient that you really can provide some great value before you try to sell.
+//3. Always add value first by offering to do something for free or giving some actionable advice without worrying about or charging for it.`
+//}
   console.log('📧 OpenAI Email Generation Prompt:', {
     systemPrompt: getOutreachSystemPrompt({ 
       name: 'unknown',
