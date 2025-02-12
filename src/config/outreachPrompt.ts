@@ -1,7 +1,6 @@
 import { WeatherData } from '@/services/location'
 import { FormDataValue } from '@/types/forms'
 import { UserInfo } from '@/types/outreach'
-import { userInfo } from 'os'
 
 interface FormData {
   [key: string]: FormDataValue | WeatherData | undefined

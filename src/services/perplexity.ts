@@ -23,9 +23,16 @@ export async function queryPerplexity(recipientName: string, companyName: string
 Name: ${recipientName}
 Company: ${companyName}
 
+CRITICAL: The LinkedIn profile URL must be EXACT and VERIFIED. This is the highest priority task.
+
+URL FORMAT REQUIREMENTS:
+- Must start with "https://www.linkedin.com/in/"
+- Return empty string if you cannot find a URL matching this exact format
+
 Please return the research results in the following JSON format EXACTLY:
 
 {
+  "title": "Current job title at the company",
   "companyInfo": [
     "First important company fact",
     "Second important company fact",
@@ -37,28 +44,59 @@ Please return the research results in the following JSON format EXACTLY:
     "Third important person fact"
   ],
   "sources": [
-    "URL1",
+    "REQUIRED - If found, the first source must be the LinkedIn URL in exact format https://www.linkedin.com/in/[profile-id]/",
     "URL2",
     "URL3"
-  ],
-  "title": "Current job title at the company"
+  ]
 }
 
-Include:
-- For companyInfo: Recent news, company updates, key metrics, or notable achievements
-- For personInfo: Educational background, work history, location, and relevant professional details
-- For sources: URLs to the source material used
-- For title: The person's current job title at the company, if found. If not found, leave as empty string.
+Research Instructions:
+1. MANDATORY - LinkedIn URL Verification Steps:
+   a. Search "[name] [company] linkedin" on Google
+   b. When you find a profile, VERIFY THE URL FORMAT FIRST:
+      - Must match exactly: https://www.linkedin.com/in/[profile-id]/
+      - No other formats are acceptable
+      - If format is wrong or uncertain, do not include the URL in sources
+   c. Then verify ALL of these match:
+      - Full name matches exactly
+      - Current company matches exactly
+      - Current role/title at the company
+   d. Double-check the profile belongs to the right person by:
+      - Verifying current employment
+      - Cross-referencing with other sources
+      - Ensuring location and industry match
+   e. If multiple profiles exist, verify each one against these criteria
+   f. If a valid LinkedIn URL is found, it must be the first source in the sources array
+
+2. Then gather the following information:
+   - For title: The person's current job title at the company, if found. If not found, leave as empty string.
+   - For companyInfo: Recent news, company updates, key metrics, or notable achievements
+   - For personInfo: Educational background, work history, location, and relevant professional details
+   - For sources: URLs to the source material used, with LinkedIn URL (if found and verified) as the first source
+
+IMPORTANT: 
+- The LinkedIn URL format must be exact - no exceptions
+- Must start with https://www.linkedin.com/in/
+- No @ symbols or other prefixes
+- If format is wrong or uncertain, do not include the URL in sources
+- Double-check the final URL before including it
+- When in doubt, do not include the URL
 
 Format the response as valid JSON only, with no additional text or markdown.`
 
   try {
-    console.log('Sending request to Perplexity with payload:', {
+    console.log('Sending request to Perplexity with the following info:', {
       model: 'sonar-pro',
       messages: [
         {
           role: 'system',
-          content: 'Be precise and concise.'
+          content: `You are a precise research assistant with strict URL validation capabilities.
+For LinkedIn URLs:
+- They must EXACTLY match the format: https://www.linkedin.com/in/[profile-id]/
+- No @ symbols or other prefixes allowed
+- Must be a direct profile URL
+- Must be verified and exact
+- Return empty string if format is incorrect or uncertain`
         },
         {
           role: 'user',
@@ -78,7 +116,13 @@ Format the response as valid JSON only, with no additional text or markdown.`
         messages: [
           {
             role: 'system',
-            content: 'Be precise and concise.'
+            content: `You are a precise research assistant with strict URL validation capabilities.
+For LinkedIn URLs:
+- They must EXACTLY match the format: https://www.linkedin.com/in/[profile-id]/
+- No @ symbols or other prefixes allowed
+- Must be a direct profile URL
+- Must be verified and exact
+- Return empty string if format is incorrect or uncertain`
           },
           {
             role: 'user',
