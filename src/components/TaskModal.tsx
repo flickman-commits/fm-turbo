@@ -202,6 +202,19 @@ export function TaskModal({
   const config = taskConfigs[taskType]
   const isLoading = viewState === 'loading'
 
+  const isFieldRequired = (field: FormField) => {
+    // Special case for file inputs - if they're marked as optional, they're never required
+    if (field.type === 'file' && field.optional) {
+      return false;
+    }
+    
+    if (field.optional) {
+      const [dependentField, value] = field.optional.split('=')
+      return formData[dependentField] !== value
+    }
+    return true
+  }
+
   const isFormValid = () => {
     return config.fields.every(field => {
       // Skip validation for hidden fields
@@ -212,7 +225,11 @@ export function TaskModal({
         }
       }
 
-      // Skip validation for optional fields when condition is met
+      // Skip validation for optional fields
+      if (field.type === 'file' && field.optional) {
+        return true;
+      }
+
       if (field.optional) {
         const [dependentField, value] = field.optional.split('=')
         if (formData[dependentField] === value) {
@@ -229,14 +246,6 @@ export function TaskModal({
     if (!field.showIf) return true
     const [dependentField, value] = field.showIf.split('=')
     return formData[dependentField] === value
-  }
-
-  const isFieldRequired = (field: FormField) => {
-    if (field.optional) {
-      const [dependentField, value] = field.optional.split('=')
-      return formData[dependentField] !== value
-    }
-    return true
   }
 
   const handleFillTestData = async () => {
@@ -1100,6 +1109,29 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
         )
     }
   }
+
+  // Update the CSS styles for enterKeyHint
+  useEffect(() => {
+    // Add the style to the document head
+    const style = document.createElement('style')
+    style.textContent = `
+      @supports (color: env(keyboard-button)) {
+        input[enterkeyhint="next"],
+        textarea[enterkeyhint="next"],
+        select[enterkeyhint="next"] {
+          color-scheme: light;
+          --keyboard-button-color: #2563eb;
+          text-transform: capitalize;
+        }
+      }
+    `
+    document.head.appendChild(style)
+    
+    // Cleanup
+    return () => {
+      document.head.removeChild(style)
+    }
+  }, [])
 
   return (
     <DottedDialog

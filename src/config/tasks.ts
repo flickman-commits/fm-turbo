@@ -60,7 +60,8 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
         label: 'Discovery Call Transcript (Optional)', 
         type: 'file', 
         placeholder: 'Upload your discovery call transcript',
-        accept: '.json,application/json'
+        accept: '.json,application/json',
+        optional: 'true'
       },
       { 
         id: 'projectType', 
@@ -76,22 +77,24 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
       },
       { 
         id: 'timelineInfo', 
-        label: 'Timeline Info', 
+        label: 'Timeline Info (Optional)', 
         type: 'text', 
-        placeholder: 'Enter any info regarding timeline (ex: event takes place Jan 7th, final deliverables needed by Feb 10th, etc.)'
+        placeholder: 'Enter any info regarding timeline (ex: event takes place Jan 7th, final deliverables needed by Feb 10th, etc.)',
+        optional: 'true'
       },
       { 
         id: 'budget', 
-        label: 'Budget', 
+        label: 'Budget (Optional)', 
         type: 'text', 
-        placeholder: 'Enter budget range'
+        placeholder: 'Enter budget range',
+        optional: 'true'
       },
       { 
         id: 'additionalNotes', 
-        label: 'Additional Notes', 
+        label: 'Additional Notes (Optional)', 
         type: 'textarea', 
         placeholder: 'Enter any specific requirements or additional information about the project',
-        optional: 'projectType=*'
+        optional: 'true'
       }
     ],
     resultSections: [
