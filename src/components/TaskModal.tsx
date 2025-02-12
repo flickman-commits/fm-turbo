@@ -927,6 +927,24 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
                             value={typeof formData[field.id] === 'string' ? formData[field.id] as string : ''}
                             onChange={(e) => handleFieldChange(field.id, e.target.value)}
                             required={isFieldRequired(field)}
+                            enterKeyHint="next"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                const inputs = Array.from(document.querySelectorAll('input:not([type="file"]), textarea, select'));
+                                const currentIndex = inputs.indexOf(e.target as HTMLElement);
+                                const nextInput = inputs[currentIndex + 1] as HTMLElement;
+                                if (nextInput) {
+                                  nextInput.focus();
+                                } else {
+                                  // If it's the last field and form is valid, submit
+                                  if (isFormValid()) {
+                                    const form = document.querySelector('form');
+                                    form?.requestSubmit();
+                                  }
+                                }
+                              }
+                            }}
                           />
                         ) : field.type === 'file' ? (
                           <div className="space-y-2">
@@ -988,6 +1006,24 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
                             value={typeof formData[field.id] === 'string' ? formData[field.id] as string : field.options?.find(opt => opt.default)?.value || ''}
                             onChange={(e) => handleFieldChange(field.id, e.target.value)}
                             required={isFieldRequired(field)}
+                            enterKeyHint="next"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const inputs = Array.from(document.querySelectorAll('input:not([type="file"]), textarea, select'));
+                                const currentIndex = inputs.indexOf(e.target as HTMLElement);
+                                const nextInput = inputs[currentIndex + 1] as HTMLElement;
+                                if (nextInput) {
+                                  nextInput.focus();
+                                } else {
+                                  // If it's the last field and form is valid, submit
+                                  if (isFormValid()) {
+                                    const form = document.querySelector('form');
+                                    form?.requestSubmit();
+                                  }
+                                }
+                              }
+                            }}
                           >
                             {field.options?.map((option) => (
                               <option key={option.value} value={option.value}>
@@ -1004,6 +1040,24 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
                             value={typeof formData[field.id] === 'string' ? formData[field.id] as string : ''}
                             onChange={(e) => handleFieldChange(field.id, e.target.value)}
                             required={isFieldRequired(field)}
+                            enterKeyHint="next"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const inputs = Array.from(document.querySelectorAll('input:not([type="file"]), textarea, select'));
+                                const currentIndex = inputs.indexOf(e.target as HTMLElement);
+                                const nextInput = inputs[currentIndex + 1] as HTMLElement;
+                                if (nextInput) {
+                                  nextInput.focus();
+                                } else {
+                                  // If it's the last field and form is valid, submit
+                                  if (isFormValid()) {
+                                    const form = document.querySelector('form');
+                                    form?.requestSubmit();
+                                  }
+                                }
+                              }
+                            }}
                           />
                         )}
                       </div>
