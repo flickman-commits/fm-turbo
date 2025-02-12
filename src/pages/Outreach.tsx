@@ -376,7 +376,6 @@ export default function Outreach() {
         personInfo: string[]
         sources: string[]
         title?: string
-        linkedinUrl?: string
       }
 
       try {
@@ -390,8 +389,7 @@ export default function Outreach() {
           companyInfo: [],
           personInfo: [],
           sources: [],
-          title: '',
-          linkedinUrl: ''
+          title: ''
         }
       }
 
@@ -399,8 +397,7 @@ export default function Outreach() {
         companyInfo: parsedResearch.companyInfo || [],
         personInfo: parsedResearch.personInfo || [],
         sources: parsedResearch.sources || [],
-        rawResponse: researchResponse,
-        linkedinUrl: parsedResearch.linkedinUrl || ''
+        rawResponse: researchResponse
       }
 
       // Log the parsed research data
@@ -1611,9 +1608,9 @@ export default function Outreach() {
                           {currentProspect?.title && currentProspect?.company && ' at '}
                           {currentProspect?.company}
                         </p>
-                        {currentProspect.research?.linkedinUrl && (
+                        {currentProspect.research?.sources[0]?.startsWith('https://www.linkedin.com/in/') && (
                           <a
-                            href={currentProspect.research.linkedinUrl}
+                            href={currentProspect.research.sources[0]}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="mt-3 inline-flex items-center gap-2 text-sm text-turbo-blue hover:underline"
