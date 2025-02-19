@@ -1104,6 +1104,10 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
         select[enterkeyhint="next"] {
           color-scheme: light;
           --keyboard-button-color: #2563eb;
+        }
+
+        /* Only capitalize the keyboard button itself */
+        ::-webkit-keyboard-button {
           text-transform: capitalize;
         }
       }
