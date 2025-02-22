@@ -3,14 +3,14 @@ import type { TimelineSegment } from './types'
 
 interface TimelineVisualProps {
   segments: TimelineSegment[]
-  totalDuration: number
+  totalDuration?: number
   selectedSegmentIndex: number
   onSegmentClick: (index: number) => void
 }
 
 export const TimelineVisual: React.FC<TimelineVisualProps> = ({
   segments,
-  totalDuration,
+  totalDuration: propTotalDuration,
   selectedSegmentIndex,
   onSegmentClick,
 }) => {
@@ -29,7 +29,7 @@ export const TimelineVisual: React.FC<TimelineVisualProps> = ({
   }
 
   // Calculate total duration from all segments
-  const totalExactDuration = segments.reduce((total, segment) => {
+  const totalDuration = propTotalDuration || segments.reduce((total, segment) => {
     return total + calculateExactDuration(segment.sourceStartTimecode, segment.sourceEndTimecode)
   }, 0)
 
@@ -53,7 +53,7 @@ export const TimelineVisual: React.FC<TimelineVisualProps> = ({
           {segments.map((segment, index) => {
             // Calculate segment width based on exact duration
             const exactDuration = calculateExactDuration(segment.sourceStartTimecode, segment.sourceEndTimecode)
-            const width = (exactDuration / totalExactDuration) * 100
+            const width = (exactDuration / totalDuration) * 100
 
             return (
               <button
@@ -83,7 +83,7 @@ export const TimelineVisual: React.FC<TimelineVisualProps> = ({
         <div className="absolute -bottom-8 left-0 right-0">
           <div className="relative h-8">
             {segments.map((segment, index) => {
-              const position = (getSegmentEndTime(index - 1) || 0) / totalExactDuration * 100
+              const position = (getSegmentEndTime(index - 1) || 0) / totalDuration * 100
               const isFirst = index === 0
               
               return (

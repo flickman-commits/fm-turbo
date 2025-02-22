@@ -7,11 +7,8 @@ import { createChatCompletion } from '@/services/openai'
 import ReactMarkdown from 'react-markdown'
 import type { Components } from 'react-markdown'
 import { creditsManager } from '@/utils/credits'
-import { useCompanyInfo } from '@/contexts/CompanyInfoContext'
 import { Layout } from '@/components/Layout'
 import { taskConfigs } from '@/config/tasks'
-import { useUser } from '@/contexts/UserContext'
-import { PortfolioVideoSelector } from '@/components/PortfolioVideoSelector'
 import { NotionButton } from '@/components/ui/notion-button'
 
 type ViewState = 'input' | 'loading' | 'result'
@@ -58,8 +55,6 @@ const LoadingOverlay = () => {
 }
 
 export default function Proposals() {
-  const { user } = useUser()
-  const { isInfoSaved } = useCompanyInfo()
   const [formData, setFormData] = useState<FormDataWithWeather>({})
   const [viewState, setViewState] = useState<ViewState>(ViewState.Input)
   const [result, setResult] = useState<{ content: string } | null>(null)
@@ -145,7 +140,10 @@ export default function Proposals() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!isFormValid()) return
+    if (!isFormValid()) {
+      toast.error('Please fill in all required fields')
+      return
+    }
 
     if (creditsManager.getCredits() <= 0) {
       toast.error('No credits remaining')
