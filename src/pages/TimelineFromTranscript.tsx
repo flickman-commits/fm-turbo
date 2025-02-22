@@ -27,6 +27,14 @@ const BUSINESS_QUOTES = [
 const LoadingOverlay = () => {
   const [quoteIndex, setQuoteIndex] = useState(() => Math.floor(Math.random() * BUSINESS_QUOTES.length))
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setQuoteIndex(current => (current + 1) % BUSINESS_QUOTES.length)
+    }, 7000)
+
+    return () => clearInterval(interval)
+  }, [])
+
   return (
     <div className="absolute inset-0 bg-turbo-beige flex flex-col items-center justify-center z-10">
       <div className="max-w-2xl w-full px-4">
