@@ -9,6 +9,7 @@ import type { Components } from 'react-markdown'
 import { creditsManager } from '@/utils/credits'
 import { useCompanyInfo } from '@/contexts/CompanyInfoContext'
 import { Layout } from '@/components/Layout'
+import { SegmentCard, TimelineVisual, TimelineDescription, TimelineData, TimelineSegment } from '@/components/timeline'
 
 type ViewState = 'input' | 'loading' | 'result'
 
@@ -53,12 +54,18 @@ const LoadingOverlay = () => {
   )
 }
 
+type TimelineResult = {
+  content: string | TimelineData
+  totalDuration?: number
+}
+
 export default function TimelineFromTranscript() {
   const { isInfoSaved } = useCompanyInfo()
   const [formData, setFormData] = useState<FormDataWithWeather>({})
   const [viewState, setViewState] = useState<ViewState>(ViewState.Input)
-  const [result, setResult] = useState<{ content: string } | null>(null)
+  const [result, setResult] = useState<TimelineResult | null>(null)
   const [selectedFileName, setSelectedFileName] = useState('')
+  const [selectedSegmentIndex, setSelectedSegmentIndex] = useState(0)
 
   const fields = [
     { 
@@ -178,36 +185,21 @@ export default function TimelineFromTranscript() {
       let content = response.content || ''
       
       try {
-        const jsonData = JSON.parse(content)
-        content = `# Timeline Overview
-${jsonData.overview}
-
-# Selected Segments
-
-${jsonData.segments.map((segment: any, index: number) => `
-### Segment ${index + 1}
-- **Time in Final Video:** ${segment.startTimecode} - ${segment.endTimecode}
-- **Source Timecode:** ${segment.sourceStartTimecode} - ${segment.sourceEndTimecode}
-- **Speaker:** ${segment.speaker} (${segment.speakerColor})
-- **Content:** "${segment.content}"
-- **Duration:** ${segment.duration}s
-- **Rationale:** ${segment.rationale}
-`).join('\n')}
-
-# Total Run Time
-${jsonData.totalRunTime}
-
-# Editing Notes and Recommendations
-${jsonData.editingNotes.map((note: string) => `- ${note}`).join('\n')}
-`
+        const jsonData = JSON.parse(content) as TimelineData
+        const totalDuration = parseInt(jsonData.totalRunTime.split(' ')[0]) // Assuming format "180 seconds"
+        
+        setResult({ 
+          content: jsonData,
+          totalDuration
+        })
+        setViewState(ViewState.Result)
       } catch (error) {
         console.error('Error parsing timeline JSON:', error)
         toast.error('Error parsing timeline data')
         content = response.content || ''
+        setResult({ content })
+        setViewState(ViewState.Result)
       }
-
-      setResult({ content })
-      setViewState(ViewState.Result)
     } catch (error) {
       console.error('Error generating content:', error)
       toast.error('Failed to generate content. Please try again.')
@@ -366,11 +358,41 @@ ${jsonData.editingNotes.map((note: string) => `- ${note}`).join('\n')}
 
           {viewState === ViewState.Result && result && (
             <div className="bg-turbo-beige border-2 border-turbo-black rounded-lg p-6">
-              <div className="prose prose-sm max-w-none">
-                <ReactMarkdown components={markdownComponents}>
-                  {result.content}
-                </ReactMarkdown>
-              </div>
+              {typeof result.content === 'string' ? (
+                <div className="prose prose-sm max-w-none">
+                  <ReactMarkdown components={markdownComponents}>
+                    {result.content}
+                  </ReactMarkdown>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  <TimelineDescription 
+                    overview={result.content.overview}
+                    editingNotes={result.content.editingNotes}
+                    showOverviewOnly={true}
+                  />
+
+                  <SegmentCard 
+                    segment={result.content.segments[selectedSegmentIndex]} 
+                  />
+                  
+                  {result.totalDuration && (
+                    <TimelineVisual 
+                      segments={result.content.segments}
+                      totalDuration={result.totalDuration}
+                      selectedSegmentIndex={selectedSegmentIndex}
+                      onSegmentClick={setSelectedSegmentIndex}
+                    />
+                  )}
+                  
+                  <TimelineDescription 
+                    overview={result.content.overview}
+                    editingNotes={result.content.editingNotes}
+                    showEditingNotesOnly={true}
+                  />
+                </div>
+              )}
+              
               <div className="mt-6 flex justify-between">
                 <button
                   onClick={() => setViewState(ViewState.Input)}
