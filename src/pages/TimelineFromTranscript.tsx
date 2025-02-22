@@ -9,7 +9,7 @@ import type { Components } from 'react-markdown'
 import { creditsManager } from '@/utils/credits'
 import { useCompanyInfo } from '@/contexts/CompanyInfoContext'
 import { Layout } from '@/components/Layout'
-import { SegmentCard, TimelineVisual, TimelineDescription, TimelineData, TimelineSegment } from '@/components/timeline'
+import { SegmentCard, TimelineVisual, TimelineDescription, TimelineData } from '@/components/timeline'
 
 type ViewState = 'input' | 'loading' | 'result'
 

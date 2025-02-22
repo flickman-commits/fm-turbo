@@ -1,16 +1,5 @@
 import React from 'react'
-
-interface TimelineSegment {
-  startTimecode: string
-  endTimecode: string
-  sourceStartTimecode: string
-  sourceEndTimecode: string
-  speaker: string
-  speakerColor: string
-  content: string
-  duration: number
-  rationale: string
-}
+import type { TimelineSegment } from './types'
 
 interface TimelineVisualProps {
   segments: TimelineSegment[]
