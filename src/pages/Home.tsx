@@ -39,8 +39,7 @@ export default function Home() {
     { type: 'proposal', label: 'CONTENT PROPOSAL' },
     { type: 'runOfShow', label: 'RUN OF SHOW' },
     { type: 'budget', label: 'PRODUCTION BUDGET' },
-    { type: 'contractorBrief', label: 'CONTRACTOR BRIEF' },
-    { type: 'trendingAudios', label: 'TRENDING AUDIOS' }
+    { type: 'contractorBrief', label: 'CONTRACTOR BRIEF' }
   ]
 
   return (

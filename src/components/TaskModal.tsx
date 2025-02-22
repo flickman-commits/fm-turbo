@@ -23,79 +23,27 @@ type ViewState = 'input' | 'loading' | 'result'
 
 const testData: Record<TaskType, FormDataWithWeather> = {
   contractorBrief: {
-    contractorName: 'Nick',
-    contractorEmail: 'nick@example.com',
-    client: 'Evergreen Health',
-    startDate: '2024-12-07',
-    endDate: '2024-12-08',
-    location: 'Orlando, FL',
-    pointOfContact: 'Flickman',
-    contactEmail: 'matt@flickmanmedia.com',
-    contactPhone: '(503) 890-1239',
-    schedule: `Saturday, December 7th (Shoot):
-              7:30 AM - Leave Crew Hotel & Uber to Studio
-              7:50 AM - Arrive at Studio
-              8:00 AM - We are let in to studio
-              9:30 AM-11 AM - First shot
-              11-1:30 PM - Film Tax Strategies
-              1:30 PM Lunch on location (PA to order on Uber Eats)
-              3:00 PM - 6:00 PM Shoot Miami cityscape location
-              7:00 PM Crew dinner. Make game plan for tomorrow — get some outdoor shots, more run and gun, delivering lines, run and gun
-
-              Sunday, December 8th - Miami, FL (Shoot):
-              6:56 AM - Sunrise
-              6:45 AM - Meet for Breakfast & Coffee
-              7:00 AM - Leave for Jack Daniel's HQ
-              7:30 AM - 9:30 AM Shoot for social on Day 2 — Shoot horizontal and cut vertical
-              1:30 PM Lunch on location or in Lynchburg
-              3:30 PM - 6:30 PM Shoot Miami cityscape location
-              7:00 PM Crew dinner
-              5:30 PM Sunset`,
-    role: `Director of Photography (DP)`,
-    deliverables: `All raw footage must be handed off to our team at the end of the shoot`,
-    dailyRate: '1500',
+    contractorName: 'John Smith',
+    contractorEmail: 'john@example.com',
+    client: 'Acme Corp',
+    startDate: '2023-12-15',
+    endDate: '2023-12-16',
+    location: 'New York City',
+    pointOfContact: 'Jane Doe',
+    contactEmail: 'jane@example.com',
+    contactPhone: '555-0123',
+    schedule: '9am - Setup\n10am - Filming\n12pm - Lunch\n1pm - More filming\n5pm - Wrap',
+    role: 'Camera Operator',
+    deliverables: 'Raw footage, color graded final cut',
+    dailyRate: '500',
     numberOfDays: '2'
   },
   proposal: {
-    projectType: 'US Creative Partner',
-    clientName: 'Oanda',
-    timelineInfo: 'Event filming on Jan 7th 2024, rough cut needed by Jan 21st, final deliverables by Feb 10th 2024',
-    budget: '$50,000',
-    discoveryTranscript: '/discovery-call-transcript.json',
-    requirements: 'Full video production setup with localized content for US market, professional crew, and high-end equipment for corporate brand video. Focus on creating content that resonates with US traders while maintaining global brand standards.',
-    additionalNotes: 'please emphasize that we\'ve worked with financial institutions before so we understand this market',
-    portfolioVideos: [
-      {
-        id: '1042629726',
-        title: '"Tax Optimization" | Evergreen Wealth',
-        description: 'A professional corporate video showcasing financial expertise and complex topics in an engaging way.',
-        url: 'https://vimeo.com/1042629726',
-        thumbnail: null,
-        views: 0,
-        likes: 0,
-        projectType: 'corporate'
-      },
-      {
-        id: '1030922649',
-        title: '"Join Us" | Regeneration.VC',
-        description: 'Flickman Media filmed & edited an event recap of ReAssembly 2024 -- a 2-day climate week conference that brought together visionaries and changemakers in the climate world.',
-        url: 'https://vimeo.com/1030922649',
-        thumbnail: null,
-        views: 0,
-        likes: 0,
-        projectType: 'corporate'
-      },
-      {
-        id: '926038873',
-        title: '"Celebrating 20 Years" | Lure Fishbar',
-        description: 'A brand-focused video that effectively tells the story of an established business while maintaining professionalism and engagement.',
-        url: 'https://vimeo.com/926038873',
-        thumbnail: null,
-        views: 0,
-        likes: 0,
-        projectType: 'brand'
-      }
-    ]
+    projectType: 'Brand Story Video',
+    clientName: 'Acme Corp',
+    timelineInfo: 'Final video needed by end of Q1 2024',
+    budget: '$20,000 - $30,000',
+    additionalNotes: 'Looking for a cinematic feel with interviews and b-roll'
   },
   outreach: {
     recipientName: 'Tim Cook',
@@ -137,9 +85,6 @@ const testData: Record<TaskType, FormDataWithWeather> = {
     length: '3 minutes max',
     tone: 'uplifting, fun',
     additionalNotes: 'There are 4 different speakers and they all need to have a section of talking'
-  },
-  trendingAudios: {
-    // This is a placeholder for the new task type
   }
 }
 
@@ -818,39 +763,23 @@ ${jsonData.editingNotes.map((note: string) => `- ${note}`).join('\n')}
         return 'Contractor Brief'
       case 'timelineFromTranscript':
         return 'Timeline from Transcript'
-      case 'trendingAudios':
-        return 'Trending Audios'
       default:
         return ''
     }
   }
 
   const renderContent = () => {
-    if (taskType === 'trendingAudios') {
-      return (
-        <div className="p-6">
-          <p className="text-turbo-black/60 mb-6">
-            Every week we update this link with the 10 most trending audios on social media, ready for download.
-          </p>
-          <div className="flex justify-end">
-            <button
-              onClick={() => handleAction(taskActionConfigs.trendingAudios[0])}
-              className="px-6 py-2 text-sm font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors"
-            >
-              Download Now
-            </button>
-          </div>
-        </div>
-      )
+    if (viewState === 'loading') {
+      return <LoadingOverlay />
     }
 
     switch (viewState) {
-      case 'loading':
-        return <LoadingOverlay />
       case 'result':
         if (!result) return null
-        const formattedResearch = result.research || 'No research data available.'
-        const formattedMessage = result.content.replace(/(https?:\/\/\S+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>')
+
+        const formattedMessage = result.content
+        const formattedResearch = result.research || ''
+
         return (
           <div className="flex flex-col h-full overflow-hidden">
             <div className="flex-1 overflow-y-auto">

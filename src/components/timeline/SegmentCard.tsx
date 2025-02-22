@@ -6,6 +6,22 @@ interface SegmentCardProps {
 }
 
 export const SegmentCard: React.FC<SegmentCardProps> = ({ segment }) => {
+  // Format the speaker name to show "Unknown Speaker" instead of "Unknown"
+  const displaySpeaker = segment.speaker === 'Unknown' ? 'Unknown Speaker' : segment.speaker
+
+  // Calculate exact duration from source timecodes
+  const calculateExactDuration = (start: string, end: string) => {
+    const [startHours, startMinutes, startSeconds] = start.split(':').map(Number)
+    const [endHours, endMinutes, endSeconds] = end.split(':').map(Number)
+    
+    const startTotalSeconds = (startHours * 3600) + (startMinutes * 60) + startSeconds
+    const endTotalSeconds = (endHours * 3600) + (endMinutes * 60) + endSeconds
+    
+    return (endTotalSeconds - startTotalSeconds).toFixed(2)
+  }
+
+  const exactDuration = calculateExactDuration(segment.sourceStartTimecode, segment.sourceEndTimecode)
+
   return (
     <div className="bg-white rounded-lg border-2 border-turbo-black p-6 mb-8">
       <div className="flex items-center justify-between mb-6">
@@ -20,7 +36,7 @@ export const SegmentCard: React.FC<SegmentCardProps> = ({ segment }) => {
           </div>
           <div className="text-sm text-turbo-black/60 text-right">
             <span className="block font-medium text-turbo-black">Clip Duration</span>
-            {segment.duration}s
+            {exactDuration}s
           </div>
         </div>
       </div>
@@ -28,7 +44,7 @@ export const SegmentCard: React.FC<SegmentCardProps> = ({ segment }) => {
       <div className="flex items-center mb-6">
         <h3 className="text-xl font-bold text-turbo-black flex items-center">
           <span className="inline-block w-3 h-3 rounded-full mr-2" style={{ backgroundColor: segment.speakerColor }}></span>
-          {segment.speaker}
+          {displaySpeaker}
         </h3>
       </div>
       

@@ -1,4 +1,4 @@
-export type TaskType = 'runOfShow' | 'contractorBrief' | 'outreach' | 'proposal' | 'budget' | 'timelineFromTranscript' | 'trendingAudios'
+export type TaskType = 'runOfShow' | 'contractorBrief' | 'outreach' | 'proposal' | 'budget' | 'timelineFromTranscript'
 
 export interface TaskResult {
   taskType: TaskType
@@ -40,8 +40,5 @@ export const taskActionConfigs: Record<TaskType, TaskActionConfig[]> = {
   timelineFromTranscript: [
     { type: 'notion', label: 'Duplicate to Notion', primary: true },
     { type: 'copy', label: 'Copy to Clipboard' }
-  ],
-  trendingAudios: [
-    { type: 'download', label: 'Download Now', primary: true }
   ]
 } 

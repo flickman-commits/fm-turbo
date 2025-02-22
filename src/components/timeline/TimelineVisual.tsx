@@ -14,11 +14,33 @@ export const TimelineVisual: React.FC<TimelineVisualProps> = ({
   selectedSegmentIndex,
   onSegmentClick,
 }) => {
+  // Format speaker name to show "Unknown Speaker" instead of "Unknown"
+  const getDisplaySpeaker = (speaker: string) => speaker === 'Unknown' ? 'Unknown Speaker' : speaker
+
+  // Calculate exact duration from source timecodes
+  const calculateExactDuration = (start: string, end: string) => {
+    const [startHours, startMinutes, startSeconds] = start.split(':').map(Number)
+    const [endHours, endMinutes, endSeconds] = end.split(':').map(Number)
+    
+    const startTotalSeconds = (startHours * 3600) + (startMinutes * 60) + startSeconds
+    const endTotalSeconds = (endHours * 3600) + (endMinutes * 60) + endSeconds
+    
+    return endTotalSeconds - startTotalSeconds
+  }
+
+  // Calculate total duration from all segments
+  const totalExactDuration = segments.reduce((total, segment) => {
+    return total + calculateExactDuration(segment.sourceStartTimecode, segment.sourceEndTimecode)
+  }, 0)
+
   // Calculate positions for duration labels
   const getSegmentEndTime = (index: number) => {
     let totalTime = 0
     for (let i = 0; i <= index; i++) {
-      totalTime += segments[i].duration
+      totalTime += calculateExactDuration(
+        segments[i].sourceStartTimecode,
+        segments[i].sourceEndTimecode
+      )
     }
     return totalTime
   }
@@ -29,8 +51,9 @@ export const TimelineVisual: React.FC<TimelineVisualProps> = ({
       <div className="relative h-8">
         <div className="absolute inset-0 flex rounded-full overflow-hidden border-2 border-turbo-black">
           {segments.map((segment, index) => {
-            // Calculate segment width based on duration
-            const width = (segment.duration / totalDuration) * 100
+            // Calculate segment width based on exact duration
+            const exactDuration = calculateExactDuration(segment.sourceStartTimecode, segment.sourceEndTimecode)
+            const width = (exactDuration / totalExactDuration) * 100
 
             return (
               <button
@@ -48,7 +71,7 @@ export const TimelineVisual: React.FC<TimelineVisualProps> = ({
                 {/* Segment tooltip */}
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <div className="bg-turbo-black text-white text-sm rounded-lg py-1 px-2 whitespace-nowrap">
-                    {segment.speaker}
+                    {getDisplaySpeaker(segment.speaker)}
                   </div>
                 </div>
               </button>
@@ -60,7 +83,7 @@ export const TimelineVisual: React.FC<TimelineVisualProps> = ({
         <div className="absolute -bottom-8 left-0 right-0">
           <div className="relative h-8">
             {segments.map((segment, index) => {
-              const position = (getSegmentEndTime(index - 1) || 0) / totalDuration * 100
+              const position = (getSegmentEndTime(index - 1) || 0) / totalExactDuration * 100
               const isFirst = index === 0
               
               return (

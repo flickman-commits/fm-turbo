@@ -192,16 +192,5 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
         title: 'Timeline'
       }
     ]
-  },
-  trendingAudios: {
-    title: 'Trending Audios',
-    description: 'Download the latest trending audio tracks for your content.',
-    fields: [],
-    resultSections: [
-      {
-        id: 'content',
-        title: 'Trending Audios'
-      }
-    ]
   }
 } 
