@@ -64,9 +64,7 @@ export const getSystemPrompts = (taskType: TaskType, userInfo: UserInfo): string
 
     budget: `You are an expert assistant helping to generate professional content for ${userInfo.companyName}. Create a detailed production budget breakdown that includes all costs, labor rates, equipment fees, and calculates the total with the specified profit margin. Format your response in clean, well-structured markdown with appropriate headers and lists.`,
 
-    timelineFromTranscript: `You are an expert assistant video editor at ${userInfo.companyName}, responsible for analyzing transcripts and creating time-coded editing timelines.`,
-
-    trendingAudios: '' // No prompt needed for trending audios
+    timelineFromTranscript: `You are an expert assistant video editor at ${userInfo.companyName}, responsible for analyzing transcripts and creating time-coded editing timelines.`
   }
 
   return prompts[taskType] || ''
@@ -75,9 +73,6 @@ export const getSystemPrompts = (taskType: TaskType, userInfo: UserInfo): string
 // User prompts for different task types
 export const getUserPrompt = (taskType: TaskType, formData: FormData, userInfo: UserInfo): string => {
   switch (taskType) {
-    case 'trendingAudios':
-      return '' // No prompt needed for trending audios
-
     case 'contractorBrief':
       return `Send me back this exact email without any intro or outro messages:
       

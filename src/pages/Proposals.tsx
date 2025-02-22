@@ -62,7 +62,6 @@ export default function Proposals() {
   const [copiedButtons, setCopiedButtons] = useState<Record<string, boolean>>({})
 
   const config = taskConfigs.proposal
-  const isLoading = viewState === 'loading'
 
   const isFieldRequired = (field: any) => {
     if (field.optional) {
