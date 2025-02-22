@@ -6,6 +6,7 @@ import Settings from '@/pages/Settings'
 import SignUp from '@/pages/SignUp'
 import Outreach from '@/pages/Outreach'
 import TimelineFromTranscript from '@/pages/TimelineFromTranscript'
+import Proposals from '@/pages/Proposals'
 import { UserProvider } from '@/contexts/UserContext'
 import { CompanyInfoProvider } from '@/contexts/CompanyInfoContext'
 
@@ -24,6 +25,7 @@ export default function App() {
         <CompanyInfoProvider>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/proposals" element={<Proposals />} />
             <Route path="/outreach" element={<Outreach />} />
             <Route path="/timeline" element={<TimelineFromTranscript />} />
             <Route path="/profile" element={<Profile />} />

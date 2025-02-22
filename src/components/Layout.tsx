@@ -1,4 +1,4 @@
-import { Home, User, Settings, Send, Clock } from 'lucide-react'
+import { Home, User, Settings, Send, Clock, FileText } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import { FeatureRequestModal } from '@/components/FeatureRequestModal'
@@ -6,6 +6,7 @@ import { creditsManager } from '@/utils/credits'
 
 const navigationItems = [
   { name: 'Home', icon: Home, path: '/' },
+  { name: 'Proposals', icon: FileText, path: '/proposals' },
   { name: 'Outreach', icon: Send, path: '/outreach' },
   { name: 'Timeline', icon: Clock, path: '/timeline', beta: true },
 ]
