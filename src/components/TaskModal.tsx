@@ -499,8 +499,42 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
 
       creditsManager.useCredit()
 
+      let content = response.content || ''
+      
+      // Parse JSON response for timeline from transcript
+      if (taskType === 'timelineFromTranscript' && content) {
+        try {
+          const jsonData = JSON.parse(content)
+          content = `# Timeline Overview
+${jsonData.overview}
+
+# Selected Segments
+
+${jsonData.segments.map((segment: any, index: number) => `
+### Segment ${index + 1}
+- **Time in Final Video:** ${segment.startTimecode} - ${segment.endTimecode}
+- **Source Timecode:** ${segment.sourceStartTimecode} - ${segment.sourceEndTimecode}
+- **Speaker:** ${segment.speaker} (${segment.speakerColor})
+- **Content:** "${segment.content}"
+- **Duration:** ${segment.duration}s
+- **Rationale:** ${segment.rationale}
+`).join('\n')}
+
+# Total Run Time
+${jsonData.totalRunTime}
+
+# Editing Notes and Recommendations
+${jsonData.editingNotes.map((note: string) => `- ${note}`).join('\n')}
+`
+        } catch (error) {
+          console.error('Error parsing timeline JSON:', error)
+          toast.error('Error parsing timeline data')
+          content = response.content || ''
+        }
+      }
+
       const newResult = {
-        content: response.content || '',
+        content,
         taskType,
         research: String(updatedFormData.perplexityResearch || '')
       }

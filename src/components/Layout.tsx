@@ -1,4 +1,4 @@
-import { Home, User, Settings, Send } from 'lucide-react'
+import { Home, User, Settings, Send, Clock } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import { FeatureRequestModal } from '@/components/FeatureRequestModal'
@@ -7,6 +7,7 @@ import { creditsManager } from '@/utils/credits'
 const navigationItems = [
   { name: 'Home', icon: Home, path: '/' },
   { name: 'Outreach', icon: Send, path: '/outreach' },
+  { name: 'Timeline', icon: Clock, path: '/timeline', beta: true },
 ]
 
 const mobileNavigationItems = [
@@ -104,7 +105,14 @@ export function Layout({ children }: LayoutProps) {
                 `}
               >
                 <Icon className="w-5 h-5" />
-                <span className="font-medium">{item.name}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{item.name}</span>
+                  {item.beta && (
+                    <span className="px-1.5 py-0.5 text-xs font-medium bg-turbo-blue/20 rounded">
+                      BETA
+                    </span>
+                  )}
+                </div>
               </Link>
             )
           })}
@@ -163,7 +171,14 @@ export function Layout({ children }: LayoutProps) {
               `}
             >
               <Icon className="w-5 h-5" />
-              <span className="text-xs font-medium">{item.name}</span>
+              <div className="flex flex-col items-center">
+                <span className="text-xs font-medium">{item.name}</span>
+                {item.beta && (
+                  <span className="px-1 py-0.25 text-[10px] font-medium bg-turbo-blue/20 rounded">
+                    BETA
+                  </span>
+                )}
+              </div>
             </Link>
           )
         })}

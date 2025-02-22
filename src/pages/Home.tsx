@@ -40,7 +40,6 @@ export default function Home() {
     { type: 'runOfShow', label: 'RUN OF SHOW' },
     { type: 'budget', label: 'PRODUCTION BUDGET' },
     { type: 'contractorBrief', label: 'CONTRACTOR BRIEF' },
-    { type: 'timelineFromTranscript', label: 'TIMELINE FROM TRANSCRIPT', beta: true },
     { type: 'trendingAudios', label: 'TRENDING AUDIOS' }
   ]
 

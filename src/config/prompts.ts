@@ -229,9 +229,32 @@ Additional Costs: ${formData.additionalCosts}
 Break down all costs including labor, equipment, post-production, and additional expenses. Calculate subtotals and apply the specified profit margin. Format in clear markdown with appropriate sections and calculations.`
 
     case 'timelineFromTranscript':
-      return `Your task is to
+      return `Return ONLY a JSON object with no additional text, markdown formatting, or code block indicators. The response should start with { and end with } and be valid JSON.
 
-1. Take in the provided transcript, video purpose, target length, desired tone, and additional context
+The JSON object should have this exact structure:
+{
+  "overview": "A brief overview of the segments chosen and why they were selected",
+  "segments": [
+    {
+      "id": "segment-1",
+      "startTimecode": "00:00:00",
+      "endTimecode": "00:00:00",
+      "sourceStartTimecode": "00:00:00",
+      "sourceEndTimecode": "00:00:00",
+      "content": "The exact content/quote that was said",
+      "speaker": "Name of the speaker",
+      "speakerColor": "blue|red|yellow",
+      "rationale": "Why this segment was chosen and how it contributes to the video's purpose",
+      "duration": "Duration in seconds"
+    }
+  ],
+  "totalRunTime": "Total duration in format MM:SS",
+  "editingNotes": [
+    "Array of additional editing notes and recommendations"
+  ]
+}
+
+Use this information to analyze the transcript and create the timeline:
 
 Transcript Content:${formData.transcriptFile}
 Client: ${formData.clientName}
@@ -240,13 +263,15 @@ Target Length: ${formData.length}
 Desired Tone: ${formData.tone}
 Additional Context: ${formData.additionalNotes}
 
-2. Identify the most impactful and relevant segments based on the video's purpose, tone, and additional context. Make sure to read the entire transcript. You can move the order of the segments if it helps tell a better story.
-3. Create a detailed write up that includes the follwoing
-  A. An overview of the selected segments in a section called "Overview of The Segments We Chose"
-  B. A timeline for a finished video that is the same length as the target length, showing which parts of the provided transcript should be used, their content, speaker name, and ratinoale for using them as it relates to the purpose of the video "Your Timeline"
-  C. Total Run Time of New Video in a section called "Total Run Time"
-  D. Any additional editing notes or recommendations
-3. Format your response in clean, well-structured markdown`
+Guidelines:
+1. Identify the most impactful and relevant segments based on the video's purpose, tone, and additional context
+2. Read the entire transcript and select segments that tell a cohesive story
+3. You can reorder segments if it helps tell a better story
+4. Assign speaker colors in order of appearance (first speaker = blue, second = red, third = yellow)
+5. Make sure the total run time matches the target length
+6. Include specific timecodes for both source and final video
+7. Provide clear rationale for each segment's inclusion
+8. Add any technical or creative editing recommendations in the editingNotes array`
 
     default:
       return ''
