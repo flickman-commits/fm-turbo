@@ -119,10 +119,6 @@ export default function Welcome() {
     setToast(null)
   }, [])
 
-  const scrollToTop = () => {
-    topRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
-
   useEffect(() => {
     // Initialize intersection observer for fade-in animations
     const fadeObserver = new IntersectionObserver((entries) => {

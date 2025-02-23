@@ -13,14 +13,6 @@ import { CompanyInfoProvider } from '@/contexts/CompanyInfoContext'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 
-// For testing purposes, we'll create a mock user
-const mockUser = {
-  id: '1',
-  email: 'test@example.com',
-  vimeoConnected: true,
-  vimeoUserId: 'vimeo123'
-}
-
 export default function App() {
   return (
     <BrowserRouter>
