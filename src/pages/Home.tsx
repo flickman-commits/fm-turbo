@@ -5,8 +5,10 @@ import { FeatureRequestModal } from '@/components/FeatureRequestModal'
 import { Layout } from '@/components/Layout'
 import { VideoModal } from '@/components/VideoModal'
 import { creditsManager } from '@/utils/credits'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function Home() {
+  const { initialized } = useAuth()
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null)
   const [showFeatureModal, setShowFeatureModal] = useState(false)
   const [showVideoModal, setShowVideoModal] = useState(false)
@@ -40,6 +42,15 @@ export default function Home() {
     { type: 'budget', label: 'PRODUCTION BUDGET' },
     { type: 'contractorBrief', label: 'CONTRACTOR BRIEF' }
   ]
+
+  // Show loading state while auth is initializing
+  if (!initialized) {
+    return (
+      <div className="min-h-screen bg-turbo-beige flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-turbo-black/20 border-t-turbo-black rounded-full animate-spin"></div>
+      </div>
+    )
+  }
 
   return (
     <Layout>

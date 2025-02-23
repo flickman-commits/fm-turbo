@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useCompanyInfo } from '@/contexts/CompanyInfoContext'
 import { User } from 'lucide-react'
 import { UserInfo } from '@/types/outreach'
+import { useAuth } from '@/contexts/AuthContext'
 
 // Default user info for mobile
 const DEFAULT_USER_INFO: UserInfo = {
@@ -20,6 +21,7 @@ const DEFAULT_USER_INFO: UserInfo = {
 }
 
 export default function Profile() {
+  const { initialized } = useAuth()
   const { user } = useUser()
   const { setIsInfoSaved } = useCompanyInfo()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -33,6 +35,15 @@ export default function Profile() {
     const saved = localStorage.getItem('userInfo')
     return saved ? JSON.parse(saved) : DEFAULT_USER_INFO
   })
+
+  // Show loading state while auth is initializing
+  if (!initialized) {
+    return (
+      <div className="min-h-screen bg-turbo-beige flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-turbo-black/20 border-t-turbo-black rounded-full animate-spin"></div>
+      </div>
+    )
+  }
 
   useEffect(() => {
     // Set default user info if not already set

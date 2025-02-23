@@ -1,7 +1,19 @@
 import { Layout } from '@/components/Layout'
 import { links } from '@/config/links'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function Settings() {
+  const { initialized } = useAuth()
+
+  // Show loading state while auth is initializing
+  if (!initialized) {
+    return (
+      <div className="min-h-screen bg-turbo-beige flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-turbo-black/20 border-t-turbo-black rounded-full animate-spin"></div>
+      </div>
+    )
+  }
+
   return (
     <Layout>
       <div className="max-w-3xl mx-auto px-4 py-12">

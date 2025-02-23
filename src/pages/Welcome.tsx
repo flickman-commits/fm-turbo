@@ -92,17 +92,15 @@ async function getServerCount() {
   }
 }
 
-export default function SignUp() {
+export default function Welcome() {
   const navigate = useNavigate()
   const [usersAtLaunch, setUsersAtLaunch] = useState<number>(10)
   const [isCountLoaded, setIsCountLoaded] = useState(false)
   const [activeTestimonial, setActiveTestimonial] = useState(0)
   const [isPricingVisible, setIsPricingVisible] = useState(false)
-  const [wantsSMS, setWantsSMS] = useState(false)
   const pricingSliderRef = useRef<HTMLDivElement>(null)
   const topRef = useRef<HTMLDivElement>(null)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Fetch the initial count from server
   useEffect(() => {
@@ -124,58 +122,6 @@ export default function SignUp() {
   const scrollToTop = () => {
     topRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
-
-  const handleEmailSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-
-    try {
-      const form = e.currentTarget
-      const formData = new FormData(form)
-      const email = formData.get('email_address')
-      const phoneNumber = wantsSMS ? formData.get('phone_number') : null
-      const date = new Date().toLocaleDateString()
-      const time = new Date().toLocaleTimeString()
-
-      // Send to Google Sheets
-      await fetch('https://script.google.com/macros/s/AKfycbxCvoevTYrwn8VzrMxh6lmqIn35xhI-Q2xA3MbyA64O3mDrJeA0SjtEzcHGey4SWXUlHA/exec', {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          wantsSMS,
-          phoneNumber,
-          date,
-          time
-        })
-      })
-
-      form.reset()
-      setToast({
-        message: 'Thanks for signing up! Redirecting you to the app...',
-        type: 'success'
-      })
-
-      // Wait for 1 second before redirecting
-      setTimeout(() => {
-        navigate('/')
-      }, 1000)
-    } catch (error) {
-      console.error('Error submitting form:', error)
-      setToast({
-        message: 'Something went wrong. Please try again.',
-        type: 'error'
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  // Use CURRENT_USER_COUNT for live updates (pricing tier, etc)
-  const currentTier = getCurrentPricingTier(CURRENT_USER_COUNT)
 
   useEffect(() => {
     // Initialize intersection observer for fade-in animations
@@ -270,72 +216,12 @@ export default function SignUp() {
           </div>
 
           <div className="mb-12 animate-on-scroll">
-            <h3 className="text-xl font-semibold mb-6 text-turbo-blue">
-              Beta is LIVE! Join now.
-            </h3>
-            
-            <form 
-              onSubmit={handleEmailSubmit}
-              className="max-w-md mx-auto"
+            <button 
+              onClick={() => navigate('/sign-up')}
+              className="h-[48px] px-6 font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black rounded-full transition-colors whitespace-nowrap"
             >
-              <div className="flex flex-col gap-3">
-                <div className="flex-1">
-                  <input 
-                    className="h-[48px] px-4 rounded-full bg-white border border-turbo-black/10 w-full focus:outline-none focus:ring-2 focus:ring-turbo-blue transition-all" 
-                    name="email_address" 
-                    type="email"
-                    placeholder="Enter your email to join" 
-                    required 
-                  />
-                </div>
-                <div className="flex items-center gap-2 px-2">
-                  <input
-                    type="checkbox"
-                    name="wantsSMS"
-                    id="wantsSMS"
-                    checked={wantsSMS}
-                    onChange={(e) => setWantsSMS(e.target.checked)}
-                    className="h-4 w-4 rounded border-turbo-black/10 text-turbo-blue focus:ring-turbo-blue"
-                  />
-                  <label htmlFor="wantsSMS" className="text-sm text-turbo-black/80">
-                    Send me a daily SMS reminder to do my outreach
-                  </label>
-                </div>
-                <div 
-                  className="phone-input-container transition-all overflow-hidden"
-                  style={{ 
-                    maxHeight: wantsSMS ? '200px' : '0',
-                    opacity: wantsSMS ? '1' : '0',
-                    marginTop: wantsSMS ? '8px' : '0'
-                  }}
-                >
-                  <input 
-                    className="h-[48px] px-4 rounded-full bg-white border border-turbo-black/10 w-full focus:outline-none focus:ring-2 focus:ring-turbo-blue transition-all" 
-                    name="phone_number" 
-                    type="tel"
-                    pattern="[0-9]{10}"
-                    placeholder="Enter your phone number (10 digits)" 
-                    required={wantsSMS}
-                  />
-                  <p className="text-xs text-turbo-black/60 mt-1 px-2">
-                    Format: 1234567890 (no spaces or special characters)
-                  </p>
-                </div>
-                <button 
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="h-[48px] px-6 font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black rounded-full transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? (
-                    <div className="flex items-center justify-center">
-                      <div className="w-5 h-5 border-2 border-turbo-beige border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                  ) : (
-                    'Join Now'
-                  )}
-                </button>
-              </div>
-            </form>
+              Get Started For Free
+            </button>
           </div>
         </div>
       </section>
@@ -631,7 +517,7 @@ export default function SignUp() {
                   {PRICING_TIERS.map((tier, index) => (
                     <div 
                       key={index} 
-                      className={`${currentTier === tier ? 'opacity-100' : 'opacity-60'}`}
+                      className={`${getCurrentPricingTier(CURRENT_USER_COUNT) === tier ? 'opacity-100' : 'opacity-60'}`}
                       style={{
                         position: 'absolute',
                         left: `${tier.position}%`,
@@ -660,12 +546,12 @@ export default function SignUp() {
               <div className="bg-turbo-beige rounded-xl p-6 sm:p-8 shadow-lg">
                 <h3 className="text-xl sm:text-2xl font-bold mb-4 text-turbo-black">Beta Access</h3>
                 <div className="text-4xl sm:text-6xl font-bold text-turbo-blue mb-8">
-                  {typeof currentTier.price === 'number' ? (
+                  {typeof getCurrentPricingTier(CURRENT_USER_COUNT).price === 'number' ? (
                     <>
-                      ${currentTier.price}<span className="text-xl sm:text-2xl font-normal text-turbo-black">/mo</span>
+                      ${getCurrentPricingTier(CURRENT_USER_COUNT).price}<span className="text-xl sm:text-2xl font-normal text-turbo-black">/mo</span>
                     </>
                   ) : (
-                    currentTier.price
+                    getCurrentPricingTier(CURRENT_USER_COUNT).price
                   )}
                 </div>
                 
@@ -704,10 +590,10 @@ export default function SignUp() {
 
                 <div className="w-full text-center">
                   <button
-                    onClick={scrollToTop}
+                    onClick={() => navigate('/sign-up')}
                     className="w-full h-[48px] px-6 font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black hover:text-turbo-beige rounded-full transition-colors"
                   >
-                    Join Beta Now
+                    Get Started For Free
                   </button>
                   <p className="text-xs sm:text-sm text-turbo-black/60 mt-4">
                     Get immediate access • Lock in this price forever
@@ -718,11 +604,11 @@ export default function SignUp() {
           </div>
 
           {/* Price Comparisons Section */}
-          {currentTier.price !== 'FREE' && (
+          {getCurrentPricingTier(CURRENT_USER_COUNT).price !== 'FREE' && (
             <div className="mt-16 bg-turbo-beige rounded-xl p-6 sm:p-8 shadow-lg">
               <h4 className="text-xl sm:text-2xl font-bold mb-8 text-turbo-black text-center">Less Expensive Than:</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-                {PRICE_COMPARISONS[currentTier.price].map((comparison, index) => (
+                {PRICE_COMPARISONS[getCurrentPricingTier(CURRENT_USER_COUNT).price].map((comparison, index) => (
                   <div key={index} className="text-center">
                     <div className="h-24 flex items-center justify-center mb-2 text-4xl" dangerouslySetInnerHTML={{ __html: comparison.emoji }} />
                     {comparison.item && <div className="font-medium text-turbo-black text-xl sm:text-2xl">{comparison.item}</div>}
@@ -747,10 +633,10 @@ export default function SignUp() {
           
           <div className="max-w-md mx-auto w-full">
             <button
-              onClick={scrollToTop}
+              onClick={() => navigate('/sign-up')}
               className="w-full h-[48px] px-6 font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black rounded-full transition-colors"
             >
-              Join Beta Now
+              Get Started For Free
             </button>
           </div>
         </div>

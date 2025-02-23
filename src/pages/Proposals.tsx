@@ -10,6 +10,7 @@ import { creditsManager } from '@/utils/credits'
 import { Layout } from '@/components/Layout'
 import { taskConfigs } from '@/config/tasks'
 import { NotionButton } from '@/components/ui/notion-button'
+import { useAuth } from '@/contexts/AuthContext'
 
 type ViewState = 'input' | 'loading' | 'result'
 
@@ -55,6 +56,7 @@ const LoadingOverlay = () => {
 }
 
 export default function Proposals() {
+  const { initialized } = useAuth()
   const [formData, setFormData] = useState<FormDataWithWeather>({})
   const [viewState, setViewState] = useState<ViewState>(ViewState.Input)
   const [result, setResult] = useState<{ content: string } | null>(null)
@@ -273,6 +275,15 @@ export default function Proposals() {
     li: (props) => <li className="mb-1 text-turbo-black" {...props} />,
     strong: (props) => <strong className="font-bold text-turbo-black" {...props} />,
     em: (props) => <em className="italic text-turbo-black" {...props} />
+  }
+
+  // Show loading state while auth is initializing
+  if (!initialized) {
+    return (
+      <div className="min-h-screen bg-turbo-beige flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-turbo-black/20 border-t-turbo-black rounded-full animate-spin"></div>
+      </div>
+    )
   }
 
   return (

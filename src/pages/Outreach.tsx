@@ -6,6 +6,7 @@ import { queryPerplexity } from '@/services/perplexity'
 import { createEmailTemplates } from '@/services/email'
 import { Prospect, UserInfo, EmailTemplate, ProspectResearch } from '@/types/outreach'
 import { DEFAULT_USER_INFO } from '@/config/constants'
+import { useAuth } from '@/contexts/AuthContext'
 
 type OutreachType = 'getClients' | 'getJob' | 'getSpeakers' | 'getHotelStay' | 'getSponsors' | null
 type MessageStyle = 'direct' | 'casual' | 'storytelling' | null
@@ -114,6 +115,7 @@ const extractValue = (values: string[], columnIndex: number): string => {
 }
 
 export default function Outreach() {
+  const { initialized } = useAuth()
   // Move all state declarations to the top
   const [chatMode, setChatMode] = useState(() => {
     const saved = localStorage.getItem('outreachChatMode')
@@ -1056,6 +1058,15 @@ export default function Outreach() {
     } finally {
       setIsGeneratingEmails(false)
     }
+  }
+
+  // Show loading state while auth is initializing
+  if (!initialized) {
+    return (
+      <div className="min-h-screen bg-turbo-beige flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-turbo-black/20 border-t-turbo-black rounded-full animate-spin"></div>
+      </div>
+    )
   }
 
   if (isMobile) {
