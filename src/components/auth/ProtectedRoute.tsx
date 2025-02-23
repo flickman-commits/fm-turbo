@@ -28,10 +28,10 @@ export function ProtectedRoute({ children, requiresProfile = true }: ProtectedRo
     )
   }
 
-  // If we're initialized and there's no session, redirect to login
+  // If we're initialized and there's no session, redirect to welcome
   if (!session) {
-    console.log('🚫 No session found, redirecting to login')
-    return <Navigate to="/login" state={{ from: location }} replace />
+    console.log('🚫 No session found, redirecting to welcome')
+    return <Navigate to="/welcome" state={{ from: location }} replace />
   }
 
   // If we require a profile and don't have one, redirect to profile setup

@@ -25,12 +25,14 @@ export default function App() {
             <Route path="/sign-up" element={<SignUp />} />
             <Route path="/auth/v1/callback" element={<Login />} />
 
-            {/* Protected Routes */}
+            {/* Root Route with Auth Check */}
             <Route path="/" element={
               <ProtectedRoute>
                 <Home />
               </ProtectedRoute>
             } />
+
+            {/* Protected Routes */}
             <Route path="/proposals" element={
               <ProtectedRoute>
                 <Proposals />
