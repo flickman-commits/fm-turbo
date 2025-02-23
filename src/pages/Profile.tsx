@@ -5,36 +5,67 @@ import { useCompanyInfo } from '@/contexts/CompanyInfoContext'
 import { User } from 'lucide-react'
 import { UserInfo } from '@/types/outreach'
 import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabase'
+import { useNavigate } from 'react-router-dom'
 
-// Default user info for mobile
+// Default user info structure (empty values)
 const DEFAULT_USER_INFO: UserInfo = {
-  name: 'User',
-  company: 'Your Company',
-  companyName: 'Your Company',
-  businessType: 'Video Production',
-  role: 'Professional',
+  name: '',
+  company: '',
+  companyName: '',
+  businessType: '',
+  role: '',
   email: '',
-  conversationalStyle: 'friendly',
+  conversationalStyle: 'professional',
   outreachType: 'getClients',
-  outreachContext: 'discussing business opportunities',
   messageStyle: 'direct'
 }
 
 export default function Profile() {
-  const { initialized } = useAuth()
+  const { initialized, profile, session, setProfile } = useAuth()
   const { user } = useUser()
   const { setIsInfoSaved } = useCompanyInfo()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [isEditingCompanyInfo, setIsEditingCompanyInfo] = useState(false)
+  const navigate = useNavigate()
+  
+  // Initialize form data from profile
   const [formData, setFormData] = useState<UserInfo>(() => {
-    const saved = localStorage.getItem('userInfo')
-    return saved ? JSON.parse(saved) : DEFAULT_USER_INFO
+    if (profile) {
+      return {
+        ...DEFAULT_USER_INFO,
+        name: profile.name || '',
+        email: profile.email || '',
+        companyName: profile.company_name || '',
+        businessType: profile.business_type || '',
+        conversationalStyle: profile.conversational_style || 'professional',
+        role: profile.role || '',
+        company: profile.company_name || '', // For backward compatibility
+        outreachType: (profile.outreach_type as UserInfo['outreachType']) || 'getClients',
+        messageStyle: (profile.message_style as UserInfo['messageStyle']) || 'direct'
+      }
+    }
+    return DEFAULT_USER_INFO
   })
-  const [userInfo, setUserInfo] = useState<UserInfo>(() => {
-    const saved = localStorage.getItem('userInfo')
-    return saved ? JSON.parse(saved) : DEFAULT_USER_INFO
-  })
+
+  // Update form data when profile changes
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        ...DEFAULT_USER_INFO,
+        name: profile.name || '',
+        email: profile.email || '',
+        companyName: profile.company_name || '',
+        businessType: profile.business_type || '',
+        conversationalStyle: profile.conversational_style || 'professional',
+        role: profile.role || '',
+        company: profile.company_name || '', // For backward compatibility
+        outreachType: (profile.outreach_type as UserInfo['outreachType']) || 'getClients',
+        messageStyle: (profile.message_style as UserInfo['messageStyle']) || 'direct'
+      })
+    }
+  }, [profile])
 
   // Show loading state while auth is initializing
   if (!initialized) {
@@ -45,14 +76,6 @@ export default function Profile() {
     )
   }
 
-  useEffect(() => {
-    // Set default user info if not already set
-    if (!localStorage.getItem('userInfo')) {
-      localStorage.setItem('userInfo', JSON.stringify(DEFAULT_USER_INFO))
-      setIsInfoSaved(true)
-    }
-  }, [setIsInfoSaved])
-
   const handleInfoChange = (field: keyof UserInfo, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
@@ -62,36 +85,42 @@ export default function Profile() {
       setIsSubmitting(true)
       
       try {
-        // Update userInfo with form data
-        const updatedInfo = {
-          ...userInfo,
-          name: formData.name,
-          email: formData.email,
-          conversationalStyle: formData.conversationalStyle
+        if (!session?.user?.id) {
+          throw new Error('No user session found')
         }
-        setUserInfo(updatedInfo)
-        
-        // Save to localStorage
-        localStorage.setItem('userInfo', JSON.stringify(updatedInfo))
-        console.log('User Info saved:', updatedInfo)
-        setIsEditing(false)
-        
-        // Send to Google Sheets
-        const date = new Date().toLocaleDateString()
-        const time = new Date().toLocaleTimeString()
-        
-        await fetch('https://script.google.com/macros/s/AKfycbxCvoevTYrwn8VzrMxh6lmqIn35xhI-Q2xA3MbyA64O3mDrJeA0SjtEzcHGey4SWXUlHA/exec', {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: updatedInfo.email,
-            date,
-            time
+
+        // Update Supabase profile with all relevant fields
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({
+            name: formData.name,
+            email: formData.email,
+            conversational_style: formData.conversationalStyle,
+            role: formData.role,
+            outreach_type: formData.outreachType,
+            message_style: formData.messageStyle,
+            updated_at: new Date().toISOString()
           })
-        })
+          .eq('id', session.user.id)
+
+        if (updateError) throw updateError
+        
+        // Save to localStorage for backward compatibility
+        localStorage.setItem('userInfo', JSON.stringify(formData))
+        
+        // Fetch updated profile data
+        const { data: refreshedProfile } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+          
+        if (refreshedProfile) {
+          setProfile(refreshedProfile)
+        }
+        
+        setIsInfoSaved(true)
+        setIsEditing(false)
       } catch (error) {
         console.error('Error saving info:', error)
       } finally {
@@ -105,17 +134,37 @@ export default function Profile() {
       setIsSubmitting(true)
       
       try {
-        // Update userInfo with form data
-        const updatedInfo = {
-          ...userInfo,
-          companyName: formData.companyName,
-          businessType: formData.businessType
+        if (!session?.user?.id) {
+          throw new Error('No user session found')
         }
-        setUserInfo(updatedInfo)
+
+        // Update Supabase profile
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({
+            company_name: formData.companyName,
+            business_type: formData.businessType,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', session.user.id)
+
+        if (updateError) throw updateError
         
-        // Save to localStorage
-        localStorage.setItem('userInfo', JSON.stringify(updatedInfo))
-        console.log('Company Info saved:', updatedInfo)
+        // Save to localStorage for backward compatibility
+        localStorage.setItem('userInfo', JSON.stringify(formData))
+        
+        // Fetch updated profile data
+        const { data: refreshedProfile } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+          
+        if (refreshedProfile) {
+          setProfile(refreshedProfile)
+        }
+        
+        setIsInfoSaved(true)
         setIsEditingCompanyInfo(false)
       } catch (error) {
         console.error('Error saving info:', error)
@@ -126,12 +175,24 @@ export default function Profile() {
   }
 
   const handleCancelUserInfo = () => {
-    setFormData(userInfo) // Reset form to current userInfo
+    if (profile) {
+      setFormData(prev => ({
+        ...prev,
+        name: profile.name || '',
+        email: profile.email || ''
+      }))
+    }
     setIsEditing(false)
   }
 
   const handleCancelCompanyInfo = () => {
-    setFormData(userInfo) // Reset form to current userInfo
+    if (profile) {
+      setFormData(prev => ({
+        ...prev,
+        companyName: profile.company_name || '',
+        businessType: profile.business_type || ''
+      }))
+    }
     setIsEditingCompanyInfo(false)
   }
 
@@ -142,13 +203,6 @@ export default function Profile() {
   const isCompanyInfoValid = () => {
     return !!(formData.companyName && formData.businessType)
   }
-
-  // Update form data when editing starts
-  useEffect(() => {
-    if (isEditing || isEditingCompanyInfo) {
-      setFormData(userInfo)
-    }
-  }, [isEditing, isEditingCompanyInfo, userInfo])
 
   return (
     <Layout>
@@ -162,12 +216,14 @@ export default function Profile() {
           <div className="p-6 bg-white rounded-xl border-2 border-turbo-black">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold">Your Info</h2>
-              <button
-                onClick={() => setIsEditing(true)}
-                className="text-sm font-medium text-turbo-black/60 hover:text-turbo-blue transition-colors"
-              >
-                Edit Info
-              </button>
+              {!isEditing && (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="text-sm font-medium text-turbo-black/60 hover:text-turbo-blue transition-colors"
+                >
+                  Edit Info
+                </button>
+              )}
             </div>
             <div className="space-y-6">
               {isEditing ? (
@@ -210,7 +266,7 @@ export default function Profile() {
                       Conversational Style
                     </label>
                     <select
-                      value={formData.conversationalStyle || 'professional'}
+                      value={formData.conversationalStyle}
                       onChange={(e) => handleInfoChange('conversationalStyle', e.target.value)}
                       className="w-full px-3 py-2 text-sm border border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-1 focus:ring-turbo-blue"
                     >
@@ -218,6 +274,73 @@ export default function Profile() {
                       <option value="casual">Casual</option>
                       <option value="friendly">Friendly</option>
                     </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-turbo-black mb-1">
+                      Role
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.role}
+                      onChange={(e) => handleInfoChange('role', e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-1 focus:ring-turbo-blue"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-turbo-black mb-1">
+                      Outreach Type
+                    </label>
+                    <select
+                      value={formData.outreachType || ''}
+                      onChange={(e) => handleInfoChange('outreachType', e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-1 focus:ring-turbo-blue"
+                    >
+                      <option value="">Select an outreach type</option>
+                      <option value="getClients">Get Clients</option>
+                      <option value="getJob">Get Job</option>
+                      <option value="getSpeakers">Get Speakers</option>
+                      <option value="getHotelStay">Get Hotel Stay</option>
+                      <option value="getSponsors">Get Sponsors</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-turbo-black mb-1">
+                      Message Style
+                    </label>
+                    <select
+                      value={formData.messageStyle || ''}
+                      onChange={(e) => handleInfoChange('messageStyle', e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-1 focus:ring-turbo-blue"
+                    >
+                      <option value="">Select a message style</option>
+                      <option value="direct">Direct</option>
+                      <option value="casual">Casual</option>
+                      <option value="storytelling">Storytelling</option>
+                    </select>
+                  </div>
+
+                  <div className="pt-4 mt-4 border-t border-turbo-black/10 flex justify-end gap-2">
+                    <button
+                      onClick={handleCancelUserInfo}
+                      className="px-4 py-2 text-sm font-medium text-turbo-black hover:text-turbo-blue transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveUserInfo}
+                      disabled={!isUserInfoValid() || isSubmitting}
+                      className={`px-6 py-2 text-sm font-medium text-turbo-beige rounded-full transition-colors ${
+                        isUserInfoValid() && !isSubmitting
+                          ? 'bg-turbo-blue hover:bg-turbo-black'
+                          : 'bg-turbo-black/40 cursor-not-allowed'
+                      }`}
+                    >
+                      {isSubmitting ? 'Saving...' : 'Save Changes'}
+                    </button>
                   </div>
                 </>
               ) : (
@@ -230,41 +353,34 @@ export default function Profile() {
                   
                   <div>
                     <p className="text-turbo-black/60 mb-1">Your Name</p>
-                    <p className="font-medium">{userInfo.name}</p>
+                    <p className="font-medium">{profile?.name || 'Not set'}</p>
                   </div>
                   
                   <div>
                     <p className="text-turbo-black/60 mb-1">Email</p>
-                    <p className="font-medium">{userInfo.email}</p>
+                    <p className="font-medium">{profile?.email || 'Not set'}</p>
                   </div>
                   
                   <div>
                     <p className="text-turbo-black/60 mb-1">Conversational Style</p>
-                    <p className="font-medium">{userInfo.conversationalStyle || 'Professional'}</p>
+                    <p className="font-medium">{profile?.conversational_style === 'professional' ? 'Professional' : profile?.conversational_style || 'Not set'}</p>
+                  </div>
+                  
+                  <div>
+                    <p className="text-turbo-black/60 mb-1">Role</p>
+                    <p className="font-medium">{profile?.role || 'Not set'}</p>
+                  </div>
+                  
+                  <div>
+                    <p className="text-turbo-black/60 mb-1">Outreach Type</p>
+                    <p className="font-medium">{profile?.outreach_type || 'Not set'}</p>
+                  </div>
+                  
+                  <div>
+                    <p className="text-turbo-black/60 mb-1">Message Style</p>
+                    <p className="font-medium">{profile?.message_style || 'Not set'}</p>
                   </div>
                 </>
-              )}
-
-              {isEditing && (
-                <div className="pt-4 mt-4 border-t border-turbo-black/10 flex justify-end gap-2">
-                  <button
-                    onClick={handleCancelUserInfo}
-                    className="px-4 py-2 text-sm font-medium text-turbo-black hover:text-turbo-blue transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSaveUserInfo}
-                    disabled={!isUserInfoValid() || isSubmitting}
-                    className={`px-6 py-2 text-sm font-medium text-turbo-beige rounded-full transition-colors ${
-                      isUserInfoValid() && !isSubmitting
-                        ? 'bg-turbo-blue hover:bg-turbo-black'
-                        : 'bg-turbo-black/40 cursor-not-allowed'
-                    }`}
-                  >
-                    {isSubmitting ? 'Saving...' : 'Save Changes'}
-                  </button>
-                </div>
               )}
             </div>
           </div>
@@ -344,12 +460,12 @@ export default function Profile() {
                 <>
                   <div>
                     <p className="text-turbo-black/60 mb-1">Company Name</p>
-                    <p className="font-medium">{userInfo.companyName}</p>
+                    <p className="font-medium">{profile?.company_name || 'Not set'}</p>
                   </div>
                   
                   <div>
                     <p className="text-turbo-black/60 mb-1">Business Type</p>
-                    <p className="font-medium">{userInfo.businessType}</p>
+                    <p className="font-medium">{profile?.business_type || 'Not set'}</p>
                   </div>
                 </>
               )}

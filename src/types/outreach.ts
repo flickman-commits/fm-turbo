@@ -7,11 +7,10 @@ export interface UserInfo {
   role: string
   email: string
   conversationalStyle: string
-  messageStyle: 'direct' | 'casual' | 'storytelling' | null
+  messageStyle: 'direct' | 'casual' | 'storytelling'
   
   // Outreach Context
-  outreachType: 'getClients' | 'getJob' | 'getSpeakers' | 'getHotelStay' | 'getSponsors' | null
-  outreachContext: string // The context message used in emails
+  outreachType: 'getClients' | 'getJob' | 'getSpeakers' | 'getHotelStay' | 'getSponsors'
 }
 
 export interface EmailTemplate {

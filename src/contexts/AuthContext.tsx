@@ -6,14 +6,16 @@ import { useNavigate } from 'react-router-dom'
 
 interface UserProfile {
   id: string
-  email: string
-  company_name?: string
-  business_type?: string
-  website_url?: string
-  company_size?: string
-  industry?: string
-  created_at: string
-  updated_at: string
+  email: string | null
+  name: string | null
+  company_name: string | null
+  business_type: string | null
+  conversational_style: string | null
+  role: string | null
+  outreach_type: string | null
+  message_style: string | null
+  updated_at: string | null
+  created_at: string | null
 }
 
 interface AuthContextType {
@@ -21,6 +23,7 @@ interface AuthContextType {
   session: Session | null
   profile: UserProfile | null
   initialized: boolean
+  setProfile: (profile: UserProfile | null) => void
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
@@ -161,7 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signUp({ 
+      const { error } = await supabase.auth.signUp({ 
         email, 
         password,
         options: {
@@ -208,6 +211,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     profile,
     initialized,
+    setProfile,
     signIn,
     signUp,
     signOut

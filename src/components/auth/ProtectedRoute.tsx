@@ -34,8 +34,8 @@ export function ProtectedRoute({ children, requiresProfile = true }: ProtectedRo
     return <Navigate to="/welcome" state={{ from: location }} replace />
   }
 
-  // If we require a profile and don't have one, redirect to profile setup
-  if (requiresProfile && !profile) {
+  // Only check for profile if we're not on the home page and requiresProfile is true
+  if (requiresProfile && !profile && location.pathname !== '/') {
     console.log('👤 No profile found, redirecting to profile setup')
     return <Navigate to="/profile" state={{ from: location }} replace />
   }
