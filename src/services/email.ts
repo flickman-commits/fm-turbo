@@ -14,8 +14,7 @@ export async function createEmailTemplates(
     familiarity: 'Never Met', // This could be made dynamic later
     perplexityResearch: research.rawResponse,
     keyPoints: research.companyInfo.concat(research.personInfo).join('\n'),
-    keyPointsToEmphasize: research.companyInfo.join('\n'),
-    deliverables: userInfo.outreachContext
+    keyPointsToEmphasize: research.companyInfo.join('\n')
   }
 
   // Map our UserInfo to the format expected by the prompt functions
@@ -27,9 +26,7 @@ export async function createEmailTemplates(
     messageStyle: userInfo.messageStyle,
     company: userInfo.company,
     role: userInfo.role,
-    email: userInfo.email,
-    conversationalStyle: userInfo.conversationalStyle,
-    outreachContext: userInfo.outreachContext
+    email: userInfo.email
   }
 
   const systemPrompt = getOutreachSystemPrompt(promptUserInfo)

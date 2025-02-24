@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { TaskType, TaskResult, taskActionConfigs, TaskActionConfig } from '@/types/tasks'
 import { taskConfigs, FormField } from '@/config/tasks'
-import { getSystemPrompts, getUserPrompt, getUserInfoFromProfile, UserInfo } from '@/config/prompts'
+import { getSystemPrompts, getUserPrompt, getUserInfoFromProfile } from '@/config/prompts'
 import { DottedDialog } from '@/components/ui/dotted-dialog-wrapper'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/components/ui/rainbow-toast'

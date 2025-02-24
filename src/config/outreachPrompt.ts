@@ -25,9 +25,11 @@ export const getOutreachSystemPrompt = (userInfo: UserInfo): string => {
 
   // Get the tone based on message style
   const tone = userInfo.messageStyle ? {
-    direct: "Your tone should be professional, clear, and straight to the point. No fluff.Focus on value and efficiency in communication.",
+    direct: "Your tone should be professional, clear, and straight to the point. No fluff. Focus on value and efficiency in communication.",
     casual: "Your tone should be friendly, conversational, and relatable, using a more personal touch.",
-    storytelling: "Your tone should be engaging and narrative-focused. Weave in relevant anecdotes or examples while maintaining professionalism."
+    storytelling: "Your tone should be engaging and narrative-focused. Weave in relevant anecdotes or examples while maintaining professionalism.",
+    professional: "Your tone should be formal, polished, and business-oriented. Focus on expertise and credibility.",
+    friendly: "Your tone should be warm, approachable, and personable while maintaining professionalism."
   }[userInfo.messageStyle] : "Your tone should be professional, clear, and straight to the point. Focus on value and efficiency in communication."
 
   return `You are the best ${userInfo.outreachType === "getClients" ? "salesman" : userInfo.outreachType === "getJob" ? "job seeker" : userInfo.outreachType === "getSpeakers" ? "event coordinator" : userInfo.outreachType === "getHotelStay" ? "travel content creator" : userInfo.outreachType === "getSponsors" ? "producer" : "outreach specialist"} at ${userInfo.companyName} (a ${userInfo.businessType} company)${purpose}. ${tone}
@@ -91,10 +93,8 @@ Write an email that is designed to get the other party to respond using the foll
       businessType: 'unknown',
       role: 'unknown',
       email: '',
-      conversationalStyle: 'friendly',
-      outreachType: 'getClients',
-      messageStyle: 'direct',
-      outreachContext: 'discussing business opportunities'
+      messageStyle: 'professional',
+      outreachType: 'getClients'
     }),
     userPrompt: prompt,
     formData
