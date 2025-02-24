@@ -1,6 +1,6 @@
 import { UserInfo } from '@/types/outreach'
 
-export const DEFAULT_USER_INFO = {
+export const DEFAULT_USER_INFO: UserInfo = {
   name: '',
   company: '',
   companyName: '',

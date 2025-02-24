@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { FormDataWithWeather } from '@/types/forms'
-import { getUserInfoFromProfile, UserInfo, getSystemPrompts, getUserPrompt } from '@/config/prompts'
+import { getUserInfoFromProfile, getSystemPrompts, getUserPrompt } from '@/config/prompts'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/components/ui/rainbow-toast'
 import { createChatCompletion } from '@/services/openai'

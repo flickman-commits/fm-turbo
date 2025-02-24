@@ -6,7 +6,6 @@ import { User } from 'lucide-react'
 import { UserInfo } from '@/types/outreach'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
-import { useNavigate } from 'react-router-dom'
 
 // Default user info structure (empty values)
 const DEFAULT_USER_INFO: UserInfo = {
@@ -27,7 +26,6 @@ export default function Profile() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [isEditingCompanyInfo, setIsEditingCompanyInfo] = useState(false)
-  const navigate = useNavigate()
   
   // Initialize form data from profile
   const [formData, setFormData] = useState<UserInfo>(() => {
