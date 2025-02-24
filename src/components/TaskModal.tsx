@@ -138,7 +138,7 @@ export function TaskModal({
 }) {
   const { user } = useUser()
   const { isInfoSaved } = useCompanyInfo()
-  const { initialized, session, incrementTasksUsed } = useAuth()
+  const { session, incrementTasksUsed } = useAuth()
   const [formData, setFormData] = useState<FormDataWithWeather>({})
   const [viewState, setViewState] = useState<ViewState>('input')
   const [result, setResult] = useState<TaskResult | null>(null)
@@ -274,16 +274,18 @@ export function TaskModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!isFormValid()) return
-
-    if (creditsManager.getCredits() <= 0) {
-      toast.error('No credits remaining')
+    if (!isFormValid()) {
+      toast.error('Please fill in all required fields')
       return
     }
 
     setViewState('loading')
-    
     try {
+      if (!session) {
+        toast.error('Please wait for initialization to complete')
+        return
+      }
+
       const updatedFormData: FormDataWithWeather = { ...formData }
       
       if (taskType === 'outreach' && typeof formData.recipientName === 'string' && typeof formData.company === 'string') {
@@ -488,6 +490,7 @@ ${jsonData.editingNotes.map((note: string) => `- ${note}`).join('\n')}
       
       setResult(newResult)
       setViewState('result')
+      await incrementTasksUsed()
     } catch (error) {
       console.error('Error generating content:', error)
       toast.error('Failed to generate content. Please try again.')
