@@ -3,6 +3,7 @@ import { WeatherData } from '@/services/location'
 import { Video, FormDataValue } from '@/types/forms'
 import { getOutreachSystemPrompt, getOutreachUserPrompt } from './outreachPrompt'
 import { UserInfo } from '@/types/outreach'
+import { supabase } from '@/lib/supabase'
 
 // Type definitions
 interface FormData {
@@ -31,10 +32,42 @@ interface FormData {
 // Export UserInfo type from types/outreach
 export type { UserInfo } from '@/types/outreach'
 
-// Helper function to get user info from localStorage
-export const getUserInfoFromLocalStorage = (): UserInfo | null => {
-  const saved = localStorage.getItem('userInfo')
-  return saved ? JSON.parse(saved) : null
+// Helper function to get user info from Supabase profile
+export const getUserInfoFromProfile = async (userId: string): Promise<UserInfo | null> => {
+  console.log('🔄 Getting user info from Supabase profile...')
+  try {
+    const { data: profile, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .single()
+
+    if (error) {
+      console.error('❌ Error fetching user profile:', error)
+      return null
+    }
+
+    if (!profile) {
+      console.log('ℹ️ No profile found')
+      return null
+    }
+
+    console.log('✅ Successfully loaded user info from profile')
+    
+    return {
+      name: profile.name || 'User',
+      company: profile.company_name || 'Your Company',
+      companyName: profile.company_name || 'Your Company',
+      role: profile.role || 'Professional',
+      email: profile.email || '',
+      businessType: profile.business_type || 'business',
+      messageStyle: (profile.message_style as UserInfo['messageStyle']) || 'professional',
+      outreachType: (profile.outreach_type as UserInfo['outreachType']) || 'getClients'
+    }
+  } catch (error) {
+    console.error('❌ Error in getUserInfoFromProfile:', error)
+    return null
+  }
 }
 
 // Helper function to get weather emoji for run of show

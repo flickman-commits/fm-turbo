@@ -7,9 +7,10 @@ import { createEmailTemplates } from '@/services/email'
 import { Prospect, UserInfo, EmailTemplate, ProspectResearch } from '@/types/outreach'
 import { DEFAULT_USER_INFO } from '@/config/constants'
 import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabase'
 
 type OutreachType = 'getClients' | 'getJob' | 'getSpeakers' | 'getHotelStay' | 'getSponsors' | null
-type MessageStyle = 'direct' | 'casual' | 'storytelling' | null
+type MessageStyle = 'direct' | 'casual' | 'storytelling'
 type OnboardingStep = 1 | 2 | 3 | 4
 type HasList = 'yes' | 'no' | null
 type SlideDirection = 'forward' | 'back' | null
@@ -115,7 +116,7 @@ const extractValue = (values: string[], columnIndex: number): string => {
 }
 
 export default function Outreach() {
-  const { initialized } = useAuth()
+  const { initialized, incrementTasksUsed, profile, setProfile } = useAuth()
   // Move all state declarations to the top
   const [chatMode, setChatMode] = useState(() => {
     const saved = localStorage.getItem('outreachChatMode')
@@ -139,12 +140,10 @@ export default function Outreach() {
     return saved ? JSON.parse(saved) : 1
   })
   const [outreachType, setOutreachType] = useState<OutreachType>(() => {
-    const saved = localStorage.getItem('outreachType')
-    return saved ? JSON.parse(saved) : 'getClients'
+    return profile?.outreach_type as OutreachType || 'getClients'
   })
   const [messageStyle, setMessageStyle] = useState<MessageStyle>(() => {
-    const saved = localStorage.getItem('outreachMessageStyle')
-    return saved ? JSON.parse(saved) : 'casual'
+    return profile?.message_style as MessageStyle || 'direct'
   })
   const [hasList, setHasList] = useState<HasList>(() => {
     const saved = localStorage.getItem('outreachHasList')
@@ -239,67 +238,74 @@ export default function Outreach() {
     setTimeout(() => setSlideDirection(null), 500)
   }
 
-  // Helper function to get outreach context based on type
-  const getOutreachContext = (type: OutreachType): string => {
-    if (!type) return 'discussing business opportunities'
-    
-    switch (type) {
-      case 'getClients':
-        return 'discussing potential collaboration opportunities'
-      case 'getJob':
-        return 'exploring career opportunities'
-      case 'getSpeakers':
-        return 'inviting speakers to our event'
-      case 'getHotelStay':
-        return 'discussing content creation partnership opportunities'
-      case 'getSponsors':
-        return 'exploring project sponsorship opportunities'
-      default:
-        return 'discussing business opportunities'
-    }
-  }
-
   // Handle selections
-  const handleOutreachTypeSelect = (type: NonNullable<OutreachType>) => {
+  const handleOutreachTypeSelect = async (type: NonNullable<OutreachType>) => {
     setOutreachType(type)
     console.log('📝 Outreach type changed:', { from: outreachType, to: type })
     
-    // Get current user info
-    const currentUserInfo = localStorage.getItem('userInfo')
-    const userInfo = currentUserInfo ? JSON.parse(currentUserInfo) : DEFAULT_USER_INFO
-    
-    // Update both outreachType and outreachContext
-    const updatedUserInfo = {
-      ...userInfo,
-      outreachType: type,
-      outreachContext: getOutreachContext(type),
-      messageStyle: messageStyle || 'direct' // Provide default if null
+    try {
+      // Update profile in Supabase
+      const { data, error } = await supabase
+        .from('users')
+        .update({ outreach_type: type })
+        .eq('id', profile?.id)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      // Update local profile state
+      if (data && setProfile) {
+        setProfile(data)
+      }
+
+      // Update userInfo for email generation
+      const updatedUserInfo: UserInfo = {
+        ...DEFAULT_USER_INFO,
+        ...userInfo,
+        outreachType: type,
+        messageStyle: messageStyle || 'direct'
+      }
+      setUserInfo(updatedUserInfo)
+      
+      goToNextStep()
+    } catch (error) {
+      console.error('Error updating outreach type:', error)
     }
-    
-    // Save back to localStorage
-    localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo))
-    
-    goToNextStep()
   }
 
-  const handleMessageStyleSelect = (style: NonNullable<MessageStyle>) => {
+  const handleMessageStyleSelect = async (style: NonNullable<MessageStyle>) => {
     setMessageStyle(style)
     console.log('📝 Message style changed:', { from: messageStyle, to: style })
     
-    // Get current user info
-    const currentUserInfo = localStorage.getItem('userInfo')
-    const userInfo = currentUserInfo ? JSON.parse(currentUserInfo) : DEFAULT_USER_INFO
-    
-    // Update messageStyle
-    const updatedUserInfo = {
-      ...userInfo,
-      messageStyle: style
+    try {
+      // Update profile in Supabase
+      const { data, error } = await supabase
+        .from('users')
+        .update({ message_style: style })
+        .eq('id', profile?.id)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      // Update local profile state
+      if (data && setProfile) {
+        setProfile(data)
+      }
+
+      // Update userInfo for email generation
+      const updatedUserInfo: UserInfo = {
+        ...DEFAULT_USER_INFO,
+        ...userInfo,
+        messageStyle: style
+      }
+      setUserInfo(updatedUserInfo)
+      
+      goToNextStep()
+    } catch (error) {
+      console.error('Error updating message style:', error)
     }
-    
-    // Save back to localStorage
-    localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo))
-    
-    goToNextStep()
   }
 
   const handleHasListSelect = (value: HasList) => {
@@ -450,12 +456,7 @@ export default function Outreach() {
           companyInfo: research.companyInfo,
           personInfo: research.personInfo
         },
-        userInfo: {
-          ...userInfo,
-          outreachContext: userInfo.outreachContext,
-          outreachType: outreachType || 'getClients',
-          messageStyle: messageStyle || 'direct'
-        }
+        userInfo
       })
 
       const templates = await createEmailTemplates(prospect, research, {
@@ -473,6 +474,9 @@ export default function Outreach() {
           bodyPreview: t.body.substring(0, 100) + '...'
         }))
       })
+
+      // Increment tasks counter after successful generation
+      await incrementTasksUsed()
 
       // 5. Store email templates
       setProspects(prevProspects => {
@@ -546,14 +550,22 @@ export default function Outreach() {
     }
   }
 
-  // Load user info from localStorage
+  // Load user info from profile
   useEffect(() => {
-    console.log('🔄 Loading user info from localStorage...')
-    const storedUserInfo = localStorage.getItem('userInfo')
-    if (storedUserInfo) {
-      const parsedUserInfo = JSON.parse(storedUserInfo)
-      console.log('✅ Successfully loaded user info:', parsedUserInfo)
-      setUserInfo(parsedUserInfo)
+    console.log('🔄 Loading user info from profile...')
+    if (profile) {
+      const userInfoFromProfile: UserInfo = {
+        name: profile.name || 'User',
+        company: profile.company_name || 'Your Company',
+        companyName: profile.company_name || 'Your Company',
+        role: profile.role || 'Professional',
+        email: profile.email || '',
+        businessType: profile.business_type || 'business',
+        messageStyle: (profile.message_style as UserInfo['messageStyle']) || 'direct',
+        outreachType: (profile.outreach_type as UserInfo['outreachType']) || 'getClients'
+      }
+      console.log('✅ Successfully loaded user info from profile:', userInfoFromProfile)
+      setUserInfo(userInfoFromProfile)
     } else {
       console.log('ℹ️ Creating default user info based on outreach type')
       // Create default user info based on outreach type
@@ -563,16 +575,13 @@ export default function Outreach() {
         companyName: 'Your Company',
         role: 'Professional',
         email: '',
-        conversationalStyle: 'friendly',
         businessType: outreachType || 'business',
-        outreachContext: getOutreachContext(outreachType),
         messageStyle: 'direct',
         outreachType: outreachType || 'getClients'
       }
-      localStorage.setItem('userInfo', JSON.stringify(defaultUserInfo))
       setUserInfo(defaultUserInfo)
     }
-  }, [outreachType])
+  }, [profile, outreachType])
 
   // Update the useEffect hooks
   useEffect(() => {
@@ -1356,7 +1365,7 @@ export default function Outreach() {
                 <div className="grid grid-cols-2 gap-4">
                   {/* Context of Outreach Selector */}
                   <div>
-                    <label className="block text-xs font-medium text-turbo-black mb-1">Context of Outreach</label>
+                    <label className="block text-xs font-medium text-turbo-black mb-1">Outreach Type</label>
                     <select
                       value={outreachType || 'getClients'}
                       onChange={async (e) => {
@@ -1364,18 +1373,37 @@ export default function Outreach() {
                         setOutreachType(newType)
                         console.log('📝 Outreach type changed:', { from: outreachType, to: newType })
                         
-                        // Update userInfo with new type and context
-                        if (userInfo) {
-                          const updatedUserInfo = {
-                            ...userInfo,
-                            outreachType: newType,
-                            outreachContext: getOutreachContext(newType)
+                        try {
+                          // Update profile in Supabase
+                          const { data, error } = await supabase
+                            .from('users')
+                            .update({ outreach_type: newType })
+                            .eq('id', profile?.id)
+                            .select()
+                            .single()
+
+                          if (error) throw error
+
+                          // Update local profile state
+                          if (data && setProfile) {
+                            setProfile(data)
                           }
-                          setUserInfo(updatedUserInfo)
-                          localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo))
-                          
-                          // Regenerate emails with new type
-                          await regenerateEmailsForCurrentProspect(newType, messageStyle)
+
+                          // Update userInfo and regenerate emails
+                          if (newType) {
+                            const updatedUserInfo: UserInfo = {
+                              ...DEFAULT_USER_INFO,
+                              ...userInfo,
+                              outreachType: newType,
+                              messageStyle: messageStyle || 'direct'
+                            }
+                            setUserInfo(updatedUserInfo)
+                            
+                            // Regenerate emails with new type
+                            await regenerateEmailsForCurrentProspect(newType, messageStyle)
+                          }
+                        } catch (error) {
+                          console.error('Error updating outreach type:', error)
                         }
                       }}
                       className="w-full px-2 py-1.5 text-sm rounded-lg border-2 border-turbo-black/10 focus:border-turbo-blue focus:outline-none transition-colors"
@@ -1398,17 +1426,33 @@ export default function Outreach() {
                         setMessageStyle(newStyle)
                         console.log('📝 Message style changed:', { from: messageStyle, to: newStyle })
                         
-                        // Update userInfo with new style
-                        if (userInfo) {
-                          const updatedUserInfo = {
+                        try {
+                          // Update profile in Supabase
+                          const { data, error } = await supabase
+                            .from('users')
+                            .update({ message_style: newStyle })
+                            .eq('id', profile?.id)
+                            .select()
+                            .single()
+
+                          if (error) throw error
+
+                          // Update local profile state
+                          if (data && setProfile) {
+                            setProfile(data)
+                          }
+
+                          // Update userInfo for email generation
+                          const updatedUserInfo: UserInfo = {
+                            ...DEFAULT_USER_INFO,
                             ...userInfo,
                             messageStyle: newStyle
                           }
                           setUserInfo(updatedUserInfo)
-                          localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo))
                           
-                          // Regenerate emails with new style
-                          await regenerateEmailsForCurrentProspect(outreachType, newStyle)
+                          goToNextStep()
+                        } catch (error) {
+                          console.error('Error updating message style:', error)
                         }
                       }}
                       className="w-full px-2 py-1.5 text-sm rounded-lg border-2 border-turbo-black/10 focus:border-turbo-blue focus:outline-none transition-colors"

@@ -14,6 +14,7 @@ interface UserProfile {
   role: string | null
   outreach_type: string | null
   message_style: string | null
+  tasks_used: number
   updated_at: string | null
   created_at: string | null
 }
@@ -24,6 +25,7 @@ interface AuthContextType {
   profile: UserProfile | null
   initialized: boolean
   setProfile: (profile: UserProfile | null) => void
+  incrementTasksUsed: () => Promise<void>
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
@@ -40,6 +42,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Add a ref to track initialization status
   const initializationComplete = useRef(false)
+
+  // Function to increment tasks used counter
+  const incrementTasksUsed = async () => {
+    if (!session?.user?.id) return
+
+    try {
+      const { data: updatedProfile, error } = await supabase
+        .from('users')
+        .update({
+          tasks_used: (profile?.tasks_used || 0) + 1,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', session.user.id)
+        .select()
+        .single()
+
+      if (error) throw error
+      
+      if (updatedProfile) {
+        console.log('✅ Tasks counter incremented:', updatedProfile.tasks_used)
+        setProfile(updatedProfile)
+      }
+    } catch (error) {
+      console.error('❌ Error incrementing tasks counter:', error)
+    }
+  }
 
   // Function to handle profile fetching/creation
   const handleProfile = async (userId: string, userEmail: string) => {
@@ -173,7 +201,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
       if (error) throw error
 
-      toast.success('Please check your email to verify your account before signing in.')
       navigate('/login', { 
         replace: true,
         state: { 
@@ -212,6 +239,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     profile,
     initialized,
     setProfile,
+    incrementTasksUsed,
     signIn,
     signUp,
     signOut

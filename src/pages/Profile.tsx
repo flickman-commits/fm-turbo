@@ -16,9 +16,8 @@ const DEFAULT_USER_INFO: UserInfo = {
   businessType: '',
   role: '',
   email: '',
-  conversationalStyle: 'professional',
-  outreachType: 'getClients',
-  messageStyle: 'direct'
+  messageStyle: 'professional',
+  outreachType: 'getClients'
 }
 
 export default function Profile() {
@@ -39,11 +38,10 @@ export default function Profile() {
         email: profile.email || '',
         companyName: profile.company_name || '',
         businessType: profile.business_type || '',
-        conversationalStyle: profile.conversational_style || 'professional',
+        messageStyle: (profile.message_style as UserInfo['messageStyle']) || 'professional',
         role: profile.role || '',
         company: profile.company_name || '', // For backward compatibility
-        outreachType: (profile.outreach_type as UserInfo['outreachType']) || 'getClients',
-        messageStyle: (profile.message_style as UserInfo['messageStyle']) || 'direct'
+        outreachType: (profile.outreach_type as UserInfo['outreachType']) || 'getClients'
       }
     }
     return DEFAULT_USER_INFO
@@ -58,11 +56,10 @@ export default function Profile() {
         email: profile.email || '',
         companyName: profile.company_name || '',
         businessType: profile.business_type || '',
-        conversationalStyle: profile.conversational_style || 'professional',
+        messageStyle: (profile.message_style as UserInfo['messageStyle']) || 'professional',
         role: profile.role || '',
         company: profile.company_name || '', // For backward compatibility
-        outreachType: (profile.outreach_type as UserInfo['outreachType']) || 'getClients',
-        messageStyle: (profile.message_style as UserInfo['messageStyle']) || 'direct'
+        outreachType: (profile.outreach_type as UserInfo['outreachType']) || 'getClients'
       })
     }
   }, [profile])
@@ -89,24 +86,27 @@ export default function Profile() {
           throw new Error('No user session found')
         }
 
+        // Create update object for logging and updating
+        const updateData = {
+          name: formData.name,
+          email: formData.email,
+          message_style: formData.messageStyle,
+          role: formData.role,
+          outreach_type: formData.outreachType,
+          updated_at: new Date().toISOString()
+        }
+
+        console.log('📝 Updating user info:', updateData)
+
         // Update Supabase profile with all relevant fields
         const { error: updateError } = await supabase
           .from('users')
-          .update({
-            name: formData.name,
-            email: formData.email,
-            conversational_style: formData.conversationalStyle,
-            role: formData.role,
-            outreach_type: formData.outreachType,
-            message_style: formData.messageStyle,
-            updated_at: new Date().toISOString()
-          })
+          .update(updateData)
           .eq('id', session.user.id)
 
         if (updateError) throw updateError
         
-        // Save to localStorage for backward compatibility
-        localStorage.setItem('userInfo', JSON.stringify(formData))
+        console.log('✅ User info updated successfully')
         
         // Fetch updated profile data
         const { data: refreshedProfile } = await supabase
@@ -116,13 +116,14 @@ export default function Profile() {
           .single()
           
         if (refreshedProfile) {
+          console.log('👤 Updated profile data:', refreshedProfile)
           setProfile(refreshedProfile)
         }
         
         setIsInfoSaved(true)
         setIsEditing(false)
       } catch (error) {
-        console.error('Error saving info:', error)
+        console.error('❌ Error saving info:', error)
       } finally {
         setIsSubmitting(false)
       }
@@ -138,20 +139,24 @@ export default function Profile() {
           throw new Error('No user session found')
         }
 
+        // Create update object for logging and updating
+        const updateData = {
+          company_name: formData.companyName,
+          business_type: formData.businessType,
+          updated_at: new Date().toISOString()
+        }
+
+        console.log('🏢 Updating company info:', updateData)
+
         // Update Supabase profile
         const { error: updateError } = await supabase
           .from('users')
-          .update({
-            company_name: formData.companyName,
-            business_type: formData.businessType,
-            updated_at: new Date().toISOString()
-          })
+          .update(updateData)
           .eq('id', session.user.id)
 
         if (updateError) throw updateError
         
-        // Save to localStorage for backward compatibility
-        localStorage.setItem('userInfo', JSON.stringify(formData))
+        console.log('✅ Company info updated successfully')
         
         // Fetch updated profile data
         const { data: refreshedProfile } = await supabase
@@ -161,13 +166,14 @@ export default function Profile() {
           .single()
           
         if (refreshedProfile) {
+          console.log('👤 Updated profile data:', refreshedProfile)
           setProfile(refreshedProfile)
         }
         
         setIsInfoSaved(true)
         setIsEditingCompanyInfo(false)
       } catch (error) {
-        console.error('Error saving info:', error)
+        console.error('❌ Error saving info:', error)
       } finally {
         setIsSubmitting(false)
       }
@@ -263,16 +269,18 @@ export default function Profile() {
 
                   <div>
                     <label className="block text-sm font-medium text-turbo-black mb-1">
-                      Conversational Style
+                      Message Style
                     </label>
                     <select
-                      value={formData.conversationalStyle}
-                      onChange={(e) => handleInfoChange('conversationalStyle', e.target.value)}
+                      value={formData.messageStyle}
+                      onChange={(e) => handleInfoChange('messageStyle', e.target.value)}
                       className="w-full px-3 py-2 text-sm border border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-1 focus:ring-turbo-blue"
                     >
                       <option value="professional">Professional</option>
                       <option value="casual">Casual</option>
                       <option value="friendly">Friendly</option>
+                      <option value="direct">Direct</option>
+                      <option value="storytelling">Storytelling</option>
                     </select>
                   </div>
 
@@ -303,22 +311,6 @@ export default function Profile() {
                       <option value="getSpeakers">Get Speakers</option>
                       <option value="getHotelStay">Get Hotel Stay</option>
                       <option value="getSponsors">Get Sponsors</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-turbo-black mb-1">
-                      Message Style
-                    </label>
-                    <select
-                      value={formData.messageStyle || ''}
-                      onChange={(e) => handleInfoChange('messageStyle', e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-1 focus:ring-turbo-blue"
-                    >
-                      <option value="">Select a message style</option>
-                      <option value="direct">Direct</option>
-                      <option value="casual">Casual</option>
-                      <option value="storytelling">Storytelling</option>
                     </select>
                   </div>
 
@@ -362,8 +354,8 @@ export default function Profile() {
                   </div>
                   
                   <div>
-                    <p className="text-turbo-black/60 mb-1">Conversational Style</p>
-                    <p className="font-medium">{profile?.conversational_style === 'professional' ? 'Professional' : profile?.conversational_style || 'Not set'}</p>
+                    <p className="text-turbo-black/60 mb-1">Message Style</p>
+                    <p className="font-medium">{profile?.message_style === 'professional' ? 'Professional' : profile?.message_style || 'Not set'}</p>
                   </div>
                   
                   <div>
@@ -374,11 +366,6 @@ export default function Profile() {
                   <div>
                     <p className="text-turbo-black/60 mb-1">Outreach Type</p>
                     <p className="font-medium">{profile?.outreach_type || 'Not set'}</p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-turbo-black/60 mb-1">Message Style</p>
-                    <p className="font-medium">{profile?.message_style || 'Not set'}</p>
                   </div>
                 </>
               )}
@@ -473,7 +460,7 @@ export default function Profile() {
               <div>
                 <p className="text-turbo-black/60 mb-1">Total Tasks Used</p>
                 <div className="flex items-center gap-2">
-                  <p className="font-medium">247</p>
+                  <p className="font-medium">{profile?.tasks_used || 0}</p>
                   <span className="text-xs text-turbo-black/40">all-time</span>
                 </div>
               </div>

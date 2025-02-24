@@ -6,8 +6,7 @@ export interface UserInfo {
   businessType: string // The type of business/industry (e.g., "Video Production")
   role: string
   email: string
-  conversationalStyle: string
-  messageStyle: 'direct' | 'casual' | 'storytelling'
+  messageStyle: 'direct' | 'casual' | 'storytelling' | 'professional' | 'friendly'
   
   // Outreach Context
   outreachType: 'getClients' | 'getJob' | 'getSpeakers' | 'getHotelStay' | 'getSponsors'

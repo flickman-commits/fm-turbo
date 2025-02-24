@@ -1,16 +1,14 @@
-import { createContext, useContext, ReactNode, Dispatch, SetStateAction, useState } from 'react'
+import { createContext, useContext, useState } from 'react'
+import { useAuth } from './AuthContext'
 
 interface CompanyInfoContextType {
-  isInfoSaved: boolean;
-  setIsInfoSaved: Dispatch<SetStateAction<boolean>>;
+  isInfoSaved: boolean
+  setIsInfoSaved: (value: boolean) => void
 }
 
-export const CompanyInfoContext = createContext<CompanyInfoContextType>({
-  isInfoSaved: false,
-  setIsInfoSaved: () => {},
-})
+const CompanyInfoContext = createContext<CompanyInfoContextType | undefined>(undefined)
 
-export const useCompanyInfo = () => {
+export function useCompanyInfo() {
   const context = useContext(CompanyInfoContext)
   if (context === undefined) {
     throw new Error('useCompanyInfo must be used within a CompanyInfoProvider')
@@ -19,16 +17,22 @@ export const useCompanyInfo = () => {
 }
 
 interface CompanyInfoProviderProps {
-  children: ReactNode
+  children: React.ReactNode
 }
 
 export function CompanyInfoProvider({ children }: CompanyInfoProviderProps) {
-  // Initialize state from localStorage
+  const { profile } = useAuth()
+  
+  // Initialize state from profile
   const [isInfoSaved, setIsInfoSaved] = useState(() => {
-    const saved = localStorage.getItem('userInfo')
-    if (!saved) return false
-    const info = JSON.parse(saved)
-    return !!(info.companyName && info.userName && info.businessType)
+    console.log('🔄 Checking company info from profile...')
+    if (!profile) {
+      console.log('ℹ️ No profile found, company info not saved')
+      return false
+    }
+    const hasRequiredInfo = !!(profile.company_name && profile.name && profile.business_type)
+    console.log('✅ Company info status:', hasRequiredInfo ? 'saved' : 'not saved')
+    return hasRequiredInfo
   })
 
   return (

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { TaskType, TaskResult, taskActionConfigs, TaskActionConfig } from '@/types/tasks'
 import { taskConfigs, FormField } from '@/config/tasks'
-import { getSystemPrompts, getUserPrompt, getUserInfoFromLocalStorage, UserInfo } from '@/config/prompts'
+import { getSystemPrompts, getUserPrompt, getUserInfoFromProfile, UserInfo } from '@/config/prompts'
 import { DottedDialog } from '@/components/ui/dotted-dialog-wrapper'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/components/ui/rainbow-toast'
@@ -18,6 +18,7 @@ import { links } from '@/config/links'
 import { queryPerplexity } from '@/services/perplexity'
 import { getOutreachSystemPrompt } from '@/config/outreachPrompt'
 import { useCompanyInfo } from '@/contexts/CompanyInfoContext'
+import { useAuth } from '@/contexts/AuthContext'
 
 type ViewState = 'input' | 'loading' | 'result'
 
@@ -137,6 +138,7 @@ export function TaskModal({
 }) {
   const { user } = useUser()
   const { isInfoSaved } = useCompanyInfo()
+  const { initialized, session, incrementTasksUsed } = useAuth()
   const [formData, setFormData] = useState<FormDataWithWeather>({})
   const [viewState, setViewState] = useState<ViewState>('input')
   const [result, setResult] = useState<TaskResult | null>(null)
@@ -298,7 +300,7 @@ export function TaskModal({
 
       console.log('Preparing to send request to OpenAI with updated form data:', updatedFormData)
 
-      const userInfo: UserInfo | null = getUserInfoFromLocalStorage();
+      const userInfo = session?.user?.id ? await getUserInfoFromProfile(session.user.id) : null
       if (!userInfo) {
         toast.error('User information is required. Please complete your profile.')
         setViewState('input')
@@ -518,7 +520,7 @@ ${jsonData.editingNotes.map((note: string) => `- ${note}`).join('\n')}
 
       console.log('Preparing to send request to OpenAI with updated form data:', updatedFormData)
 
-      const userInfo: UserInfo | null = getUserInfoFromLocalStorage();
+      const userInfo = session?.user?.id ? await getUserInfoFromProfile(session.user.id) : null
       if (!userInfo) {
         toast.error('User information is required. Please complete your profile.')
         setViewState('result')

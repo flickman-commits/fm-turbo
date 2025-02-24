@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { FormDataWithWeather } from '@/types/forms'
-import { getUserInfoFromLocalStorage, UserInfo, getSystemPrompts, getUserPrompt } from '@/config/prompts'
+import { getUserInfoFromProfile, UserInfo, getSystemPrompts, getUserPrompt } from '@/config/prompts'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/components/ui/rainbow-toast'
 import { createChatCompletion } from '@/services/openai'
@@ -56,9 +56,10 @@ const LoadingOverlay = () => {
 }
 
 export default function Proposals() {
-  const { initialized } = useAuth()
+  const { initialized, session, incrementTasksUsed } = useAuth()
   const [formData, setFormData] = useState<FormDataWithWeather>({})
   const [viewState, setViewState] = useState<ViewState>(ViewState.Input)
+  const [isRegenerating, setIsRegenerating] = useState(false)
   const [result, setResult] = useState<{ content: string } | null>(null)
   const [selectedFileName, setSelectedFileName] = useState('')
   const [copiedButtons, setCopiedButtons] = useState<Record<string, boolean>>({})
@@ -139,28 +140,20 @@ export default function Proposals() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!isFormValid()) {
-      toast.error('Please fill in all required fields')
-      return
-    }
-
-    if (creditsManager.getCredits() <= 0) {
-      toast.error('No credits remaining')
-      return
-    }
-
-    setViewState('loading')
-    
+  const generateProposal = async () => {
     try {
-      const userInfo: UserInfo | null = getUserInfoFromLocalStorage();
+      console.log('🔄 Getting user info for proposal generation...')
+      const userInfo = session?.user?.id ? await getUserInfoFromProfile(session.user.id) : null
+      
       if (!userInfo) {
+        console.error('❌ No user info available')
         toast.error('User information is required. Please complete your profile.')
         setViewState('input')
         return
       }
-
+      
+      console.log('📝 Generating proposal with user info:', userInfo)
+      
       const messages = [
         {
           role: "system" as const,
@@ -179,32 +172,33 @@ export default function Proposals() {
       }
 
       creditsManager.useCredit()
+      await incrementTasksUsed()
       
       setResult({ content: response.content || '' })
       setViewState('result')
     } catch (error) {
-      console.error('Error generating content:', error)
+      console.error('❌ Error generating proposal:', error)
       toast.error('Failed to generate content. Please try again.')
       setViewState('input')
     }
   }
 
-  const handleRegenerate = async () => {
-    if (creditsManager.getCredits() <= 0) {
-      toast.error('No credits remaining')
-      return
-    }
-
-    setViewState('loading')
+  const regenerateProposal = async () => {
+    setIsRegenerating(true)
     
     try {
-      const userInfo: UserInfo | null = getUserInfoFromLocalStorage();
+      console.log('🔄 Getting user info for proposal regeneration...')
+      const userInfo = session?.user?.id ? await getUserInfoFromProfile(session.user.id) : null
+      
       if (!userInfo) {
+        console.error('❌ No user info available')
         toast.error('User information is required. Please complete your profile.')
         setViewState('result')
         return
       }
-
+      
+      console.log('📝 Regenerating proposal with user info:', userInfo)
+      
       const messages = [
         {
           role: "system" as const,
@@ -223,13 +217,16 @@ export default function Proposals() {
       }
       
       creditsManager.useCredit()
+      await incrementTasksUsed()
       
       setResult({ content: response.content || '' })
       setViewState('result')
     } catch (error) {
-      console.error('Error regenerating content:', error)
+      console.error('❌ Error regenerating proposal:', error)
       setViewState('result')
       toast.error('Failed to regenerate content')
+    } finally {
+      setIsRegenerating(false)
     }
   }
 
@@ -300,7 +297,7 @@ export default function Proposals() {
           {viewState === ViewState.Loading && <LoadingOverlay />}
 
           {viewState === ViewState.Input && (
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={generateProposal} className="space-y-6">
               <div className="bg-turbo-beige border-2 border-turbo-black rounded-lg p-6 space-y-6">
                 {config.fields.map((field) => (
                   <div key={field.id} className="space-y-2">
@@ -407,7 +404,7 @@ export default function Proposals() {
                     {copiedButtons['Copy to Clipboard'] ? 'Copied!' : 'Copy to Clipboard'}
                   </button>
                   <button
-                    onClick={handleRegenerate}
+                    onClick={regenerateProposal}
                     className="px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors"
                   >
                     Regenerate

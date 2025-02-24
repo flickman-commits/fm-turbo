@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { FormDataWithWeather } from '@/types/forms'
-import { getUserInfoFromLocalStorage, UserInfo, getSystemPrompts, getUserPrompt } from '@/config/prompts'
+import { getUserInfoFromProfile, UserInfo, getSystemPrompts, getUserPrompt } from '@/config/prompts'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/components/ui/rainbow-toast'
 import { createChatCompletion } from '@/services/openai'
@@ -10,6 +10,7 @@ import { creditsManager } from '@/utils/credits'
 import { useCompanyInfo } from '@/contexts/CompanyInfoContext'
 import { Layout } from '@/components/Layout'
 import { SegmentCard, TimelineVisual, TimelineDescription, TimelineData } from '@/components/timeline'
+import { useAuth } from '@/contexts/AuthContext'
 
 type ViewState = 'input' | 'loading' | 'result'
 
@@ -61,6 +62,7 @@ type TimelineResult = {
 
 export default function TimelineFromTranscript() {
   const { isInfoSaved } = useCompanyInfo()
+  const { initialized, session, incrementTasksUsed } = useAuth()
   const [formData, setFormData] = useState<FormDataWithWeather>({})
   const [viewState, setViewState] = useState<ViewState>(ViewState.Input)
   const [result, setResult] = useState<TimelineResult | null>(null)
@@ -156,13 +158,18 @@ export default function TimelineFromTranscript() {
     setViewState(ViewState.Loading)
     
     try {
-      const userInfo: UserInfo | null = getUserInfoFromLocalStorage();
+      console.log('🔄 Getting user info for timeline generation...')
+      const userInfo = session?.user?.id ? await getUserInfoFromProfile(session.user.id) : null
+      
       if (!userInfo) {
+        console.error('❌ No user info available')
         toast.error('User information is required. Please complete your profile.')
         setViewState(ViewState.Input)
         return
       }
-
+      
+      console.log('📝 Generating timeline with user info:', userInfo)
+      
       const messages = [
         {
           role: "system" as const,
@@ -181,6 +188,7 @@ export default function TimelineFromTranscript() {
       }
 
       creditsManager.useCredit()
+      await incrementTasksUsed()
 
       let content = response.content || ''
       
@@ -201,7 +209,7 @@ export default function TimelineFromTranscript() {
         setViewState(ViewState.Result)
       }
     } catch (error) {
-      console.error('Error generating content:', error)
+      console.error('❌ Error generating timeline:', error)
       toast.error('Failed to generate content. Please try again.')
       setViewState(ViewState.Input)
     }
