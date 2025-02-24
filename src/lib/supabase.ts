@@ -8,16 +8,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Initialize the Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-    storage: localStorage,
-    storageKey: 'turbo_auth_token',
-    flowType: 'pkce'
-  }
-})
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Test function to directly create a user profile
 export const testCreateUserProfile = async () => {
