@@ -59,7 +59,6 @@ export default function Proposals() {
   const { initialized, session, incrementTasksUsed } = useAuth()
   const [formData, setFormData] = useState<FormDataWithWeather>({})
   const [viewState, setViewState] = useState<ViewState>(ViewState.Input)
-  const [isRegenerating, setIsRegenerating] = useState(false)
   const [result, setResult] = useState<{ content: string } | null>(null)
   const [selectedFileName, setSelectedFileName] = useState('')
   const [copiedButtons, setCopiedButtons] = useState<Record<string, boolean>>({})
@@ -180,53 +179,6 @@ export default function Proposals() {
       console.error('❌ Error generating proposal:', error)
       toast.error('Failed to generate content. Please try again.')
       setViewState('input')
-    }
-  }
-
-  const regenerateProposal = async () => {
-    setIsRegenerating(true)
-    
-    try {
-      console.log('🔄 Getting user info for proposal regeneration...')
-      const userInfo = session?.user?.id ? await getUserInfoFromProfile(session.user.id) : null
-      
-      if (!userInfo) {
-        console.error('❌ No user info available')
-        toast.error('User information is required. Please complete your profile.')
-        setViewState('result')
-        return
-      }
-      
-      console.log('📝 Regenerating proposal with user info:', userInfo)
-      
-      const messages = [
-        {
-          role: "system" as const,
-          content: getSystemPrompts('proposal', userInfo)
-        },
-        {
-          role: "user" as const,
-          content: getUserPrompt('proposal', formData, userInfo)
-        }
-      ]
-      
-      const response = await createChatCompletion(messages)
-      
-      if (!response) {
-        throw new Error('Failed to generate content')
-      }
-      
-      creditsManager.useCredit()
-      await incrementTasksUsed()
-      
-      setResult({ content: response.content || '' })
-      setViewState('result')
-    } catch (error) {
-      console.error('❌ Error regenerating proposal:', error)
-      setViewState('result')
-      toast.error('Failed to regenerate content')
-    } finally {
-      setIsRegenerating(false)
     }
   }
 
@@ -402,12 +354,6 @@ export default function Proposals() {
                     className="px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors"
                   >
                     {copiedButtons['Copy to Clipboard'] ? 'Copied!' : 'Copy to Clipboard'}
-                  </button>
-                  <button
-                    onClick={regenerateProposal}
-                    className="px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors"
-                  >
-                    Regenerate
                   </button>
                 </div>
               </div>

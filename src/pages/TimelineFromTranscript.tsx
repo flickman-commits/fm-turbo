@@ -62,7 +62,7 @@ type TimelineResult = {
 
 export default function TimelineFromTranscript() {
   const { isInfoSaved } = useCompanyInfo()
-  const { initialized, session, incrementTasksUsed } = useAuth()
+  const { session, incrementTasksUsed } = useAuth()
   const [formData, setFormData] = useState<FormDataWithWeather>({})
   const [viewState, setViewState] = useState<ViewState>(ViewState.Input)
   const [result, setResult] = useState<TimelineResult | null>(null)
