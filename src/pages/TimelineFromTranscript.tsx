@@ -63,11 +63,53 @@ type TimelineResult = {
 export default function TimelineFromTranscript() {
   const { isInfoSaved } = useCompanyInfo()
   const { session, incrementTasksUsed } = useAuth()
-  const [formData, setFormData] = useState<FormDataWithWeather>({})
-  const [viewState, setViewState] = useState<ViewState>(ViewState.Input)
-  const [result, setResult] = useState<TimelineResult | null>(null)
-  const [selectedFileName, setSelectedFileName] = useState('')
-  const [selectedSegmentIndex, setSelectedSegmentIndex] = useState(0)
+  const [formData, setFormData] = useState<FormDataWithWeather>(() => {
+    const saved = localStorage.getItem('timeline_form_data')
+    return saved ? JSON.parse(saved) : {}
+  })
+  const [viewState, setViewState] = useState<ViewState>(() => {
+    const saved = localStorage.getItem('timeline_view_state')
+    return (saved as ViewState) || ViewState.Input
+  })
+  const [result, setResult] = useState<TimelineResult | null>(() => {
+    const saved = localStorage.getItem('timeline_result')
+    return saved ? JSON.parse(saved) : null
+  })
+  const [selectedFileName, setSelectedFileName] = useState(() => {
+    return localStorage.getItem('timeline_selected_filename') || ''
+  })
+  const [selectedSegmentIndex, setSelectedSegmentIndex] = useState(() => {
+    const saved = localStorage.getItem('timeline_selected_segment_index')
+    return saved ? parseInt(saved, 10) : 0
+  })
+
+  useEffect(() => {
+    localStorage.setItem('timeline_form_data', JSON.stringify(formData))
+  }, [formData])
+
+  useEffect(() => {
+    localStorage.setItem('timeline_view_state', viewState)
+  }, [viewState])
+
+  useEffect(() => {
+    localStorage.setItem('timeline_result', JSON.stringify(result))
+  }, [result])
+
+  useEffect(() => {
+    localStorage.setItem('timeline_selected_filename', selectedFileName)
+  }, [selectedFileName])
+
+  useEffect(() => {
+    localStorage.setItem('timeline_selected_segment_index', selectedSegmentIndex.toString())
+  }, [selectedSegmentIndex])
+
+  const handleBackToForm = () => {
+    setViewState(ViewState.Input)
+    setResult(null)
+    localStorage.removeItem('timeline_result')
+    localStorage.removeItem('timeline_view_state')
+    localStorage.removeItem('timeline_selected_segment_index')
+  }
 
   const fields = [
     { 
@@ -403,7 +445,7 @@ export default function TimelineFromTranscript() {
               
               <div className="mt-6 flex justify-between">
                 <button
-                  onClick={() => setViewState(ViewState.Input)}
+                  onClick={handleBackToForm}
                   className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-turbo-black hover:text-turbo-white bg-turbo-beige hover:bg-turbo-blue border-2 border-turbo-black rounded-full transition-colors"
                 >
                   Back to Form

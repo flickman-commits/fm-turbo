@@ -3,6 +3,7 @@ import { links } from '@/config/links'
 import { PRICING_TIERS, getCurrentPricingTier, getSliderPosition } from '@/utils/pricing'
 import { PRICE_COMPARISONS } from '@/utils/priceComparisons'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '@/lib/supabase'
 
 // Toast component
 const Toast = ({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) => {
@@ -92,6 +93,39 @@ async function getServerCount() {
   }
 }
 
+async function getUserCount() {
+  try {
+    console.log('🔄 Fetching total user count from Supabase...')
+    
+    // First let's log all users to verify the data
+    const { data: users, error: usersError } = await supabase
+      .from('users')
+      .select('id, email')
+    
+    if (usersError) {
+      console.error('❌ Error fetching users:', usersError)
+    } else {
+      console.log('📊 Current users in database:', users)
+    }
+
+    // Now get the count
+    const { count, error } = await supabase
+      .from('users')
+      .select('*', { count: 'exact', head: true })
+
+    if (error) {
+      console.error('❌ Error fetching user count:', error)
+      return 0
+    }
+    
+    console.log('✅ Successfully fetched user count:', count)
+    return count || 0
+  } catch (error) {
+    console.error('❌ Error in getUserCount:', error)
+    return 0
+  }
+}
+
 export default function Welcome() {
   const navigate = useNavigate()
   const [usersAtLaunch, setUsersAtLaunch] = useState<number>(10)
@@ -101,6 +135,7 @@ export default function Welcome() {
   const pricingSliderRef = useRef<HTMLDivElement>(null)
   const topRef = useRef<HTMLDivElement>(null)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [userCount, setUserCount] = useState(0)
 
   // Fetch the initial count from server
   useEffect(() => {
@@ -112,6 +147,15 @@ export default function Welcome() {
       }
     }
     fetchInitialCount()
+  }, [])
+
+  useEffect(() => {
+    const fetchUserCount = async () => {
+      const count = await getUserCount()
+      setUserCount(count)
+    }
+
+    fetchUserCount()
   }, [])
 
   // Create a stable onClose callback using useCallback
@@ -206,7 +250,7 @@ export default function Welcome() {
                 />
               </div>
               <div className="text-sm sm:text-base font-medium text-black text-center sm:text-left ml-1">
-                JOIN FELLOW CREATORS AUTOMATING THEIR WORKFLOWS
+                JOIN {userCount > 0 ? userCount.toLocaleString() : 'FELLOW'} CREATORS AUTOMATING THEIR WORKFLOWS
               </div>
             </div>
           </div>

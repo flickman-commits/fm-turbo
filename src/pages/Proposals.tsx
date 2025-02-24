@@ -57,10 +57,21 @@ const LoadingOverlay = () => {
 
 export default function Proposals() {
   const { initialized, session, incrementTasksUsed } = useAuth()
-  const [formData, setFormData] = useState<FormDataWithWeather>({})
-  const [viewState, setViewState] = useState<ViewState>(ViewState.Input)
-  const [result, setResult] = useState<{ content: string } | null>(null)
-  const [selectedFileName, setSelectedFileName] = useState('')
+  const [formData, setFormData] = useState<FormDataWithWeather>(() => {
+    const saved = localStorage.getItem('proposal_form_data')
+    return saved ? JSON.parse(saved) : {}
+  })
+  const [viewState, setViewState] = useState<ViewState>(() => {
+    const saved = localStorage.getItem('proposal_view_state')
+    return (saved as ViewState) || ViewState.Input
+  })
+  const [result, setResult] = useState<{ content: string } | null>(() => {
+    const saved = localStorage.getItem('proposal_result')
+    return saved ? JSON.parse(saved) : null
+  })
+  const [selectedFileName, setSelectedFileName] = useState(() => {
+    return localStorage.getItem('proposal_selected_filename') || ''
+  })
   const [copiedButtons, setCopiedButtons] = useState<Record<string, boolean>>({})
 
   const config = taskConfigs.proposal
@@ -81,6 +92,45 @@ export default function Proposals() {
       const value = formData[field.id]
       return typeof value === 'string' && value.trim().length > 0
     })
+  }
+
+  useEffect(() => {
+    localStorage.setItem('proposal_form_data', JSON.stringify(formData))
+  }, [formData])
+
+  useEffect(() => {
+    localStorage.setItem('proposal_view_state', viewState)
+  }, [viewState])
+
+  useEffect(() => {
+    localStorage.setItem('proposal_result', JSON.stringify(result))
+  }, [result])
+
+  useEffect(() => {
+    localStorage.setItem('proposal_selected_filename', selectedFileName)
+  }, [selectedFileName])
+
+  // Add keyboard shortcut handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault()
+        const valid = isFormValid()
+        if (valid && viewState !== ViewState.Loading) {
+          generateProposal({ preventDefault: () => {} } as React.FormEvent)
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [viewState, formData, isFormValid])
+
+  const handleBackToForm = () => {
+    setViewState(ViewState.Input)
+    setResult(null)
+    localStorage.removeItem('proposal_result')
+    localStorage.removeItem('proposal_view_state')
   }
 
   const handleFillTestData = async () => {
@@ -139,19 +189,24 @@ export default function Proposals() {
     }
   }
 
-  const generateProposal = async () => {
+  const generateProposal = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
     try {
+      setViewState(ViewState.Loading)
+      
       console.log('🔄 Getting user info for proposal generation...')
       const userInfo = session?.user?.id ? await getUserInfoFromProfile(session.user.id) : null
       
       if (!userInfo) {
         console.error('❌ No user info available')
         toast.error('User information is required. Please complete your profile.')
-        setViewState('input')
+        setViewState(ViewState.Input)
         return
       }
       
       console.log('📝 Generating proposal with user info:', userInfo)
+      console.log('Form data being sent:', formData)
       
       const messages = [
         {
@@ -174,11 +229,11 @@ export default function Proposals() {
       await incrementTasksUsed()
       
       setResult({ content: response.content || '' })
-      setViewState('result')
+      setViewState(ViewState.Result)
     } catch (error) {
       console.error('❌ Error generating proposal:', error)
       toast.error('Failed to generate content. Please try again.')
-      setViewState('input')
+      setViewState(ViewState.Input)
     }
   }
 
@@ -226,7 +281,6 @@ export default function Proposals() {
     em: (props) => <em className="italic text-turbo-black" {...props} />
   }
 
-  // Show loading state while auth is initializing
   if (!initialized) {
     return (
       <div className="min-h-screen bg-turbo-beige flex items-center justify-center">
@@ -268,7 +322,9 @@ export default function Proposals() {
                             if (file) {
                               const reader = new FileReader()
                               reader.onload = (e) => {
-                                handleFieldChange(field.id, typeof e.target?.result === 'string' ? e.target.result : '')
+                                if (typeof e.target?.result === 'string') {
+                                  handleFieldChange(field.id, e.target.result)
+                                }
                               }
                               setSelectedFileName(file.name)
                               reader.readAsText(file)
@@ -321,7 +377,15 @@ export default function Proposals() {
                   className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors disabled:opacity-80 disabled:bg-turbo-black/40 disabled:cursor-not-allowed disabled:text-turbo-beige group relative"
                 >
                   <span className="flex items-center justify-center gap-2">
-                    {viewState === ViewState.Loading ? 'Generating...' : 'Generate Proposal'}
+                    {viewState === ViewState.Loading ? 'Generating...' : (
+                      <>
+                        Generate Proposal
+                        <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-turbo-beige/30 bg-turbo-beige/10 px-1.5 font-mono text-[10px] font-medium text-turbo-beige opacity-50 group-hover:opacity-75">
+                          <span className="text-xs">⌘</span>
+                          <span className="text-xs">↵</span>
+                        </kbd>
+                      </>
+                    )}
                   </span>
                 </button>
               </div>
@@ -338,7 +402,7 @@ export default function Proposals() {
               
               <div className="mt-6 flex justify-between">
                 <button
-                  onClick={() => setViewState(ViewState.Input)}
+                  onClick={handleBackToForm}
                   className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-turbo-black hover:text-turbo-white bg-turbo-beige hover:bg-turbo-blue border-2 border-turbo-black rounded-full transition-colors"
                 >
                   Back to Form
