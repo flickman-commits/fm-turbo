@@ -10,6 +10,7 @@ import { creditsManager } from '@/utils/credits'
 import { Layout } from '@/components/Layout'
 import { taskConfigs } from '@/config/tasks'
 import { NotionButton } from '@/components/ui/notion-button'
+import { LoadingOverlay } from '@/components/ui/loading-overlay'
 import { useAuth } from '@/contexts/AuthContext'
 
 type ViewState = 'input' | 'loading' | 'result'
@@ -26,39 +27,6 @@ const BUSINESS_QUOTES = [
   "The reason it's taking so long is because you're in a rush.",
 ]
 
-const LoadingOverlay = () => {
-  const [quoteIndex, setQuoteIndex] = useState(() => Math.floor(Math.random() * BUSINESS_QUOTES.length))
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setQuoteIndex(current => (current + 1) % BUSINESS_QUOTES.length)
-    }, 7000)
-
-    return () => clearInterval(interval)
-  }, [])
-
-  return (
-    <div className="absolute inset-0 bg-turbo-beige flex flex-col items-center justify-center z-10">
-      <div className="max-w-2xl w-full px-4">
-        <img 
-          src="/turbo-typing-beige.gif" 
-          alt="Turbo typing" 
-          className="w-72 h-auto mx-auto mb-4"
-        />
-        <p className="text-turbo-black text-lg font-medium text-center mb-12">
-          Hold tight... Turbo is doing tedious work so you don't have to.
-        </p>
-        <div className="bg-turbo-black/5 border-2 border-turbo-black rounded-lg p-6">
-          <p className="text-2xl font-bold text-turbo-black mb-3 text-left">💭 Words of Wisdom</p>
-          <p className="text-lg text-turbo-black leading-relaxed">
-            "{BUSINESS_QUOTES[quoteIndex]}"
-          </p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export default function Proposals() {
   const { initialized, session, incrementTasksUsed } = useAuth()
   const [formData, setFormData] = useState<FormDataWithWeather>(() => {
@@ -66,8 +34,13 @@ export default function Proposals() {
     return saved ? JSON.parse(saved) : {}
   })
   const [viewState, setViewState] = useState<ViewState>(() => {
-    const saved = localStorage.getItem('proposal_view_state')
-    return (saved as ViewState) || ViewState.Input
+    const savedResult = localStorage.getItem('proposal_result')
+    const savedViewState = localStorage.getItem('proposal_view_state')
+    
+    if (savedResult && savedViewState === ViewState.Result) {
+      return ViewState.Result
+    }
+    return ViewState.Input
   })
   const [result, setResult] = useState<{ content: string } | null>(() => {
     const saved = localStorage.getItem('proposal_result')
@@ -103,11 +76,15 @@ export default function Proposals() {
   }, [formData])
 
   useEffect(() => {
-    localStorage.setItem('proposal_view_state', viewState)
+    if (viewState !== ViewState.Loading) {
+      localStorage.setItem('proposal_view_state', viewState)
+    }
   }, [viewState])
 
   useEffect(() => {
-    localStorage.setItem('proposal_result', JSON.stringify(result))
+    if (result) {
+      localStorage.setItem('proposal_result', JSON.stringify(result))
+    }
   }, [result])
 
   useEffect(() => {
@@ -129,6 +106,16 @@ export default function Proposals() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [viewState, formData, isFormValid])
+
+  // Clear loading state on unmount or navigation
+  useEffect(() => {
+    return () => {
+      if (viewState === ViewState.Loading) {
+        setViewState(ViewState.Input)
+        localStorage.removeItem('proposal_view_state')
+      }
+    }
+  }, [viewState])
 
   const handleBackToForm = () => {
     setViewState(ViewState.Input)
@@ -198,6 +185,8 @@ export default function Proposals() {
     
     try {
       setViewState(ViewState.Loading)
+      localStorage.removeItem('proposal_result')
+      localStorage.removeItem('proposal_view_state')
       
       console.log('🔄 Getting user info for proposal generation...')
       const userInfo = session?.user?.id ? await getUserInfoFromProfile(session.user.id) : null
@@ -223,16 +212,27 @@ export default function Proposals() {
         }
       ]
 
+      console.log('🔄 Sending messages to OpenAI:', messages)
+
       const response = await createChatCompletion(messages)
       
-      if (!response) {
+      console.log('✅ Received response from OpenAI:', response)
+      
+      if (!response?.content) {
+        console.error('❌ No content received from OpenAI')
         throw new Error('Failed to generate content')
       }
+
+      console.log('📊 Response content:', response.content)
 
       creditsManager.useCredit()
       await incrementTasksUsed()
       
-      setResult({ content: response.content || '' })
+      const newResult = { content: response.content }
+      console.log('💾 Setting result:', newResult)
+      setResult(newResult)
+      localStorage.setItem('proposal_result', JSON.stringify(newResult))
+      localStorage.setItem('proposal_view_state', ViewState.Result)
       setViewState(ViewState.Result)
     } catch (error) {
       console.error('❌ Error generating proposal:', error)
@@ -276,13 +276,36 @@ export default function Proposals() {
   }
 
   const markdownComponents: Components = {
-    h1: (props) => <h1 className="text-2xl font-bold mb-4 text-turbo-black" {...props} />,
-    h2: (props) => <h2 className="text-xl font-bold mb-3 text-turbo-black" {...props} />,
-    p: (props) => <p className="mb-2 text-turbo-black" {...props} />,
-    ul: (props) => <ul className="list-disc pl-6 mb-4 text-turbo-black" {...props} />,
-    li: (props) => <li className="mb-1 text-turbo-black" {...props} />,
+    h1: (props) => <h1 className="text-2xl font-bold mb-4 text-turbo-black mt-6" {...props} />,
+    h2: (props) => <h2 className="text-xl font-bold mb-3 text-turbo-black mt-4" {...props} />,
+    h3: (props) => <h3 className="text-lg font-bold mb-2 text-turbo-black mt-3" {...props} />,
+    p: (props) => <p className="mb-4 text-turbo-black leading-relaxed" {...props} />,
+    ul: (props) => <ul className="list-disc pl-6 mb-4 text-turbo-black space-y-2" {...props} />,
+    ol: (props) => <ol className="list-decimal pl-6 mb-4 text-turbo-black space-y-2" {...props} />,
+    li: (props) => <li className="text-turbo-black" {...props} />,
     strong: (props) => <strong className="font-bold text-turbo-black" {...props} />,
-    em: (props) => <em className="italic text-turbo-black" {...props} />
+    em: (props) => <em className="italic text-turbo-black" {...props} />,
+    a: (props) => (
+      <a
+        className="text-turbo-blue hover:text-turbo-black underline transition-colors"
+        target="_blank"
+        rel="noopener noreferrer"
+        {...props}
+      />
+    ),
+    blockquote: (props) => (
+      <blockquote className="border-l-4 border-turbo-black pl-4 italic my-4" {...props} />
+    ),
+    hr: () => <hr className="my-8 border-t-2 border-turbo-black/10" />,
+    table: (props) => (
+      <div className="overflow-x-auto my-6">
+        <table className="min-w-full divide-y divide-turbo-black/10" {...props} />
+      </div>
+    ),
+    th: (props) => (
+      <th className="px-4 py-2 text-left font-bold text-turbo-black bg-turbo-black/5" {...props} />
+    ),
+    td: (props) => <td className="px-4 py-2 text-turbo-black border-t border-turbo-black/10" {...props} />
   }
 
   if (!initialized) {

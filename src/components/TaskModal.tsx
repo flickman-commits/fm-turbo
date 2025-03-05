@@ -19,6 +19,7 @@ import { queryPerplexity } from '@/services/perplexity'
 import { getOutreachSystemPrompt } from '@/config/outreachPrompt'
 import { useCompanyInfo } from '@/contexts/CompanyInfoContext'
 import { useAuth } from '@/contexts/AuthContext'
+import { LoadingOverlay } from '@/components/ui/loading-overlay'
 
 type ViewState = 'input' | 'loading' | 'result'
 
@@ -102,37 +103,10 @@ const BUSINESS_QUOTES = [
   "The cost of settling is higher than the price of ambition. You just pay it later."
 ]
 
-const LoadingOverlay = () => {
-  const [quoteIndex, setQuoteIndex] = useState(() => Math.floor(Math.random() * BUSINESS_QUOTES.length))
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setQuoteIndex(current => (current + 1) % BUSINESS_QUOTES.length)
-    }, 7000)
-
-    return () => clearInterval(interval)
-  }, [])
-
-  return (
-    <div className="absolute inset-0 bg-turbo-beige flex flex-col items-center justify-center z-50 p-8">
-      <div className="max-w-2xl w-full">
-        <img 
-          src="/turbo-typing-beige.gif" 
-          alt="Turbo typing" 
-          className="w-72 h-auto mx-auto mb-4"
-        />
-        <p className="text-turbo-black text-lg font-medium text-center mb-12">
-          Hold tight... Turbo is doing tedious work so you don't have to.
-        </p>
-        <div className="bg-turbo-black/5 border-2 border-turbo-black rounded-lg p-6">
-          <p className="text-2xl font-bold text-turbo-black mb-3 text-left">💭 Words of Wisdom</p>
-          <p className="text-lg text-turbo-black leading-relaxed">
-            "{BUSINESS_QUOTES[quoteIndex]}"
-          </p>
-        </div>
-      </div>
-    </div>
-  )
+const ViewState: Record<'Input' | 'Loading' | 'Result', ViewState> = {
+  Input: 'input',
+  Loading: 'loading',
+  Result: 'result'
 }
 
 export function TaskModal({
@@ -153,7 +127,7 @@ export function TaskModal({
 
   if (!taskType) return null
   const config = taskConfigs[taskType]
-  const isLoading = viewState === 'loading'
+  const isLoading = viewState === ViewState.Loading
 
   const isFieldRequired = (field: FormField) => {
     // Special case for file inputs - if they're marked as optional, they're never required
@@ -285,10 +259,11 @@ export function TaskModal({
       return
     }
 
-    setViewState('loading')
+    setViewState(ViewState.Loading)
     try {
       if (!session) {
         toast.error('Please wait for initialization to complete')
+        setViewState(ViewState.Input)
         return
       }
 
@@ -311,7 +286,7 @@ export function TaskModal({
       const userInfo = session?.user?.id ? await getUserInfoFromProfile(session.user.id) : null
       if (!userInfo) {
         toast.error('User information is required. Please complete your profile.')
-        setViewState('input')
+        setViewState(ViewState.Input)
         return
       }
 
@@ -319,112 +294,6 @@ export function TaskModal({
         {
           role: "system",
           content: getOutreachSystemPrompt(userInfo)
-        },
-        {
-          role: "user",
-          content: `Research Summary:
-
-Here's a concise bullet-pointed list of information about Adrien De oliveira and Timeleft:
-* Adrien De oliveira is the Co-Founder and Head of Growth at Timeleft17
-* He holds a Master's degree in Marketing and digital media from Novancia Business School Paris1
-* Adrien is based in the Greater Paris Metropolitan Region7
-* Timeleft is a social platform that organizes dinners for strangers to combat urban loneliness8
-* The company uses an algorithm to match compatible individuals for these dinners8
-* Timeleft was founded in September 20207
-* As of February 2025, Timeleft connects 15,000 strangers over dinner every month in 50 cities7
-* The company is fully remote, with team members working from Lisbon, Los Angeles, Paris, and Oaxaca7
-* Timeleft expanded to Los Angeles in May 2024, making it their second-largest market in the United States5
-* For the 2024 holiday season, Timeleft hosted special community dinners on December 25th in several cities, including New York City, Los Angeles, Chicago, Houston, Montreal, Mexico City, Bogota, Buenos Aires, Paris, Barcelona, and Madrid2
-* As of December 2024, Timeleft was bringing together 16,000 strangers weekly in 65 countries and 285 cities2
-Sources
-* https://theorg.com/org/timeleft/org-chart/adrien-de-oliveira
-* https://timeleft.com/blog/2024/12/03/our-holiday-table-isnt-complete-without-you/
-* https://timeleft.com/pl/story/
-* https://www.latimes.com/lifestyle/story/2024-12-17/timeleft-app-dinner-strangers-holidays-los-angeles
-* https://fr.linkedin.com/in/adrien-de-oliveira-63b62173
-* https://timeleft.com/gr/category/news/
-
-Recipient: Adrien De oliveira
-Company: Timeleft
-Role: Head of Marketing & Co-Founder
-Familiarity Level: Never met
-Key Points: talk about how I'm personally impacted by the problem they are solving`
-        },
-        {
-          role: "assistant",
-          content: "Subject: NYC big city loneliness gone\n\nHey Adrien,\n\nLove what you guys are doing with Timeleft -- I resonate with the product as I recently moved to NYC and had to fight that big city loneliness for the first year.\n\nI have some video ideas that I think could help you guys push more into the US market -- let me know if you're up for a chat."
-        },
-        {
-          role: "user",
-          content:`
-Here's a concise bullet-pointed list of information about Mitchell Nover and Four Seasons:
-Mitchell Nover is the Director of Public Relations and Communications at Four Seasons Resort Nevis15
-He is based in Miami, Florida15
-Nover holds a Master's degree in International Administration from the University of Miami2
-He also has a Bachelor's degree in Spanish Language & Literature from the University of Michigan2
-Four Seasons is expanding its portfolio with new hotels and resorts opening in 2025 and beyond36
-The company recently reopened the Four Seasons Hotel New York at the end of 202436
-Four Seasons is planning to debut a 95-suite, yacht-like cruise ship in 20261
-The company is accelerating its growth strategy across hotels, resorts, residences, and experiential journeys3
-Four Seasons will conclude management of The Beverly Wilshire hotel in December 202510
-2025 marks the 25th anniversary of partnership with the company's longtime shareholders3
-Sources
-https://press.fourseasons.com/nevis/hotel-press-contacts/
-https://www.linkedin.com/in/mitchell-nover-5872a423
-https://press.fourseasons.com/news-releases/2025/strategic-growth-and-expansion/
-https://press.fourseasons.com/news-releases/2024/new-openings-and-renovations/
-https://press.fourseasons.com/news-releases/2025/portfolio-update/
-
-Recipient: Mitchell Nover
-Company: Four Seasons
-Role: Director of Public Relations and Communications
-Familiarity Level: Just met
-Key Points: talk about how we met in Miami last week and then talk about how I have some video ideas on how we could push his hotel forward into new markets, ask to hop on a call but make it sound casual`
-        },
-        {
-          role: "assistant",
-          content:"Subject: Miami follow up + video ideas\n\nHey Mitchell,\n\nGreat meeting last week. I can never get enough Miami time. Wanted to follow up on that convo we were having regarding content ideas for pushing Four Seasons into new markets this year. Do you have time to connect later this week?"
-        },
-        {
-          role: "user",
-          content:`
-Here's a concise bullet-pointed list of information about Jason Kuperberg and OthersideAI:
-Jason Kuperberg is the co-founder of OthersideAI, an applied AI company building tools powered by artificial intelligence14
-He was named to the 2024 Forbes 30 Under 30 list for consumer technology4
-OthersideAI's flagship product is HyperWrite, an AI writing and research assistant with over 2 million users45
-Education:
-Syracuse University (2014-2018)3
-Study abroad program at UNSW Australia (2016)3
-Location: New York, New York, United States1
-Previous experience:
-Teaching Fellow at Stanford University (2019-2020)1
-Innovation Specialist and Springboard Fellow at Hillel International (2018-2020)1
-Director of Operations at Hillel at Syracuse University (2017-2018)1
-Company news:
-OthersideAI raised $2.8 million in funding in March 20235
-The company raised $2.6 million in seed funding in November 202028
-OthersideAI was on track to generate $1 million in revenue in 20237
-Kuperberg's Hillel journey began during his sophomore year of college in 20166
-He is a volunteer entrepreneur in residence at the Blackstone LaunchPad and mentors student startups7
-Sources
-https://www.linkedin.com/in/jasonkuperberg
-https://www.businesswire.com/news/home/20201112005064/en/OthersideAI-Announces-Funding-of-2.6-Million-to-Bring-Magic-to-Your-Inbox
-https://theorg.com/org/othersideai/org-chart/jason-kuperberg
-https://jasonkuperberg.com
-https://www.globenewswire.com/news-release/2023/03/09/2624023/0/en/OthersideAI-Raises-2-8M-to-Make-Writing-Faster-and-Easier-with-Personalized-AI.html
-https://www.hillel.org/update/hillel-shaped-startup-founders-life-now-hes-paying-it-forward/
-https://www.hunterwatson.org/hunter-blog/30-under-30
-https://www.vcnewsdaily.com/OthersideAI/venture-funding.php
-
-Recipient: Jason Kuperberg
-Company: OthersideAI
-Role: Co-Founder
-Familiarity Level: I know them
-Key Points To Emphasize: Talk about how it's probbaly time for us to do another project with them because I saw that they are pushing out some big product updates`
-        },
-        {
-          role: "assistant",
-          content:"Subject: new projects\n\nWhat's up man,\n\n Saw you guys are about to push out some major  updates. Do you already have the created sorted out? Would love to collab, per usual -- just let me know."
         },
         {
           role: "user",
@@ -441,12 +310,12 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
         }
       ]
 
-      console.log('OpenAI API system prompt:', getSystemPrompts(taskType, userInfo));
-      console.log('OpenAI API user prompt:', getUserPrompt(taskType, updatedFormData, userInfo));
+      console.log('OpenAI API system prompt:', getSystemPrompts(taskType, userInfo))
+      console.log('OpenAI API user prompt:', getUserPrompt(taskType, updatedFormData, userInfo))
 
       const response = await createChatCompletion(messages)
       
-      if (!response) {
+      if (!response || !response.content) {
         throw new Error('Failed to generate content')
       }
 
@@ -454,7 +323,7 @@ Key Points To Emphasize: Talk about how it's probbaly time for us to do another 
 
       creditsManager.useCredit()
 
-      let content = response.content || ''
+      let content = response.content
       
       // Parse JSON response for timeline from transcript
       if (taskType === 'timelineFromTranscript' && content) {
@@ -484,7 +353,7 @@ ${jsonData.editingNotes.map((note: string) => `- ${note}`).join('\n')}
         } catch (error) {
           console.error('Error parsing timeline JSON:', error)
           toast.error('Error parsing timeline data')
-          content = response.content || ''
+          content = response.content
         }
       }
 
@@ -495,12 +364,13 @@ ${jsonData.editingNotes.map((note: string) => `- ${note}`).join('\n')}
       }
       
       setResult(newResult)
-      setViewState('result')
+      setViewState(ViewState.Result)
       await incrementTasksUsed()
     } catch (error) {
       console.error('Error generating content:', error)
       toast.error('Failed to generate content. Please try again.')
-      setViewState('input')
+      setViewState(ViewState.Input)
+      setResult(null)
     }
   }
 
@@ -510,7 +380,7 @@ ${jsonData.editingNotes.map((note: string) => `- ${note}`).join('\n')}
       return
     }
 
-    setViewState('loading')
+    setViewState(ViewState.Loading)
     
     try {
       const updatedFormData: FormDataWithWeather = { ...formData }
@@ -532,7 +402,7 @@ ${jsonData.editingNotes.map((note: string) => `- ${note}`).join('\n')}
       const userInfo = session?.user?.id ? await getUserInfoFromProfile(session.user.id) : null
       if (!userInfo) {
         toast.error('User information is required. Please complete your profile.')
-        setViewState('result')
+        setViewState(ViewState.Result)
         return
       }
 
@@ -571,10 +441,10 @@ ${jsonData.editingNotes.map((note: string) => `- ${note}`).join('\n')}
       };
       
       setResult(newResult);
-      setViewState('result');
+      setViewState(ViewState.Result);
     } catch (error) {
       console.error('Error regenerating content:', error);
-      setViewState('result');
+      setViewState(ViewState.Result);
       toast.error('Failed to regenerate content');
     }
   }
@@ -780,12 +650,8 @@ ${jsonData.editingNotes.map((note: string) => `- ${note}`).join('\n')}
   }
 
   const renderContent = () => {
-    if (viewState === 'loading') {
-      return <LoadingOverlay />
-    }
-
     switch (viewState) {
-      case 'result':
+      case ViewState.Result:
         if (!result) return null
 
         const formattedMessage = result.content
@@ -864,7 +730,7 @@ ${jsonData.editingNotes.map((note: string) => `- ${note}`).join('\n')}
             </div>
           </div>
         )
-      case 'input':
+      case ViewState.Input:
         return (
           <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1">
             <div className="flex-1 overflow-y-auto">
@@ -1039,17 +905,17 @@ ${jsonData.editingNotes.map((note: string) => `- ${note}`).join('\n')}
                   type="button"
                   onClick={onClose}
                   className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-turbo-black hover:text-turbo-white bg-turbo-beige border-2 border-turbo-black rounded-full hover:bg-turbo-blue transition-colors disabled:opacity-50"
-                  disabled={isLoading}
+                  disabled={viewState === ViewState.Loading}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors disabled:opacity-80 disabled:bg-turbo-black/40 disabled:cursor-not-allowed disabled:text-turbo-beige group relative"
-                  disabled={isLoading || !isFormValid()}
+                  disabled={viewState === ViewState.Loading || !isFormValid()}
                 >
                   <span className="flex items-center justify-center gap-2">
-                    {isLoading ? 'Generating...' : (
+                    {viewState === ViewState.Loading ? 'Generating...' : (
                       <>
                         Generate
                         <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-turbo-beige/30 bg-turbo-beige/10 px-1.5 font-mono text-[10px] font-medium text-turbo-beige opacity-50 group-hover:opacity-75">
@@ -1064,6 +930,8 @@ ${jsonData.editingNotes.map((note: string) => `- ${note}`).join('\n')}
             </div>
           </form>
         )
+      default:
+        return null
     }
   }
 
@@ -1098,17 +966,17 @@ ${jsonData.editingNotes.map((note: string) => `- ${note}`).join('\n')}
     <DottedDialog
       open={true}
       onOpenChange={onClose}
-      title={viewState === 'result' && result ? `Your ${getTaskTitle()}` : config.title}
-      description={viewState === 'result' ? 'View and share your generated content' : config.description}
-      headerLeftAction={viewState === 'result' ? (
+      title={viewState === ViewState.Result && result ? `Your ${getTaskTitle()}` : config.title}
+      description={viewState === ViewState.Result ? 'View and share your generated content' : config.description}
+      headerLeftAction={viewState === ViewState.Result ? (
         <button
-          onClick={() => setViewState('input')}
+          onClick={() => setViewState(ViewState.Input)}
           className="text-sm text-turbo-black/60 hover:text-turbo-black hover:bg-turbo-blue/10 px-3 py-1 rounded-md transition-colors"
         >
           Back to Form
         </button>
       ) : undefined}
-      headerRightAction={viewState === 'input' ? (
+      headerRightAction={viewState === ViewState.Input ? (
         <button
           type="button"
           onClick={handleFillTestData}
@@ -1119,7 +987,24 @@ ${jsonData.editingNotes.map((note: string) => `- ${note}`).join('\n')}
       ) : undefined}
     >
       <div className="flex flex-col h-full overflow-hidden relative bg-turbo-beige">
-        {renderContent()}
+        {viewState === ViewState.Loading ? (
+          <LoadingOverlay className="z-50" />
+        ) : (
+          <>
+            <div className="flex items-center justify-between p-4 md:p-6 border-b border-turbo-black">
+              <h2 className="text-xl font-bold text-turbo-black">{getTaskTitle()}</h2>
+              <button
+                onClick={onClose}
+                className="text-turbo-black hover:text-turbo-blue transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            {renderContent()}
+          </>
+        )}
       </div>
     </DottedDialog>
   )

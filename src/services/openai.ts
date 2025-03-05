@@ -17,7 +17,6 @@ export async function createChatCompletion(messages: OpenAI.Chat.ChatCompletionM
   try {
     const completion = await openai.chat.completions.create({
       messages,
-      // model: "gpt-4-turbo-preview",
       model: "gpt-4o",
       temperature: 0.7,
     })

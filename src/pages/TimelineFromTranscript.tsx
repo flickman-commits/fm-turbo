@@ -10,6 +10,7 @@ import { creditsManager } from '@/utils/credits'
 import { useCompanyInfo } from '@/contexts/CompanyInfoContext'
 import { Layout } from '@/components/Layout'
 import { SegmentCard, TimelineVisual, TimelineDescription, TimelineData } from '@/components/timeline'
+import { LoadingOverlay } from '@/components/ui/loading-overlay'
 import { useAuth } from '@/contexts/AuthContext'
 
 type ViewState = 'input' | 'loading' | 'result'
@@ -26,39 +27,6 @@ const BUSINESS_QUOTES = [
   "The reason it's taking so long is because you're in a rush.",
 ]
 
-const LoadingOverlay = () => {
-  const [quoteIndex, setQuoteIndex] = useState(() => Math.floor(Math.random() * BUSINESS_QUOTES.length))
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setQuoteIndex(current => (current + 1) % BUSINESS_QUOTES.length)
-    }, 7000)
-
-    return () => clearInterval(interval)
-  }, [])
-
-  return (
-    <div className="absolute inset-0 bg-turbo-beige flex flex-col items-center justify-center z-10">
-      <div className="max-w-2xl w-full px-4">
-        <img 
-          src="/turbo-typing-beige.gif" 
-          alt="Turbo typing" 
-          className="w-72 h-auto mx-auto mb-4"
-        />
-        <p className="text-turbo-black text-lg font-medium text-center mb-12">
-          Hold tight... Turbo is doing tedious work so you don't have to.
-        </p>
-        <div className="bg-turbo-black/5 border-2 border-turbo-black rounded-lg p-6">
-          <p className="text-2xl font-bold text-turbo-black mb-3 text-left">💭 Words of Wisdom</p>
-          <p className="text-lg text-turbo-black leading-relaxed">
-            "{BUSINESS_QUOTES[quoteIndex]}"
-          </p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 type TimelineResult = {
   content: string | TimelineData
   totalDuration?: number
@@ -72,8 +40,13 @@ export default function TimelineFromTranscript() {
     return saved ? JSON.parse(saved) : {}
   })
   const [viewState, setViewState] = useState<ViewState>(() => {
-    const saved = localStorage.getItem('timeline_view_state')
-    return (saved as ViewState) || ViewState.Input
+    const savedResult = localStorage.getItem('timeline_result')
+    const savedViewState = localStorage.getItem('timeline_view_state')
+    
+    if (savedResult && savedViewState === ViewState.Result) {
+      return ViewState.Result
+    }
+    return ViewState.Input
   })
   const [result, setResult] = useState<TimelineResult | null>(() => {
     const saved = localStorage.getItem('timeline_result')
@@ -92,11 +65,15 @@ export default function TimelineFromTranscript() {
   }, [formData])
 
   useEffect(() => {
-    localStorage.setItem('timeline_view_state', viewState)
+    if (viewState !== ViewState.Loading) {
+      localStorage.setItem('timeline_view_state', viewState)
+    }
   }, [viewState])
 
   useEffect(() => {
-    localStorage.setItem('timeline_result', JSON.stringify(result))
+    if (result) {
+      localStorage.setItem('timeline_result', JSON.stringify(result))
+    }
   }, [result])
 
   useEffect(() => {
@@ -106,6 +83,15 @@ export default function TimelineFromTranscript() {
   useEffect(() => {
     localStorage.setItem('timeline_selected_segment_index', selectedSegmentIndex.toString())
   }, [selectedSegmentIndex])
+
+  useEffect(() => {
+    return () => {
+      if (viewState === ViewState.Loading) {
+        setViewState(ViewState.Input)
+        localStorage.removeItem('timeline_view_state')
+      }
+    }
+  }, [viewState])
 
   const handleBackToForm = () => {
     setViewState(ViewState.Input)
@@ -202,6 +188,8 @@ export default function TimelineFromTranscript() {
 
     console.log('Starting submission...')
     setViewState(ViewState.Loading)
+    localStorage.removeItem('timeline_result')
+    localStorage.removeItem('timeline_view_state')
     
     try {
       console.log('🔄 Getting user info for timeline generation...')
@@ -237,23 +225,25 @@ export default function TimelineFromTranscript() {
       await incrementTasksUsed()
 
       let content = response.content || ''
+      let newResult: TimelineResult
       
       try {
         const jsonData = JSON.parse(content) as TimelineData
         const totalDuration = parseInt(jsonData.totalRunTime.split(' ')[0]) // Assuming format "180 seconds"
         
-        setResult({ 
+        newResult = { 
           content: jsonData,
           totalDuration
-        })
-        setViewState(ViewState.Result)
+        }
       } catch (error) {
         console.error('Error parsing timeline JSON:', error)
         toast.error('Error parsing timeline data')
-        content = response.content || ''
-        setResult({ content })
-        setViewState(ViewState.Result)
+        newResult = { content }
       }
+
+      setResult(newResult)
+      localStorage.setItem('timeline_result', JSON.stringify(newResult))
+      setViewState(ViewState.Result)
     } catch (error) {
       console.error('❌ Error generating timeline:', error)
       toast.error('Failed to generate content. Please try again.')
