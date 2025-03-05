@@ -115,15 +115,21 @@ const LoadingOverlay = () => {
 
   return (
     <div className="absolute inset-0 bg-turbo-beige flex flex-col items-center justify-center z-50 p-8">
-      <div className="w-12 h-12 border-4 border-turbo-black/20 border-t-turbo-black rounded-full animate-spin mb-4"></div>
-      <p className="text-turbo-black text-lg font-medium text-center mb-12">
-        Hold tight... Turbo is doing tedious work for you...
-      </p>
-      <div className="max-w-2xl w-full bg-turbo-black/5 border-2 border-turbo-black rounded-lg p-6">
-        <p className="text-2xl font-bold text-turbo-black mb-3 text-left">💭 Words of Wisdom</p>
-        <p className="text-lg text-turbo-black leading-relaxed">
-          "{BUSINESS_QUOTES[quoteIndex]}"
+      <div className="max-w-2xl w-full">
+        <img 
+          src="/turbo-typing-beige.gif" 
+          alt="Turbo typing" 
+          className="w-72 h-auto mx-auto mb-4"
+        />
+        <p className="text-turbo-black text-lg font-medium text-center mb-12">
+          Hold tight... Turbo is doing tedious work so you don't have to.
         </p>
+        <div className="bg-turbo-black/5 border-2 border-turbo-black rounded-lg p-6">
+          <p className="text-2xl font-bold text-turbo-black mb-3 text-left">💭 Words of Wisdom</p>
+          <p className="text-lg text-turbo-black leading-relaxed">
+            "{BUSINESS_QUOTES[quoteIndex]}"
+          </p>
+        </div>
       </div>
     </div>
   )
