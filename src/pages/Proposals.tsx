@@ -21,12 +21,6 @@ const ViewState: Record<'Input' | 'Loading' | 'Result', ViewState> = {
   Result: 'result'
 }
 
-const BUSINESS_QUOTES = [
-  "If you can't sit still, ignore notifications, and focus on one task for eight hours straight, never expect to build something great.",
-  "The best way to hit next year's goals is to not wait until next year to work on them.",
-  "The reason it's taking so long is because you're in a rush.",
-]
-
 export default function Proposals() {
   const { initialized, session, incrementTasksUsed } = useAuth()
   const [formData, setFormData] = useState<FormDataWithWeather>(() => {

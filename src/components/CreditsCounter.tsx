@@ -2,9 +2,12 @@ import { useState, useEffect } from 'react'
 import { creditsManager } from '@/utils/credits'
 
 export function CreditsCounter() {
-  const [credits, setCredits] = useState(creditsManager.getCredits())
+  const [credits, setCredits] = useState<number>(0)
 
   useEffect(() => {
+    // Load initial credits
+    creditsManager.getCredits().then(setCredits)
+
     // Subscribe to credit changes
     const unsubscribe = creditsManager.addListener((newCredits) => {
       setCredits(newCredits)

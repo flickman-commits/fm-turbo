@@ -10,17 +10,8 @@ export function ProtectedRoute({ children, requiresProfile = true }: ProtectedRo
   const { session, profile, initialized } = useAuth()
   const location = useLocation()
 
-  console.log('🔒 ProtectedRoute:', {
-    path: location.pathname,
-    initialized,
-    hasSession: !!session,
-    hasProfile: !!profile,
-    requiresProfile
-  })
-
-  // Show loading state while auth is initializing
+  // Only log when there's a state change that affects routing
   if (!initialized) {
-    console.log('⏳ Auth not initialized, showing loading state')
     return (
       <div className="min-h-screen bg-turbo-beige flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-turbo-black/20 border-t-turbo-black rounded-full animate-spin"></div>
@@ -28,19 +19,15 @@ export function ProtectedRoute({ children, requiresProfile = true }: ProtectedRo
     )
   }
 
-  // If we're initialized and there's no session, redirect to welcome
   if (!session) {
-    console.log('🚫 No session found, redirecting to welcome')
+    console.log('🔒 Auth: Redirecting to welcome page - No active session')
     return <Navigate to="/welcome" state={{ from: location }} replace />
   }
 
-  // Only check for profile if we're not on the home page and requiresProfile is true
   if (requiresProfile && !profile && location.pathname !== '/') {
-    console.log('👤 No profile found, redirecting to profile setup')
+    console.log('🔒 Auth: Redirecting to profile setup - Profile required but not found')
     return <Navigate to="/profile" state={{ from: location }} replace />
   }
 
-  console.log('✅ All checks passed, rendering protected content')
-  // If we have a session and (profile if required), render the protected content
   return <>{children}</>
 } 

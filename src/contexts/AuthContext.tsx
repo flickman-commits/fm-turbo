@@ -61,7 +61,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error
       
       if (updatedProfile) {
-        console.log('✅ Tasks counter incremented:', updatedProfile.tasks_used)
         setProfile(updatedProfile)
       }
     } catch (error) {
@@ -71,7 +70,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Function to handle profile fetching/creation
   const handleProfile = async (userId: string, userEmail: string) => {
-    console.log('👤 Fetching user profile for:', userId)
     const { data: existingProfile, error: profileError } = await supabase
       .from('users')
       .select('*')
@@ -79,7 +77,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .single()
 
     if (profileError && profileError.code === 'PGRST116') {
-      console.log('🆕 Creating new profile for:', userId)
       const { data: newProfile, error: createError } = await supabase
         .from('users')
         .insert([{
@@ -96,27 +93,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         toast.error('Failed to create user profile')
         return null
       }
-      console.log('✅ Created new profile:', newProfile?.id)
+      console.log('✅ Auth: New profile created')
       return newProfile
     } else if (!profileError) {
-      console.log('✅ Found existing profile:', existingProfile?.id)
       return existingProfile
     }
     return null
   }
 
   useEffect(() => {
-    console.log('🔄 Starting auth initialization...')
     let isSubscribed = true
 
     // Function to handle auth state updates
     const handleAuthChange = async (newSession: Session | null) => {
       if (!isSubscribed) return
-
-      console.log('📝 Handling auth state:', { 
-        userId: newSession?.user?.id,
-        initialized: initializationComplete.current
-      })
 
       setSession(newSession)
       setUser(newSession?.user ?? null)
@@ -132,7 +122,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Only mark as initialized once
       if (!initializationComplete.current && isSubscribed) {
-        console.log('✅ Auth initialization complete')
         setInitialized(true)
         initializationComplete.current = true
       }
@@ -140,7 +129,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('📥 Got initial session:', session?.user?.id)
       handleAuthChange(session)
     }).catch(error => {
       console.error('❌ Error getting initial session:', error)
@@ -152,12 +140,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log('🔄 Auth state changed:', _event, session?.user?.id)
+      console.log('🔒 Auth: State changed -', _event)
       handleAuthChange(session)
     })
 
     return () => {
-      console.log('🧹 Cleaning up auth subscriptions')
       isSubscribed = false
       subscription.unsubscribe()
     }

@@ -90,19 +90,6 @@ const testData: Record<TaskType, FormDataWithWeather> = {
   }
 }
 
-const BUSINESS_QUOTES = [
-  "If you have < $10,000 saved up, don't buy crypto. Invest in the ability to make money. Then, you can restart the game as many times as you want.",
-  "If you can't sit still, ignore notifications, and focus on one task for eight hours straight, never expect to build something great.",
-  "If you can't explain why you believe what you believe, it's not your belief, it's someone else's.",
-  "The only thing crazier than chasing your goals is expecting other people to understand them.",
-  "The person who asks the most times gets the most. The problem is, people don't like being asked. So you have to give value consistently so you can earn the right to keep asking. Winners win because they take more shots on goal. But they only get those shots on goal because they know how to get into scoring position.",
-  "If you want better clients, stop selling cheap stuff",
-  "The best way to hit next year's goals is to not wait until next year to work on them.",
-  "The best marketing is the kind that works.",
-  "The reason it's taking so long is because you're in a rush.",
-  "The cost of settling is higher than the price of ambition. You just pay it later."
-]
-
 const ViewState: Record<'Input' | 'Loading' | 'Result', ViewState> = {
   Input: 'input',
   Loading: 'loading',
@@ -254,18 +241,23 @@ export function TaskModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
     if (!isFormValid()) {
       toast.error('Please fill in all required fields')
       return
     }
 
-    setViewState(ViewState.Loading)
     try {
-      if (!session) {
-        toast.error('Please wait for initialization to complete')
-        setViewState(ViewState.Input)
+      const credits = await creditsManager.getCredits()
+      if (credits <= 0) {
+        toast.error('No credits remaining')
         return
       }
+
+      setViewState(ViewState.Loading)
+
+      // Get user info for prompts
+      const userInfo = session?.user?.id ? await getUserInfoFromProfile(session.user.id) : null
 
       const updatedFormData: FormDataWithWeather = { ...formData }
       
@@ -283,7 +275,6 @@ export function TaskModal({
 
       console.log('Preparing to send request to OpenAI with updated form data:', updatedFormData)
 
-      const userInfo = session?.user?.id ? await getUserInfoFromProfile(session.user.id) : null
       if (!userInfo) {
         toast.error('User information is required. Please complete your profile.')
         setViewState(ViewState.Input)
@@ -375,14 +366,18 @@ ${jsonData.editingNotes.map((note: string) => `- ${note}`).join('\n')}
   }
 
   const handleRegenerate = async () => {
-    if (creditsManager.getCredits() <= 0) {
-      toast.error('No credits remaining')
-      return
-    }
-
-    setViewState(ViewState.Loading)
-    
     try {
+      const credits = await creditsManager.getCredits()
+      if (credits <= 0) {
+        toast.error('No credits remaining')
+        return
+      }
+
+      setViewState(ViewState.Loading)
+
+      // Get user info for prompts
+      const userInfo = session?.user?.id ? await getUserInfoFromProfile(session.user.id) : null
+
       const updatedFormData: FormDataWithWeather = { ...formData }
       
       if (taskType === 'outreach' && typeof formData.recipientName === 'string' && typeof formData.company === 'string') {
@@ -399,7 +394,6 @@ ${jsonData.editingNotes.map((note: string) => `- ${note}`).join('\n')}
 
       console.log('Preparing to send request to OpenAI with updated form data:', updatedFormData)
 
-      const userInfo = session?.user?.id ? await getUserInfoFromProfile(session.user.id) : null
       if (!userInfo) {
         toast.error('User information is required. Please complete your profile.')
         setViewState(ViewState.Result)

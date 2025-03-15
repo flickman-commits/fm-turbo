@@ -21,12 +21,6 @@ const ViewState: Record<'Input' | 'Loading' | 'Result', ViewState> = {
   Result: 'result'
 }
 
-const BUSINESS_QUOTES = [
-  "If you can't sit still, ignore notifications, and focus on one task for eight hours straight, never expect to build something great.",
-  "The best way to hit next year's goals is to not wait until next year to work on them.",
-  "The reason it's taking so long is because you're in a rush.",
-]
-
 type TimelineResult = {
   content: string | TimelineData
   totalDuration?: number
@@ -180,18 +174,19 @@ export default function TimelineFromTranscript() {
       return
     }
 
-    if (creditsManager.getCredits() <= 0) {
-      console.log('No credits remaining')
-      toast.error('No credits remaining')
-      return
-    }
-
-    console.log('Starting submission...')
-    setViewState(ViewState.Loading)
-    localStorage.removeItem('timeline_result')
-    localStorage.removeItem('timeline_view_state')
-    
     try {
+      const credits = await creditsManager.getCredits()
+      if (credits <= 0) {
+        console.log('No credits remaining')
+        toast.error('No credits remaining')
+        return
+      }
+
+      console.log('Starting submission...')
+      setViewState(ViewState.Loading)
+      localStorage.removeItem('timeline_result')
+      localStorage.removeItem('timeline_view_state')
+      
       console.log('🔄 Getting user info for timeline generation...')
       const userInfo = session?.user?.id ? await getUserInfoFromProfile(session.user.id) : null
       
@@ -221,7 +216,7 @@ export default function TimelineFromTranscript() {
         throw new Error('Failed to generate content')
       }
 
-      creditsManager.useCredit()
+      await creditsManager.useCredit()
       await incrementTasksUsed()
 
       let content = response.content || ''

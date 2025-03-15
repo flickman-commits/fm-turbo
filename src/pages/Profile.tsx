@@ -2,7 +2,7 @@ import { Layout } from '@/components/Layout'
 import { useUser } from '@/contexts/UserContext'
 import { useState, useEffect } from 'react'
 import { useCompanyInfo } from '@/contexts/CompanyInfoContext'
-import { User, Bell, CreditCard, Key } from 'lucide-react'
+import { User, CreditCard } from 'lucide-react'
 import { UserInfo } from '@/types/outreach'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
@@ -27,6 +27,8 @@ export default function Account() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [isEditingCompanyInfo, setIsEditingCompanyInfo] = useState(false)
+  const [credits, setCredits] = useState<number>(0)
+  const [isLoadingCredits, setIsLoadingCredits] = useState(true)
   
   // Initialize form data from profile
   const [formData, setFormData] = useState<UserInfo>(() => {
@@ -45,6 +47,22 @@ export default function Account() {
     }
     return DEFAULT_USER_INFO
   })
+
+  // Load credits
+  useEffect(() => {
+    const loadCredits = async () => {
+      try {
+        const currentCredits = await creditsManager.getCredits()
+        setCredits(currentCredits)
+      } catch (error) {
+        console.error('Failed to load credits:', error)
+      } finally {
+        setIsLoadingCredits(false)
+      }
+    }
+
+    loadCredits()
+  }, [])
 
   // Update form data when profile changes
   useEffect(() => {
@@ -480,7 +498,13 @@ export default function Account() {
             <div className="space-y-6">
               <div>
                 <p className="text-sm text-turbo-black/60 mb-2">Available Credits</p>
-                <p className="text-3xl font-bold text-turbo-black">{creditsManager.getCredits()}</p>
+                <p className="text-3xl font-bold text-turbo-black">
+                  {isLoadingCredits ? (
+                    <span className="inline-block w-12 h-8 bg-turbo-black/5 rounded animate-pulse" />
+                  ) : (
+                    credits
+                  )}
+                </p>
               </div>
               
               <button
