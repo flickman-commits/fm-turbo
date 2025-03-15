@@ -469,7 +469,7 @@ export default function Account() {
           </div>
 
           {/* Credits & Billing Section */}
-          <div className="p-6 bg-white rounded-xl border-2 border-turbo-black">
+          <div id="billing" className="p-6 bg-white rounded-xl border-2 border-turbo-black">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <CreditCard className="w-5 h-5 text-turbo-black" />
