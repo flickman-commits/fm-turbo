@@ -28,6 +28,18 @@ export default function Account() {
   const [credits, setCredits] = useState<number>(0)
   const [isLoadingCredits, setIsLoadingCredits] = useState(true)
   
+  // Handle scroll to billing section
+  useEffect(() => {
+    if (window.location.hash === '#billing') {
+      const billingSection = document.getElementById('billing')
+      if (billingSection) {
+        setTimeout(() => {
+          billingSection.scrollIntoView({ behavior: 'smooth' })
+        }, 100) // Small delay to ensure content is rendered
+      }
+    }
+  }, [])
+
   // Initialize form data from profile
   const [formData, setFormData] = useState<UserInfo>(() => {
     if (profile) {
