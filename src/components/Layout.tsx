@@ -1,7 +1,7 @@
 import { Home, User, Send, Clock, FileText, Calendar, LayoutDashboard, Menu, X } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { FeatureRequestModal } from '@/components/FeatureRequestModal'
 import { creditsManager } from '@/utils/credits'
 import { NavigationItem } from '@/components/navigation/NavigationItem'
@@ -38,17 +38,21 @@ export function Layout({ children }: LayoutProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const [showFeatureRequest, setShowFeatureRequest] = useState(false)
-  const [credits, setCredits] = useState(creditsManager.getCredits())
+  const [credits, setCredits] = useState<number>(0)
   const [isCreditsHovered, setIsCreditsHovered] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  // Subscribe to credit changes
-  useState(() => {
+  // Load initial credits and subscribe to changes
+  useEffect(() => {
+    // Load initial credits
+    creditsManager.getCredits().then(setCredits)
+
+    // Subscribe to credit changes
     const unsubscribe = creditsManager.addListener((newCredits) => {
       setCredits(newCredits)
     })
     return () => unsubscribe()
-  })
+  }, [])
 
   const handleRequestCredits = () => {
     const subject = encodeURIComponent("More Turbo Credits")

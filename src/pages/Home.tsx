@@ -14,14 +14,50 @@ export default function Home() {
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null)
   const [showFeatureModal, setShowFeatureModal] = useState(false)
   const [showVideoModal, setShowVideoModal] = useState(false)
+  const [credits, setCredits] = useState<number | null>(null)
+  const [isLoadingCredits, setIsLoadingCredits] = useState(true)
   const [lastFeedbackCredit, setLastFeedbackCredit] = useState(() => {
     const saved = localStorage.getItem('lastFeedbackCredit')
     return saved ? parseInt(saved) : 0
   })
 
+  // Initialize credits manager and fetch initial credits
   useEffect(() => {
-    // Subscribe to credit changes
+    let mounted = true
+
+    const initializeCredits = async () => {
+      if (!profile?.id) return
+
+      try {
+        setIsLoadingCredits(true)
+        await creditsManager.initialize(profile.id)
+        if (mounted) {
+          const currentCredits = await creditsManager.getCredits()
+          setCredits(currentCredits)
+        }
+      } catch (error) {
+        console.error('Failed to initialize credits:', error)
+      } finally {
+        if (mounted) {
+          setIsLoadingCredits(false)
+        }
+      }
+    }
+
+    initializeCredits()
+
+    return () => {
+      mounted = false
+    }
+  }, [profile?.id])
+
+  // Subscribe to credit changes
+  useEffect(() => {
+    if (!profile?.id) return
+
     const unsubscribe = creditsManager.addListener((newCredits) => {      
+      setCredits(newCredits)
+      
       // Check if 10 or more credits have been used since last feedback
       const creditsSinceLastFeedback = lastFeedbackCredit - newCredits
       if (creditsSinceLastFeedback >= 10) {
@@ -31,9 +67,8 @@ export default function Home() {
       }
     })
 
-    // Cleanup subscription on unmount
-    return () => unsubscribe()
-  }, [lastFeedbackCredit])
+    return unsubscribe
+  }, [profile?.id, lastFeedbackCredit])
 
   const handleTaskSelect = (task: TaskType) => {
     setSelectedTask(task)
@@ -84,7 +119,11 @@ export default function Home() {
               <BarChart3 className="w-5 h-5 text-turbo-black/40" />
             </div>
             <p className="text-3xl font-bold text-turbo-black mb-2">
-              {creditsManager.getCredits()}
+              {isLoadingCredits ? (
+                <span className="inline-block w-12 h-8 bg-turbo-black/5 rounded animate-pulse" />
+              ) : (
+                credits ?? 0
+              )}
             </p>
             <p className="text-sm text-turbo-black/60 mb-4">
               {profile?.tasks_used || 0} tasks completed
