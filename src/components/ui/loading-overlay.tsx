@@ -31,7 +31,7 @@ export function LoadingOverlay({
   }, [error])
 
   return (
-    <div className={`fixed inset-0 bg-turbo-beige flex flex-col items-center justify-center z-50 overflow-hidden ${className}`}>
+    <div className={`absolute inset-0 bg-turbo-beige flex flex-col items-center justify-center z-50 overflow-hidden ${className}`}>
       {/* Progress Bar */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-turbo-black/5">
         <div 

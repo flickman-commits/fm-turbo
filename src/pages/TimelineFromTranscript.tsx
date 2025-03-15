@@ -293,165 +293,171 @@ export default function TimelineFromTranscript() {
     <Layout>
       <div className="bg-turbo-beige min-h-screen">
         <div className="max-w-5xl mx-auto px-4 py-8 relative min-h-[calc(100vh-4rem)]">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-turbo-black mb-2">Timeline from Transcript</h1>
-            <p className="text-lg text-turbo-black/60">
-              Convert interview transcripts into organized timelines automatically, cutting post-production planning time in half.
-            </p>
-          </div>
+          {viewState === ViewState.Loading ? (
+            <div className="absolute inset-0">
+              <LoadingOverlay />
+            </div>
+          ) : (
+            <>
+              <div className="mb-8">
+                <h1 className="text-4xl font-bold text-turbo-black mb-2">Timeline from Transcript</h1>
+                <p className="text-lg text-turbo-black/60">
+                  Convert interview transcripts into organized timelines automatically, cutting post-production planning time in half.
+                </p>
+              </div>
 
-          {viewState === ViewState.Loading && <LoadingOverlay />}
-
-          {viewState === ViewState.Input && (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="bg-turbo-beige border-2 border-turbo-black rounded-lg p-6 space-y-6">
-                {fields.map((field) => (
-                  <div key={field.id} className="space-y-2">
-                    <Label htmlFor={field.id} className="text-sm font-medium text-turbo-black">
-                      {field.label}
-                      <span className="text-[#E94E1B] ml-1">*</span>
-                      {field.helpLink && (
-                        <a
-                          href={field.helpLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="ml-2 text-turbo-blue hover:text-turbo-blue/80 text-sm font-medium transition-colors"
-                        >
-                          ({field.helpText})
-                        </a>
-                      )}
-                    </Label>
-                    {field.type === 'file' ? (
-                      <div className="relative flex items-center">
-                        <input
-                          type="file"
-                          id={field.id}
-                          accept={field.accept}
-                          onChange={(e) => {
-                            const file = e.target.files?.[0]
-                            if (file) {
-                              const reader = new FileReader()
-                              reader.onload = (e) => {
-                                handleFieldChange(field.id, typeof e.target?.result === 'string' ? e.target.result : '')
-                              }
-                              setSelectedFileName(file.name)
-                              reader.readAsText(file)
-                            }
-                          }}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                        />
-                        <div className="flex h-10 w-full rounded-md border border-turbo-black bg-turbo-beige text-sm text-turbo-black">
-                          <div className="flex items-center px-3 border-r border-turbo-black">
-                            Choose File
+              {viewState === ViewState.Input && (
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="bg-turbo-beige border-2 border-turbo-black rounded-lg p-6 space-y-6">
+                    {fields.map((field) => (
+                      <div key={field.id} className="space-y-2">
+                        <Label htmlFor={field.id} className="text-sm font-medium text-turbo-black">
+                          {field.label}
+                          <span className="text-[#E94E1B] ml-1">*</span>
+                          {field.helpLink && (
+                            <a
+                              href={field.helpLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="ml-2 text-turbo-blue hover:text-turbo-blue/80 text-sm font-medium transition-colors"
+                            >
+                              ({field.helpText})
+                            </a>
+                          )}
+                        </Label>
+                        {field.type === 'file' ? (
+                          <div className="relative flex items-center">
+                            <input
+                              type="file"
+                              id={field.id}
+                              accept={field.accept}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                if (file) {
+                                  const reader = new FileReader()
+                                  reader.onload = (e) => {
+                                    handleFieldChange(field.id, typeof e.target?.result === 'string' ? e.target.result : '')
+                                  }
+                                  setSelectedFileName(file.name)
+                                  reader.readAsText(file)
+                                }
+                              }}
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                            />
+                            <div className="flex h-10 w-full rounded-md border border-turbo-black bg-turbo-beige text-sm text-turbo-black">
+                              <div className="flex items-center px-3 border-r border-turbo-black">
+                                Choose File
+                              </div>
+                              <div className="flex items-center px-3 flex-1">
+                                {selectedFileName || 'No file chosen'}
+                              </div>
+                            </div>
                           </div>
-                          <div className="flex items-center px-3 flex-1">
-                            {selectedFileName || 'No file chosen'}
-                          </div>
-                        </div>
+                        ) : field.type === 'textarea' ? (
+                          <textarea
+                            id={field.id}
+                            className="flex min-h-[100px] w-full rounded-md border border-turbo-black bg-turbo-beige px-3 py-2 text-base text-turbo-black placeholder:text-turbo-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-turbo-blue focus-visible:ring-offset-2"
+                            placeholder={field.placeholder}
+                            value={formData[field.id] as string || ''}
+                            onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                          />
+                        ) : (
+                          <input
+                            id={field.id}
+                            type={field.type}
+                            className="flex h-10 w-full rounded-md border border-turbo-black bg-turbo-beige px-3 py-2 text-base text-turbo-black placeholder:text-turbo-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-turbo-blue focus-visible:ring-offset-2"
+                            placeholder={field.placeholder}
+                            value={formData[field.id] as string || ''}
+                            onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                          />
+                        )}
                       </div>
-                    ) : field.type === 'textarea' ? (
-                      <textarea
-                        id={field.id}
-                        className="flex min-h-[100px] w-full rounded-md border border-turbo-black bg-turbo-beige px-3 py-2 text-base text-turbo-black placeholder:text-turbo-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-turbo-blue focus-visible:ring-offset-2"
-                        placeholder={field.placeholder}
-                        value={formData[field.id] as string || ''}
-                        onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                      />
-                    ) : (
-                      <input
-                        id={field.id}
-                        type={field.type}
-                        className="flex h-10 w-full rounded-md border border-turbo-black bg-turbo-beige px-3 py-2 text-base text-turbo-black placeholder:text-turbo-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-turbo-blue focus-visible:ring-offset-2"
-                        placeholder={field.placeholder}
-                        value={formData[field.id] as string || ''}
-                        onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                      />
-                    )}
+                    ))}
                   </div>
-                ))}
-              </div>
 
-              <div className="flex justify-between items-center">
-                <button
-                  type="button"
-                  onClick={handleTestData}
-                  className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-turbo-black hover:text-turbo-white bg-turbo-beige hover:bg-turbo-blue border-2 border-turbo-black rounded-full transition-colors"
-                >
-                  Fill Test Data
-                </button>
-                <button
-                  type="submit"
-                  disabled={!isFormValid() || viewState === ViewState.Loading}
-                  className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors disabled:opacity-80 disabled:bg-turbo-black/40 disabled:cursor-not-allowed disabled:text-turbo-beige group relative"
-                >
-                  <span className="flex items-center justify-center gap-2">
-                    {viewState === ViewState.Loading ? 'Generating...' : (
-                      <>
-                        Generate Timeline
-                        <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-turbo-beige/30 bg-turbo-beige/10 px-1.5 font-mono text-[10px] font-medium text-turbo-beige opacity-50 group-hover:opacity-75">
-                          <span className="text-xs">⌘</span>
-                          <span className="text-xs">↵</span>
-                        </kbd>
-                      </>
-                    )}
-                  </span>
-                </button>
-              </div>
-            </form>
-          )}
+                  <div className="flex justify-between items-center">
+                    <button
+                      type="button"
+                      onClick={handleTestData}
+                      className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-turbo-black hover:text-turbo-white bg-turbo-beige hover:bg-turbo-blue border-2 border-turbo-black rounded-full transition-colors"
+                    >
+                      Fill Test Data
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={!isFormValid() || viewState === ViewState.Loading}
+                      className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors disabled:opacity-80 disabled:bg-turbo-black/40 disabled:cursor-not-allowed disabled:text-turbo-beige group relative"
+                    >
+                      <span className="flex items-center justify-center gap-2">
+                        {viewState === ViewState.Loading ? 'Generating...' : (
+                          <>
+                            Generate Timeline
+                            <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-turbo-beige/30 bg-turbo-beige/10 px-1.5 font-mono text-[10px] font-medium text-turbo-beige opacity-50 group-hover:opacity-75">
+                              <span className="text-xs">⌘</span>
+                              <span className="text-xs">↵</span>
+                            </kbd>
+                          </>
+                        )}
+                      </span>
+                    </button>
+                  </div>
+                </form>
+              )}
 
-          {viewState === ViewState.Result && result && (
-            <div className="bg-turbo-beige border-2 border-turbo-black rounded-lg p-6">
-              {typeof result.content === 'string' ? (
-                <div className="prose prose-sm max-w-none">
-                  <ReactMarkdown components={markdownComponents}>
-                    {result.content}
-                  </ReactMarkdown>
-                </div>
-              ) : (
-                <div className="space-y-8">
-                  <TimelineDescription 
-                    overview={result.content.overview}
-                    editingNotes={result.content.editingNotes}
-                    showOverviewOnly={true}
-                  />
+              {viewState === ViewState.Result && result && (
+                <div className="bg-turbo-beige border-2 border-turbo-black rounded-lg p-6">
+                  {typeof result.content === 'string' ? (
+                    <div className="prose prose-sm max-w-none">
+                      <ReactMarkdown components={markdownComponents}>
+                        {result.content}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <div className="space-y-8">
+                      <TimelineDescription 
+                        overview={result.content.overview}
+                        editingNotes={result.content.editingNotes}
+                        showOverviewOnly={true}
+                      />
 
-                  <SegmentCard 
-                    segment={result.content.segments[selectedSegmentIndex]} 
-                  />
-                  
-                  {result.totalDuration && (
-                    <TimelineVisual 
-                      segments={result.content.segments}
-                      totalDuration={result.totalDuration}
-                      selectedSegmentIndex={selectedSegmentIndex}
-                      onSegmentClick={setSelectedSegmentIndex}
-                    />
+                      <SegmentCard 
+                        segment={result.content.segments[selectedSegmentIndex]} 
+                      />
+                      
+                      {result.totalDuration && (
+                        <TimelineVisual 
+                          segments={result.content.segments}
+                          totalDuration={result.totalDuration}
+                          selectedSegmentIndex={selectedSegmentIndex}
+                          onSegmentClick={setSelectedSegmentIndex}
+                        />
+                      )}
+                      
+                      <TimelineDescription 
+                        overview={result.content.overview}
+                        editingNotes={result.content.editingNotes}
+                        showEditingNotesOnly={true}
+                      />
+                    </div>
                   )}
                   
-                  <TimelineDescription 
-                    overview={result.content.overview}
-                    editingNotes={result.content.editingNotes}
-                    showEditingNotesOnly={true}
-                  />
+                  <div className="mt-6 flex justify-between">
+                    <button
+                      onClick={handleBackToForm}
+                      className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-turbo-black hover:text-turbo-white bg-turbo-beige hover:bg-turbo-blue border-2 border-turbo-black rounded-full transition-colors"
+                    >
+                      Back to Form
+                    </button>
+                    <button
+                      onClick={() => handleSubmit({ preventDefault: () => {} } as React.FormEvent)}
+                      className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors"
+                    >
+                      Regenerate
+                    </button>
+                  </div>
                 </div>
               )}
-              
-              <div className="mt-6 flex justify-between">
-                <button
-                  onClick={handleBackToForm}
-                  className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-turbo-black hover:text-turbo-white bg-turbo-beige hover:bg-turbo-blue border-2 border-turbo-black rounded-full transition-colors"
-                >
-                  Back to Form
-                </button>
-                <button
-                  onClick={() => handleSubmit({ preventDefault: () => {} } as React.FormEvent)}
-                  className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors"
-                >
-                  Regenerate
-                </button>
-              </div>
-            </div>
+            </>
           )}
         </div>
       </div>

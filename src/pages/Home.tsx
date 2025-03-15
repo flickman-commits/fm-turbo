@@ -39,7 +39,6 @@ export default function Home() {
 
   const tasks: { type: TaskType; label: string; beta?: boolean }[] = [
     { type: 'runOfShow', label: 'RUN OF SHOW' },
-    { type: 'budget', label: 'PRODUCTION BUDGET' },
     { type: 'contractorBrief', label: 'CONTRACTOR BRIEF' }
   ]
 
