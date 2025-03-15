@@ -1,20 +1,33 @@
-import { Home, User, Settings, Send, Clock, FileText } from 'lucide-react'
-import { Link, useLocation } from 'react-router-dom'
+import { Home, User, Send, Clock, FileText, Calendar, LayoutDashboard, Menu, X } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { FeatureRequestModal } from '@/components/FeatureRequestModal'
 import { creditsManager } from '@/utils/credits'
+import { NavigationItem } from '@/components/navigation/NavigationItem'
 
-const navigationItems = [
-  { name: 'Home', icon: Home, path: '/' },
-  { name: 'Proposals', icon: FileText, path: '/proposals' },
-  { name: 'Outreach', icon: Send, path: '/outreach' },
-  { name: 'Timeline', icon: Clock, path: '/timeline', beta: true },
-]
+const navigationCategories = {
+  main: [
+    { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
+  ],
+  preProduction: [
+    { name: 'Run of Show', icon: Calendar, path: '/run-of-show' },
+    { name: 'Contractor Brief', icon: FileText, path: '/contractor-brief' },
+  ],
+  clientWork: [
+    { name: 'Proposals', icon: FileText, path: '/proposals' },
+    { name: 'Outreach', icon: Send, path: '/outreach' },
+  ],
+  postProduction: [
+    { name: 'Timeline', icon: Clock, path: '/timeline', beta: true },
+  ]
+}
 
-const mobileNavigationItems = [
-  ...navigationItems,
-  { name: 'Profile', icon: User, path: '/profile' },
-  { name: 'Settings', icon: Settings, path: '/settings' },
+// Mobile navigation shows main actions
+const mobileNavigationItems: Array<{ name: string; icon: LucideIcon; path: string; beta?: boolean }> = [
+  { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
+  { name: 'Tasks', icon: Menu, path: '#' },
+  { name: 'Profile', icon: User, path: '/profile' }
 ]
 
 interface LayoutProps {
@@ -23,9 +36,11 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const location = useLocation()
+  const navigate = useNavigate()
   const [showFeatureRequest, setShowFeatureRequest] = useState(false)
   const [credits, setCredits] = useState(creditsManager.getCredits())
   const [isCreditsHovered, setIsCreditsHovered] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   // Subscribe to credit changes
   useState(() => {
@@ -87,81 +102,140 @@ export function Layout({ children }: LayoutProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4">
-          {navigationItems.map((item) => {
-            const isActive = location.pathname === item.path
-            const Icon = item.icon
-            
-            return (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`
-                  flex items-center gap-3 px-4 py-3 rounded-lg mb-2
-                  transition-colors duration-200
-                  ${isActive 
-                    ? 'bg-turbo-blue text-turbo-beige' 
-                    : 'text-turbo-black hover:bg-turbo-black/5'
-                  }
-                `}
-              >
-                <Icon className="w-5 h-5" />
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{item.name}</span>
-                  {item.beta && (
-                    <span className="px-1.5 py-0.5 text-xs font-medium bg-turbo-blue/20 rounded">
-                      BETA
-                    </span>
-                  )}
-                </div>
-              </Link>
-            )
-          })}
+        <nav className="flex-1 px-4 overflow-y-auto">
+          {/* Main Navigation */}
+          {navigationCategories.main.map((item) => (
+            <NavigationItem key={item.name} item={item} />
+          ))}
+
+          {/* Pre-Production Section */}
+          <div className="mt-8">
+            <h3 className="text-sm font-medium text-turbo-black/60 px-4 mb-2">
+              Pre-Production
+            </h3>
+            {navigationCategories.preProduction.map((item) => (
+              <NavigationItem key={item.name} item={item} />
+            ))}
+          </div>
+
+          {/* Client Work Section */}
+          <div className="mt-8">
+            <h3 className="text-sm font-medium text-turbo-black/60 px-4 mb-2">
+              Client Work
+            </h3>
+            {navigationCategories.clientWork.map((item) => (
+              <NavigationItem key={item.name} item={item} />
+            ))}
+          </div>
+
+          {/* Post-Production Section */}
+          <div className="mt-8">
+            <h3 className="text-sm font-medium text-turbo-black/60 px-4 mb-2">
+              Post-Production
+            </h3>
+            {navigationCategories.postProduction.map((item) => (
+              <NavigationItem key={item.name} item={item} />
+            ))}
+          </div>
         </nav>
 
         {/* Fixed Bottom Section */}
         <div className="flex-shrink-0 p-4 border-t border-turbo-black">
-          {/* Profile & Settings */}
-          <div className="flex items-center justify-between">
-            <Link
-              to="/profile"
-              className={`
-                flex items-center gap-2 px-4 py-2 text-sm rounded-lg transition-colors
-                ${location.pathname === '/profile' 
-                  ? 'bg-turbo-blue text-turbo-beige' 
-                  : 'text-turbo-black hover:bg-turbo-black/5'
-                }
-              `}
-            >
-              <User className="w-4 h-4" />
-              <span>My Profile</span>
-            </Link>
-            <Link
-              to="/settings"
-              className={`
-                p-2 rounded-lg transition-colors
-                ${location.pathname === '/settings'
-                  ? 'bg-turbo-blue text-turbo-beige'
-                  : 'text-turbo-black hover:bg-turbo-black/5'
-                }
-              `}
-            >
-              <Settings className="w-4 h-4" />
-            </Link>
-          </div>
+          <Link
+            to="/profile"
+            className={`
+              flex items-center gap-2 px-4 py-2 text-sm rounded-lg transition-colors
+              ${location.pathname === '/profile' 
+                ? 'bg-turbo-blue text-turbo-beige' 
+                : 'text-turbo-black hover:bg-turbo-black/5'
+              }
+            `}
+          >
+            <User className="w-4 h-4" />
+            <span>Profile Settings</span>
+          </Link>
         </div>
       </aside>
 
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 bg-turbo-beige z-50 md:hidden">
+          <div className="flex flex-col h-full">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-turbo-black/10">
+              <h2 className="text-xl font-bold text-turbo-black">Tasks</h2>
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2 text-turbo-black hover:text-turbo-blue"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Navigation Content */}
+            <div className="flex-1 overflow-y-auto px-4 py-6">
+              {/* Pre-Production Section */}
+              <div className="mb-8">
+                <h3 className="text-sm font-medium text-turbo-black/60 px-4 mb-2">
+                  Pre-Production
+                </h3>
+                {navigationCategories.preProduction.map((item) => (
+                  <NavigationItem 
+                    key={item.name} 
+                    item={item}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  />
+                ))}
+              </div>
+
+              {/* Client Work Section */}
+              <div className="mb-8">
+                <h3 className="text-sm font-medium text-turbo-black/60 px-4 mb-2">
+                  Client Work
+                </h3>
+                {navigationCategories.clientWork.map((item) => (
+                  <NavigationItem 
+                    key={item.name} 
+                    item={item}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  />
+                ))}
+              </div>
+
+              {/* Post-Production Section */}
+              <div className="mb-8">
+                <h3 className="text-sm font-medium text-turbo-black/60 px-4 mb-2">
+                  Post-Production
+                </h3>
+                {navigationCategories.postProduction.map((item) => (
+                  <NavigationItem 
+                    key={item.name} 
+                    item={item}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mobile Bottom Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-turbo-beige border-t border-turbo-black flex md:hidden items-center justify-around px-4 py-2 z-50">
+      <nav className="fixed bottom-0 left-0 right-0 bg-turbo-beige border-t border-turbo-black flex md:hidden items-center justify-around px-4 py-2 z-40">
         {mobileNavigationItems.map((item) => {
-          const isActive = location.pathname === item.path
-          const Icon = item.icon
+          const isActive = item.path === '#' ? isMobileMenuOpen : location.pathname === item.path;
+          const Icon = item.icon;
           
           return (
-            <Link
+            <button
               key={item.name}
-              to={item.path}
+              onClick={() => {
+                if (item.path === '#') {
+                  setIsMobileMenuOpen(true);
+                } else {
+                  location.pathname !== item.path && navigate(item.path);
+                }
+              }}
               className={`
                 flex flex-col items-center gap-1 p-2
                 transition-colors duration-200
@@ -172,20 +246,13 @@ export function Layout({ children }: LayoutProps) {
               `}
             >
               <Icon className="w-5 h-5" />
-              <div className="flex flex-col items-center">
-                <span className="text-xs font-medium">{item.name}</span>
-                {item.beta && (
-                  <span className="px-1 py-0.25 text-[10px] font-medium bg-turbo-blue/20 rounded">
-                    BETA
-                  </span>
-                )}
-              </div>
-            </Link>
-          )
+              <span className="text-xs font-medium">{item.name}</span>
+            </button>
+          );
         })}
       </nav>
 
-      {/* Main Content - Adjust padding for mobile header */}
+      {/* Main Content */}
       <main className="md:pl-64 min-h-screen pb-24 pt-20 md:pt-0">
         {children}
       </main>

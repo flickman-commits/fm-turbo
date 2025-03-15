@@ -2,10 +2,11 @@ import { Layout } from '@/components/Layout'
 import { useUser } from '@/contexts/UserContext'
 import { useState, useEffect } from 'react'
 import { useCompanyInfo } from '@/contexts/CompanyInfoContext'
-import { User } from 'lucide-react'
+import { User, Bell, CreditCard, Key } from 'lucide-react'
 import { UserInfo } from '@/types/outreach'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
+import { creditsManager } from '@/utils/credits'
 
 // Default user info structure (empty values)
 const DEFAULT_USER_INFO: UserInfo = {
@@ -19,7 +20,7 @@ const DEFAULT_USER_INFO: UserInfo = {
   outreachType: 'getClients'
 }
 
-export default function Profile() {
+export default function Account() {
   const { initialized, profile, session, setProfile } = useAuth()
   const { user } = useUser()
   const { setIsInfoSaved } = useCompanyInfo()
@@ -212,20 +213,20 @@ export default function Profile() {
     <Layout>
       <div className="max-w-3xl mx-auto px-4 py-12">
         <h1 className="text-4xl md:text-7xl font-bold mb-12 text-turbo-black tracking-tight">
-          My Profile
+          Profile Settings
         </h1>
         
         <div className="space-y-8">
-          {/* Your Info Section */}
+          {/* Profile Section */}
           <div className="p-6 bg-white rounded-xl border-2 border-turbo-black">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold">Your Info</h2>
+              <h2 className="text-xl font-semibold">Profile</h2>
               {!isEditing && (
                 <button
                   onClick={() => setIsEditing(true)}
                   className="text-sm font-medium text-turbo-black/60 hover:text-turbo-blue transition-colors"
                 >
-                  Edit Info
+                  Edit Profile
                 </button>
               )}
             </div>
@@ -373,13 +374,15 @@ export default function Profile() {
           {/* Company Info Section */}
           <div className="p-6 bg-white rounded-xl border-2 border-turbo-black">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold">Company Info</h2>
-              <button
-                onClick={() => setIsEditingCompanyInfo(true)}
-                className="text-sm font-medium text-turbo-black/60 hover:text-turbo-blue transition-colors"
-              >
-                Edit Info
-              </button>
+              <h2 className="text-xl font-semibold">Company Information</h2>
+              {!isEditingCompanyInfo && (
+                <button
+                  onClick={() => setIsEditingCompanyInfo(true)}
+                  className="text-sm font-medium text-turbo-black/60 hover:text-turbo-blue transition-colors"
+                >
+                  Edit Company
+                </button>
+              )}
             </div>
             <div className="space-y-6">
               <div className="flex items-center gap-4 mb-8">
@@ -465,72 +468,31 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Integrations Section */}
+          {/* Credits & Billing Section */}
           <div className="p-6 bg-white rounded-xl border-2 border-turbo-black">
-            <h2 className="text-xl font-semibold mb-6">Integrations</h2>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <CreditCard className="w-5 h-5 text-turbo-black" />
+                <h2 className="text-xl font-semibold">Credits & Billing</h2>
+              </div>
+            </div>
+            
             <div className="space-y-6">
-              {/* Vimeo Integration */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <img 
-                    src="/vimeo-icon.png" 
-                    alt="Vimeo" 
-                    className="w-8 h-8 object-contain"
-                  />
-                  <div>
-                    <p className="font-medium">Vimeo</p>
-                    <p className="text-sm text-turbo-black/60">Connect your portfolio videos</p>
-                  </div>
-                </div>
-                {user?.vimeoConnected ? (
-                  <div className="flex items-center gap-4">
-                    <p className="font-medium text-turbo-green">Connected</p>
-                    <button className="px-4 py-2 text-sm font-medium text-turbo-black hover:text-turbo-blue transition-colors">
-                      Disconnect
-                    </button>
-                  </div>
-                ) : (
-                  <button className="px-6 py-2 text-sm font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black rounded-full transition-colors">
-                    Connect
-                  </button>
-                )}
+              <div>
+                <p className="text-sm text-turbo-black/60 mb-2">Available Credits</p>
+                <p className="text-3xl font-bold text-turbo-black">{creditsManager.getCredits()}</p>
               </div>
-
-              {/* Notion Integration */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <img 
-                    src="/notion.svg" 
-                    alt="Notion" 
-                    className="w-8 h-8 object-contain"
-                  />
-                  <div>
-                    <p className="font-medium">Notion</p>
-                    <p className="text-sm text-turbo-black/60">Sync your documents</p>
-                  </div>
-                </div>
-                <button className="px-6 py-2 text-sm font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black rounded-full transition-colors">
-                  Coming Soon
-                </button>
-              </div>
-
-              {/* Slack Integration */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <img 
-                    src="/slack-logo.png" 
-                    alt="Slack" 
-                    className="w-8 h-8 object-contain"
-                  />
-                  <div>
-                    <p className="font-medium">Slack</p>
-                    <p className="text-sm text-turbo-black/60">Get notifications</p>
-                  </div>
-                </div>
-                <button className="px-6 py-2 text-sm font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black rounded-full transition-colors">
-                  Coming Soon
-                </button>
-              </div>
+              
+              <button
+                onClick={() => {
+                  const subject = encodeURIComponent("More Turbo Credits")
+                  const body = encodeURIComponent("Hey Matt,\n\nLoving Turbo so far... but I ran out of credits. Any way I could get some more?")
+                  window.location.href = `mailto:matt@flickmanmedia.com?subject=${subject}&body=${body}`
+                }}
+                className="w-full px-4 py-3 text-sm font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue rounded-lg transition-colors"
+              >
+                Request More Credits
+              </button>
             </div>
           </div>
         </div>

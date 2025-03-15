@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import Home from '@/pages/Home'
 import Profile from '@/pages/Profile'
-import Settings from '@/pages/Settings'
 import Welcome from '@/pages/Welcome'
 import SignUp from '@/pages/auth/SignUp'
 import Login from '@/pages/auth/Login'
@@ -51,11 +50,6 @@ export default function App() {
             <Route path="/profile" element={
               <ProtectedRoute requiresProfile={false}>
                 <Profile />
-              </ProtectedRoute>
-            } />
-            <Route path="/settings" element={
-              <ProtectedRoute>
-                <Settings />
               </ProtectedRoute>
             } />
 
