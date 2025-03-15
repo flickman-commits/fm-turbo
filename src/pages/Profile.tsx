@@ -1,5 +1,4 @@
 import { Layout } from '@/components/Layout'
-import { useUser } from '@/contexts/UserContext'
 import { useState, useEffect } from 'react'
 import { useCompanyInfo } from '@/contexts/CompanyInfoContext'
 import { User, CreditCard } from 'lucide-react'
