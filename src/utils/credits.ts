@@ -83,7 +83,7 @@ class CreditsManager {
         return false;
       }
 
-      const { data: transaction, error: transactionError } = await supabase
+      const { error: transactionError } = await supabase
         .from('credit_transactions')
         .insert([{
           user_id: this.userId,

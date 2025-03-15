@@ -22,7 +22,6 @@ const DEFAULT_USER_INFO: UserInfo = {
 
 export default function Account() {
   const { initialized, profile, session, setProfile } = useAuth()
-  const { user } = useUser()
   const { setIsInfoSaved } = useCompanyInfo()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isEditing, setIsEditing] = useState(false)

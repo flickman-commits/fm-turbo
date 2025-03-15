@@ -1,4 +1,4 @@
-import { Home, User, Send, Clock, FileText, Calendar, LayoutDashboard, Menu, X } from 'lucide-react'
+import { User, Send, Clock, FileText, Calendar, LayoutDashboard, Menu, X } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
