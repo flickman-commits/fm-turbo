@@ -1,4 +1,4 @@
-import { User, Send, Clock, FileText, Calendar, LayoutDashboard, Menu, X } from 'lucide-react'
+import { User, Send, Clock, FileText, Calendar, LayoutDashboard, Menu, X, Scale } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
@@ -16,6 +16,7 @@ const navigationCategories = {
   clientWork: [
     { name: 'Proposals', icon: FileText, path: '/proposals' },
     { name: 'Outreach', icon: Send, path: '/outreach' },
+    { name: 'Negotiation', icon: Scale, path: '/negotiation' },
   ],
   postProduction: [
     { name: 'Timeline', icon: Clock, path: '/timeline', beta: true },
@@ -85,7 +86,7 @@ export function Layout({ children }: LayoutProps) {
           {/* Client Work Section */}
           <div className="mt-8">
             <h3 className="text-sm font-medium text-turbo-black/60 px-4 mb-2">
-              Client Work
+              Client Communication
             </h3>
             {navigationCategories.clientWork.map((item) => (
               <NavigationItem key={item.name} item={item} />
@@ -155,7 +156,7 @@ export function Layout({ children }: LayoutProps) {
               {/* Client Work Section */}
               <div className="mb-8">
                 <h3 className="text-sm font-medium text-turbo-black/60 px-4 mb-2">
-                  Client Work
+                  Client Communication
                 </h3>
                 {navigationCategories.clientWork.map((item) => (
                   <NavigationItem 

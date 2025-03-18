@@ -8,6 +8,7 @@ import Login from '@/pages/auth/Login'
 import Outreach from '@/pages/Outreach'
 import TimelineFromTranscript from '@/pages/TimelineFromTranscript'
 import Proposals from '@/pages/Proposals'
+import Negotiation from '@/pages/Negotiation'
 import { CompanyInfoProvider } from '@/contexts/CompanyInfoContext'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
@@ -35,6 +36,11 @@ export default function App() {
             <Route path="/proposals" element={
               <ProtectedRoute>
                 <Proposals />
+              </ProtectedRoute>
+            } />
+            <Route path="/negotiation" element={
+              <ProtectedRoute>
+                <Negotiation />
               </ProtectedRoute>
             } />
             <Route path="/outreach" element={

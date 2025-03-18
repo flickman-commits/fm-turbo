@@ -97,7 +97,9 @@ export const getSystemPrompts = (taskType: TaskType, userInfo: UserInfo): string
 
     budget: `You are an expert assistant helping to generate professional content for ${userInfo.companyName}. Create a detailed production budget breakdown that includes all costs, labor rates, equipment fees, and calculates the total with the specified profit margin. Format your response in clean, well-structured markdown with appropriate headers and lists.`,
 
-    timelineFromTranscript: `You are an expert assistant video editor at ${userInfo.companyName}, responsible for analyzing transcripts and creating time-coded editing timelines.`
+    timelineFromTranscript: `You are an expert assistant video editor at ${userInfo.companyName}, responsible for analyzing transcripts and creating time-coded editing timelines.`,
+
+    negotiation: `You are an expert negotiator at ${userInfo.companyName}, a ${userInfo.businessType} company. Your role is to help craft effective responses to client negotiations, particularly around pricing and project scope. You understand the value of creative services and can help maintain professional relationships while advocating for fair compensation.`
   }
 
   return prompts[taskType] || ''
@@ -300,6 +302,41 @@ Guidelines:
 6. Include specific timecodes for both source and final video
 7. Provide clear rationale for each segment's inclusion
 8. Add any technical or creative editing recommendations in the editingNotes array`
+
+    case 'negotiation':
+      return `Return ONLY a JSON object with no additional text, markdown formatting, or code block indicators. The response should start with { and end with } and be valid JSON.
+
+The JSON object should have this exact structure:
+{
+  "responses": [
+    "First response option",
+    "Second response option",
+    "Third response option"
+  ],
+  "rationale": [
+    "A brief rationale for why option 1 would be a good response",
+    "A brief rationale for why option 2 would be a good response",
+    "A brief rationale for why option 3 would be a good response"
+  ]
+}
+
+Use this information to generate negotiation responses:
+
+Email Content:
+${formData.emailText || 'No email content provided.'}
+company name: ${userInfo.companyName}
+company type: ${userInfo.businessType}
+
+Guidelines for generating responses:
+1. Apply negotiation principles from the book Never Split the Difference
+2. Each response should be professional yet conversational
+3. Focus on value and quality rather than just price
+4. Be willing to discuss and explain pricing while maintaining confidence
+5. Offer alternatives or compromises when appropriate
+6. Keep responses concise (4-5 sentences max)
+6. Avoid being defensive or overly aggressive
+7. Each response should take a slightly different approach
+8. The response must be valid JSON only, with no additional text, markdown, or code block indicators`
 
     default:
       return ''
