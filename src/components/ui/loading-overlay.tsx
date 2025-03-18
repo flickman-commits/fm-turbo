@@ -51,7 +51,7 @@ export function LoadingOverlay({
             <img 
               src="/turbo-typing-beige.gif" 
               alt="Turbo typing" 
-              className="w-64 h-auto mx-auto transition-transform hover:scale-105"
+              className="w-64 h-auto mx-auto"
             />
           </div>
 

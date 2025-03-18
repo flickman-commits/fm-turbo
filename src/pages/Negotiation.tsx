@@ -199,7 +199,7 @@ export default function Negotiation() {
           ) : viewState === 'input' ? (
             <div className="space-y-6">
               {/* Upload Section */}
-              <div className="bg-white rounded-xl border-2 border-turbo-black p-6">
+              <div className="bg-white rounded-xl border-2 border-turbo-black p-6 relative">
                 <h2 className="text-xl font-semibold mb-4">Upload Email Screenshot</h2>
                 <div 
                   className={cn(
@@ -211,6 +211,11 @@ export default function Negotiation() {
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
                 >
+                  {isProcessingScreenshot && (
+                    <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded-lg z-10">
+                      <div className="w-12 h-12 border-4 border-turbo-blue/20 border-t-turbo-blue rounded-full animate-spin"></div>
+                    </div>
+                  )}
                   <input
                     type="file"
                     accept="image/*"
@@ -247,7 +252,7 @@ export default function Negotiation() {
 
               {/* Email Text Input */}
               <div className="bg-white rounded-xl border-2 border-turbo-black p-6">
-                <h2 className="text-xl font-semibold mb-4">Or Paste Email Content</h2>
+                <h2 className="text-xl font-semibold mb-4">Paste Text from Negotiation</h2>
                 <textarea
                   value={emailText}
                   onChange={(e) => setEmailText(e.target.value)}
