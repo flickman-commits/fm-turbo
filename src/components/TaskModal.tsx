@@ -40,6 +40,7 @@ const testData: Record<TaskType, FormDataWithWeather> = {
     dailyRate: '500',
     numberOfDays: '2'
   },
+  negotiation: {},
   proposal: {
     projectType: 'Brand Story Video',
     clientName: 'Acme Corp',
