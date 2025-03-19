@@ -6,7 +6,7 @@ import { Layout } from '@/components/Layout'
 import { VideoModal } from '@/components/VideoModal'
 import { creditsManager } from '@/utils/credits'
 import { useAuth } from '@/contexts/AuthContext'
-import { BarChart3, Clock, FileText, Plus, Sparkles, Target, Send, Scale } from 'lucide-react'
+import { BarChart3, Clock, FileText, Target, Send, Scale } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
