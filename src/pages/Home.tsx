@@ -6,8 +6,18 @@ import { Layout } from '@/components/Layout'
 import { VideoModal } from '@/components/VideoModal'
 import { creditsManager } from '@/utils/credits'
 import { useAuth } from '@/contexts/AuthContext'
-import { BarChart3, Clock, FileText, Plus, Sparkles, Target } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { BarChart3, Clock, FileText, Plus, Sparkles, Target, Send, Scale } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
+
+// Counter component without animation
+const Counter = ({ value, className = "text-7xl" }: { value: number; className?: string }) => {
+  return (
+    <span className={`font-bold text-turbo-black tabular-nums ${className}`}>
+      {value}
+    </span>
+  )
+}
 
 export default function Home() {
   const { initialized, profile } = useAuth()
@@ -20,6 +30,7 @@ export default function Home() {
     const saved = localStorage.getItem('lastFeedbackCredit')
     return saved ? parseInt(saved) : 0
   })
+  const navigate = useNavigate()
 
   // Initialize credits manager and fetch initial credits
   useEffect(() => {
@@ -71,7 +82,20 @@ export default function Home() {
   }, [profile?.id, lastFeedbackCredit])
 
   const handleTaskSelect = (task: TaskType) => {
-    setSelectedTask(task)
+    // Tasks with dedicated pages
+    switch (task) {
+      case 'outreach':
+        navigate('/outreach')
+        return
+      case 'proposal':
+        navigate('/proposals')
+        return
+      case 'negotiation':
+        navigate('/negotiation')
+        return
+      default:
+        setSelectedTask(task)
+    }
   }
 
   const tasks: { type: TaskType; label: string; description: string; icon: typeof FileText; beta?: boolean }[] = [
@@ -86,6 +110,24 @@ export default function Home() {
       label: 'Contractor Brief',
       description: 'Generate comprehensive briefs for your contractors',
       icon: FileText
+    },
+    {
+      type: 'outreach',
+      label: 'Outreach Message',
+      description: 'Create personalized outreach messages for potential clients',
+      icon: Send
+    },
+    {
+      type: 'negotiation',
+      label: 'Negotiation',
+      description: 'Get expert advice on client negotiations and pricing',
+      icon: Scale
+    },
+    {
+      type: 'proposal',
+      label: 'Content Proposal',
+      description: 'Generate professional video content proposals',
+      icon: FileText
     }
   ]
 
@@ -99,7 +141,7 @@ export default function Home() {
   }
 
   return (
-    <Layout>
+    <Layout onTaskSelect={setSelectedTask}>
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Welcome Section */}
         <div className="mb-12">
@@ -112,75 +154,101 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {/* Quick Stats */}
-          <div className="p-6 bg-white rounded-xl border-2 border-turbo-black">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold">Available Credits</h3>
+          {/* Tasks Completed */}
+          <div className="p-8 bg-white rounded-xl border-2 border-turbo-black">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="font-semibold text-lg">Tasks Completed</h3>
+              <FileText className="w-5 h-5 text-turbo-black/40" />
+            </div>
+            <div className="flex flex-col items-center justify-center py-6">
+              <Counter value={profile?.tasks_used || 0} />
+              <div className="w-full h-2 bg-turbo-black/5 rounded-full overflow-hidden mt-6">
+                <motion.div 
+                  className="h-full bg-turbo-blue"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min(((profile?.tasks_used || 0) / 100) * 100, 100)}%` }}
+                  transition={{ duration: 1, ease: "easeOut" }}
+                />
+              </div>
+              <p className="text-sm text-turbo-black/60 mt-6">
+                Keep creating amazing content!
+              </p>
+            </div>
+          </div>
+
+          {/* Available Credits */}
+          <div className="p-8 bg-white rounded-xl border-2 border-turbo-black">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="font-semibold text-lg">Available Credits</h3>
               <BarChart3 className="w-5 h-5 text-turbo-black/40" />
             </div>
-            <p className="text-3xl font-bold text-turbo-black mb-2">
+            <div className="flex flex-col items-center justify-center py-6">
               {isLoadingCredits ? (
-                <span className="inline-block w-12 h-8 bg-turbo-black/5 rounded animate-pulse" />
+                <div className="w-32 h-32 border-4 border-turbo-black/20 border-t-turbo-blue rounded-full animate-spin" />
               ) : (
-                credits ?? 0
+                <>
+                  <div className="relative mb-6">
+                    <svg className="w-32 h-32" viewBox="0 0 100 100">
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="45"
+                        fill="none"
+                        stroke="#E5E7EB"
+                        strokeWidth="10"
+                      />
+                      <motion.circle
+                        cx="50"
+                        cy="50"
+                        r="45"
+                        fill="none"
+                        stroke="#2563EB"
+                        strokeWidth="10"
+                        strokeDasharray="283"
+                        initial={{ strokeDashoffset: 283 }}
+                        animate={{ 
+                          strokeDashoffset: 283 - (Math.min((credits || 0) / 100 * 283, 283))
+                        }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                        transform="rotate(-90 50 50)"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Counter value={credits ?? 0} className="text-5xl" />
+                    </div>
+                  </div>
+                  <Link
+                    to="/profile#billing"
+                    className="inline-block px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black rounded-lg transition-colors"
+                  >
+                    Get More Credits
+                  </Link>
+                </>
               )}
-            </p>
-            <p className="text-sm text-turbo-black/60 mb-4">
-              {profile?.tasks_used || 0} tasks completed
-            </p>
-            <Link
-              to="/profile#billing"
-              className="inline-block w-full px-4 py-2 text-sm font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black rounded-lg transition-colors text-center"
-            >
-              Get More Credits
-            </Link>
+            </div>
           </div>
 
           {/* Recent Activity */}
-          <div className="p-6 bg-white rounded-xl border-2 border-turbo-black">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold">Recent Activity</h3>
+          <div className="p-8 bg-white rounded-xl border-2 border-turbo-black">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="font-semibold text-lg">Recent Activity</h3>
               <Clock className="w-5 h-5 text-turbo-black/40" />
             </div>
-            <div className="space-y-3">
+            <div className="space-y-4">
               <Link 
                 to="/timeline"
-                className="block p-3 rounded-lg bg-turbo-black/5 hover:bg-turbo-blue/10 transition-colors"
+                className="block p-4 rounded-lg bg-turbo-black/5 hover:bg-turbo-blue/10 transition-colors"
               >
-                <p className="text-sm font-medium">Last Timeline Created</p>
-                <p className="text-xs text-turbo-black/60">2 days ago</p>
+                <p className="text-base font-medium">Last Timeline Created</p>
+                <p className="text-sm text-turbo-black/60 mt-1">2 days ago</p>
               </Link>
               <Link 
                 to="/outreach"
-                className="block p-3 rounded-lg bg-turbo-black/5 hover:bg-turbo-blue/10 transition-colors"
+                className="block p-4 rounded-lg bg-turbo-black/5 hover:bg-turbo-blue/10 transition-colors"
               >
-                <p className="text-sm font-medium">Last Outreach Campaign</p>
-                <p className="text-xs text-turbo-black/60">5 days ago</p>
+                <p className="text-base font-medium">Last Outreach Campaign</p>
+                <p className="text-sm text-turbo-black/60 mt-1">5 days ago</p>
               </Link>
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="p-6 bg-white rounded-xl border-2 border-turbo-black">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold">Quick Actions</h3>
-              <Sparkles className="w-5 h-5 text-turbo-black/40" />
-            </div>
-            <div className="space-y-2">
-              <button
-                onClick={() => handleTaskSelect('runOfShow')}
-                className="w-full p-2 text-sm font-medium text-turbo-black hover:text-turbo-blue flex items-center gap-2 rounded-lg hover:bg-turbo-blue/10 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                New Run of Show
-              </button>
-              <button
-                onClick={() => handleTaskSelect('contractorBrief')}
-                className="w-full p-2 text-sm font-medium text-turbo-black hover:text-turbo-blue flex items-center gap-2 rounded-lg hover:bg-turbo-blue/10 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                New Contractor Brief
-              </button>
             </div>
           </div>
         </div>

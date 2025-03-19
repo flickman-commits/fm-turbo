@@ -445,13 +445,18 @@ ${jsonData.editingNotes.map((note: string) => `- ${note}`).join('\n')}
   }
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = async (e: KeyboardEvent) => {
+      // Only handle command + enter in input view state
+      if (viewState !== ViewState.Input) return;
+
       if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault(); // Prevent default first
+        
+        // Check if form is valid and we can submit
         if (isFormValid() && !isLoading && isInfoSaved) {
-          const form = document.querySelector('form')
+          const form = document.querySelector('form');
           if (form) {
-            e.preventDefault()
-            form.requestSubmit()
+            form.dispatchEvent(new Event('submit', { cancelable: true }));
           }
         }
       }
@@ -459,7 +464,7 @@ ${jsonData.editingNotes.map((note: string) => `- ${note}`).join('\n')}
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isFormValid, isLoading, isInfoSaved])
+  }, [viewState, isLoading, isInfoSaved]) // Only depend on state values, not functions
 
   const handleAction = async (action: TaskActionConfig) => {
     if (action.type === 'download') {
@@ -639,6 +644,8 @@ ${jsonData.editingNotes.map((note: string) => `- ${note}`).join('\n')}
         return 'Contractor Brief'
       case 'timelineFromTranscript':
         return 'Timeline from Transcript'
+      case 'negotiation':
+        return 'Negotiation Advice'
       default:
         return ''
     }

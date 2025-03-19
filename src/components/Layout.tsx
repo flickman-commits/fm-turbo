@@ -4,14 +4,15 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { FeatureRequestModal } from '@/components/FeatureRequestModal'
 import { NavigationItem } from '@/components/navigation/NavigationItem'
+import { TaskType } from '@/types/tasks'
 
 const navigationCategories = {
   main: [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
   ],
   preProduction: [
-    { name: 'Run of Show', icon: Calendar, path: '/run-of-show' },
-    { name: 'Contractor Brief', icon: FileText, path: '/contractor-brief' },
+    { name: 'Run of Show', icon: Calendar, path: '/run-of-show', taskType: 'runOfShow' as TaskType },
+    { name: 'Contractor Brief', icon: FileText, path: '/contractor-brief', taskType: 'contractorBrief' as TaskType },
   ],
   clientWork: [
     { name: 'Proposals', icon: FileText, path: '/proposals' },
@@ -32,9 +33,10 @@ const mobileNavigationItems: Array<{ name: string; icon: LucideIcon; path: strin
 
 interface LayoutProps {
   children: React.ReactNode
+  onTaskSelect?: (taskType: TaskType) => void
 }
 
-export function Layout({ children }: LayoutProps) {
+export function Layout({ children, onTaskSelect }: LayoutProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const [showFeatureRequest, setShowFeatureRequest] = useState(false)
@@ -79,7 +81,15 @@ export function Layout({ children }: LayoutProps) {
               Pre-Production
             </h3>
             {navigationCategories.preProduction.map((item) => (
-              <NavigationItem key={item.name} item={item} />
+              <NavigationItem 
+                key={item.name} 
+                item={item} 
+                onClick={() => {
+                  if (item.taskType && onTaskSelect) {
+                    onTaskSelect(item.taskType)
+                  }
+                }}
+              />
             ))}
           </div>
 
@@ -148,7 +158,11 @@ export function Layout({ children }: LayoutProps) {
                   <NavigationItem 
                     key={item.name} 
                     item={item}
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={() => {
+                      if (item.taskType && onTaskSelect) {
+                        onTaskSelect(item.taskType)
+                      }
+                    }}
                   />
                 ))}
               </div>

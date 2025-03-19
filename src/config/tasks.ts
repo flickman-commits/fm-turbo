@@ -194,8 +194,42 @@ export const taskConfigs: Record<TaskType, TaskConfig> = {
     ]
   },
   negotiation: {
-    title: 'Negotiation',
-    description: 'Get help with client negotiations',
-    fields: []
+    title: 'Get Negotiation Advice',
+    description: 'Get expert advice on how to respond to client negotiations regarding pricing and project scope.',
+    fields: [
+      { 
+        id: 'emailScreenshot', 
+        label: 'Email Screenshot', 
+        type: 'file', 
+        placeholder: 'Upload screenshot of the negotiation email',
+        accept: 'image/*',
+        optional: 'true'
+      },
+      { 
+        id: 'emailText', 
+        label: 'Email Content', 
+        type: 'textarea', 
+        placeholder: 'Paste the content of the negotiation email here'
+      },
+      { 
+        id: 'context', 
+        label: 'Additional Context', 
+        type: 'textarea', 
+        placeholder: 'Any additional context about the negotiation (e.g., previous discussions, project scope, current pricing)',
+        optional: 'true'
+      }
+    ],
+    resultSections: [
+      {
+        id: 'analysis',
+        title: 'Analysis',
+        contentKey: 'content'
+      },
+      {
+        id: 'responses',
+        title: 'Suggested Responses',
+        contentKey: 'content'
+      }
+    ]
   }
 } 
