@@ -10,7 +10,9 @@ class CreditsManager {
   private initializationPromise: Promise<void> | null = null;
 
   async initialize(userId: string) {
+    console.log('🔄 Initializing credits manager for user:', userId)
     if (this.initializationPromise && this.userId === userId) {
+      console.log('✅ Already initialized for this user')
       return this.initializationPromise;
     }
 
@@ -19,7 +21,7 @@ class CreditsManager {
         this.userId = userId;
         await this.fetchCredits();
       } catch (error) {
-        console.error('Failed to initialize credits:', error);
+        console.error('❌ Failed to initialize credits:', error);
         this.userId = null;
         this.cachedCredits = null;
         throw error;
@@ -31,41 +33,54 @@ class CreditsManager {
 
   private async fetchCredits(): Promise<number> {
     if (!this.userId) {
+      console.error('❌ Cannot fetch credits: User not initialized')
       throw new Error('User not initialized');
     }
 
     try {
+      console.log('🔄 Fetching credits from Supabase...')
       const { data: user, error } = await supabase
         .from('users')
         .select('credits')
         .eq('id', this.userId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase error:', error)
+        throw error;
+      }
       
       if (!user) {
+        console.error('❌ User not found')
         throw new Error('User not found');
       }
 
       const credits = user.credits ?? 0;
+      console.log('✅ Credits fetched:', credits)
       this.cachedCredits = credits;
+      this.notifyListeners();
       return credits;
     } catch (error) {
-      console.error('Failed to fetch credits:', error);
+      console.error('❌ Failed to fetch credits:', error);
       throw error;
     }
   }
 
   async getCredits(): Promise<number> {
-    if (!this.userId) return 0;
+    if (!this.userId) {
+      console.log('❌ No user initialized, returning 0 credits')
+      return 0;
+    }
 
     try {
       if (this.cachedCredits === null) {
+        console.log('🔄 No cached credits, fetching fresh...')
         return await this.fetchCredits();
       }
+      console.log('✅ Returning cached credits:', this.cachedCredits)
       return this.cachedCredits;
     } catch (error) {
-      console.error('Error getting credits:', error);
+      console.error('❌ Error getting credits:', error);
       return 0;
     }
   }

@@ -1,11 +1,12 @@
 import { Layout } from '@/components/Layout'
 import { useState, useEffect } from 'react'
 import { useCompanyInfo } from '@/contexts/CompanyInfoContext'
-import { User, CreditCard } from 'lucide-react'
+import { User, CreditCard, Upload } from 'lucide-react'
 import { UserInfo } from '@/types/outreach'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { creditsManager } from '@/utils/credits'
+import { toast } from 'react-hot-toast'
 
 // Default user info structure (empty values)
 const DEFAULT_USER_INFO: UserInfo = {
@@ -58,11 +59,19 @@ export default function Account() {
     return DEFAULT_USER_INFO
   })
 
-  // Load credits
+  // Update useEffect for credits loading to log the process
   useEffect(() => {
     const loadCredits = async () => {
       try {
+        console.log('🔄 Loading credits...')
+        if (!session?.user?.id) {
+          console.log('❌ No user session')
+          return
+        }
+        
+        await creditsManager.initialize(session.user.id)
         const currentCredits = await creditsManager.getCredits()
+        console.log('✅ Credits loaded:', currentCredits)
         setCredits(currentCredits)
       } catch (error) {
         console.error('Failed to load credits:', error)
@@ -72,7 +81,7 @@ export default function Account() {
     }
 
     loadCredits()
-  }, [])
+  }, [session?.user?.id])
 
   // Update form data when profile changes
   useEffect(() => {
@@ -120,6 +129,8 @@ export default function Account() {
           message_style: formData.messageStyle,
           role: formData.role,
           outreach_type: formData.outreachType,
+          // Keep existing avatar_url if it exists
+          avatar_url: profile?.avatar_url || null,
           updated_at: new Date().toISOString()
         }
 
@@ -136,21 +147,34 @@ export default function Account() {
         console.log('✅ User info updated successfully')
         
         // Fetch updated profile data
-        const { data: refreshedProfile } = await supabase
+        const { data: refreshedProfile, error: fetchError } = await supabase
           .from('users')
           .select('*')
           .eq('id', session.user.id)
           .single()
           
+        if (fetchError) throw fetchError
+        
         if (refreshedProfile) {
           console.log('👤 Updated profile data:', refreshedProfile)
           setProfile(refreshedProfile)
+          // Update form data with refreshed profile
+          setFormData(prev => ({
+            ...prev,
+            name: refreshedProfile.name || '',
+            email: refreshedProfile.email || '',
+            messageStyle: (refreshedProfile.message_style as UserInfo['messageStyle']) || 'professional',
+            role: refreshedProfile.role || '',
+            outreachType: (refreshedProfile.outreach_type as UserInfo['outreachType']) || 'getClients'
+          }))
         }
         
         setIsInfoSaved(true)
         setIsEditing(false)
+        toast.success('Profile updated successfully!')
       } catch (error) {
         console.error('❌ Error saving info:', error)
+        toast.error('Failed to update profile')
       } finally {
         setIsSubmitting(false)
       }
@@ -237,6 +261,107 @@ export default function Account() {
     return !!(formData.companyName && formData.businessType)
   }
 
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file || !session?.user?.id) return
+    
+    try {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Please upload a valid image file (JPEG, PNG, GIF, or WebP)')
+        return
+      }
+
+      // Validate file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024 // 5MB in bytes
+      if (file.size > maxSize) {
+        toast.error('Image size must be less than 5MB')
+        return
+      }
+      
+      // Show loading state
+      setIsSubmitting(true)
+      
+      // Upload image to Supabase Storage
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${session.user.id}-${Math.random()}.${fileExt}`
+      const filePath = `${fileName}`
+      
+      console.log('📤 Uploading file:', { fileName, filePath, type: file.type, size: file.size })
+      
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, {
+          upsert: true,
+          contentType: file.type, // Explicitly set the content type
+          metadata: {
+            owner: session.user.id,
+            mimetype: file.type
+          }
+        })
+      
+      if (uploadError) {
+        console.error('❌ Upload error:', uploadError)
+        throw uploadError
+      }
+      
+      // Get the Supabase URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath)
+      
+      console.log('🔗 Generated public URL:', publicUrl)
+      
+      // Ensure URL uses the correct protocol
+      const finalUrl = publicUrl.replace('http://', 'https://')
+      console.log('🔒 Final secure URL:', finalUrl)
+      
+      // Update user profile with new avatar URL
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ 
+          avatar_url: finalUrl,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', session.user.id)
+      
+      if (updateError) {
+        console.error('❌ Profile update error:', updateError)
+        throw updateError
+      }
+      
+      // Fetch updated profile
+      const { data: refreshedProfile, error: fetchError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', session.user.id)
+        .single()
+      
+      if (fetchError) {
+        console.error('❌ Profile fetch error:', fetchError)
+        throw fetchError
+      }
+        
+      if (refreshedProfile) {
+        console.log('✅ Profile updated successfully:', refreshedProfile)
+        setProfile(refreshedProfile)
+        // Update form data with refreshed profile
+        setFormData(prev => ({
+          ...prev,
+          avatar_url: refreshedProfile.avatar_url || null
+        }))
+      }
+      
+      toast.success('Profile picture updated successfully!')
+    } catch (error) {
+      console.error('❌ Error in handleImageUpload:', error)
+      toast.error('Failed to update profile picture')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <Layout>
       <div className="max-w-5xl mx-auto px-4 py-12">
@@ -244,15 +369,31 @@ export default function Account() {
         <div className="flex flex-col md:flex-row gap-8 mb-12">
           {/* Left Column - Photo */}
           <div className="flex-shrink-0">
-            <div className="w-32 h-32 rounded-full bg-turbo-black/5 flex items-center justify-center border-2 border-turbo-black overflow-hidden">
-              {profile?.avatar_url ? (
-                <img 
-                  src={profile.avatar_url} 
-                  alt={profile?.name || 'Profile'} 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <User className="w-16 h-16 text-turbo-black/40" />
+            <div className="relative group">
+              <div className="w-32 h-32 rounded-full bg-turbo-black/5 flex items-center justify-center border-2 border-turbo-black overflow-hidden">
+                {profile?.avatar_url ? (
+                  <img 
+                    src={profile.avatar_url} 
+                    alt={profile?.name || 'Profile'} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User className="w-16 h-16 text-turbo-black/40" />
+                )}
+              </div>
+              {isEditing && (
+                <label className="absolute inset-0 flex items-center justify-center bg-turbo-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-full cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                  <div className="flex flex-col items-center text-turbo-beige">
+                    <Upload className="w-6 h-6 mb-1" />
+                    <span className="text-xs">Update Photo</span>
+                  </div>
+                </label>
               )}
             </div>
           </div>
@@ -260,7 +401,7 @@ export default function Account() {
           {/* Right Column - Info */}
           <div className="flex-grow">
             <h1 className="text-4xl font-bold mb-4 text-turbo-black">
-              About {profile?.name || 'You'}
+              {profile?.name || 'Your Profile'}
             </h1>
 
             {/* Quick Stats */}
@@ -490,7 +631,7 @@ export default function Account() {
         )}
 
         {/* Request Credits Section */}
-        <div className="bg-turbo-beige border-2 border-turbo-black rounded-xl p-8">
+        <div className="bg-turbo-beige p-8 rounded-xl">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <CreditCard className="w-5 h-5 text-turbo-black" />

@@ -7,6 +7,7 @@ export interface UserInfo {
   role: string
   email: string
   messageStyle: 'direct' | 'casual' | 'storytelling' | 'professional' | 'friendly'
+  avatar_url?: string | null
   
   // Outreach Context
   outreachType: 'getClients' | 'getJob' | 'getSpeakers' | 'getHotelStay' | 'getSponsors'

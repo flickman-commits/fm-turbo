@@ -3,21 +3,7 @@ import { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { toast } from '@/components/ui/rainbow-toast'
 import { useNavigate } from 'react-router-dom'
-
-interface UserProfile {
-  id: string
-  email: string | null
-  name: string | null
-  company_name: string | null
-  business_type: string | null
-  conversational_style: string | null
-  role: string | null
-  outreach_type: string | null
-  message_style: string | null
-  tasks_used: number
-  updated_at: string | null
-  created_at: string | null
-}
+import { UserProfile } from '@/types/user'
 
 interface AuthContextType {
   user: User | null
