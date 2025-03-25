@@ -122,7 +122,7 @@ export const getCurrentUser = async () => {
   return user
 }
 
-export const getUserProfile = async (userId: string) => {
+export const getUserProfile = async (userId: string): Promise<UserProfile> => {
   const { data, error } = await supabase
     .from('users')
     .select('*')
@@ -130,5 +130,5 @@ export const getUserProfile = async (userId: string) => {
     .single()
   
   if (error) throw error
-  return data
+  return data as UserProfile
 } 

@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { FeatureRequestModal } from '@/components/FeatureRequestModal'
 import { NavigationItem } from '@/components/navigation/NavigationItem'
+import { TaskType } from '@/types/tasks'
 
 const navigationCategories = {
   main: [
@@ -32,9 +33,10 @@ const mobileNavigationItems: Array<{ name: string; icon: LucideIcon; path: strin
 
 interface LayoutProps {
   children: React.ReactNode
+  onTaskSelect?: (task: TaskType | null) => void
 }
 
-export function Layout({ children }: LayoutProps) {
+export function Layout({ children, onTaskSelect }: LayoutProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const [showFeatureRequest, setShowFeatureRequest] = useState(false)
