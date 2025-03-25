@@ -42,6 +42,34 @@ export function Layout({ children, onTaskSelect }: LayoutProps) {
   const [showFeatureRequest, setShowFeatureRequest] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
+  // Helper function to handle task selection
+  const handleTaskSelect = (path: string) => {
+    if (onTaskSelect) {
+      switch (path) {
+        case '/run-of-show':
+          onTaskSelect('runOfShow')
+          break
+        case '/contractor-brief':
+          onTaskSelect('contractorBrief')
+          break
+        case '/proposals':
+          onTaskSelect('proposal')
+          break
+        case '/outreach':
+          onTaskSelect('outreach')
+          break
+        case '/negotiation':
+          onTaskSelect('negotiation')
+          break
+        case '/timeline':
+          onTaskSelect('timelineFromTranscript')
+          break
+        default:
+          onTaskSelect(null)
+      }
+    }
+  }
+
   return (
     <div className="min-h-screen bg-turbo-beige">
       {/* Mobile Header - Fixed at top */}
@@ -72,7 +100,11 @@ export function Layout({ children, onTaskSelect }: LayoutProps) {
         <nav className="flex-1 px-4 overflow-y-auto">
           {/* Main Navigation */}
           {navigationCategories.main.map((item) => (
-            <NavigationItem key={item.name} item={item} />
+            <NavigationItem 
+              key={item.name} 
+              item={item}
+              onClick={() => handleTaskSelect(item.path)}
+            />
           ))}
 
           {/* Pre-Production Section */}
@@ -81,7 +113,11 @@ export function Layout({ children, onTaskSelect }: LayoutProps) {
               Pre-Production
             </h3>
             {navigationCategories.preProduction.map((item) => (
-              <NavigationItem key={item.name} item={item} />
+              <NavigationItem 
+                key={item.name} 
+                item={item}
+                onClick={() => handleTaskSelect(item.path)}
+              />
             ))}
           </div>
 
@@ -91,7 +127,11 @@ export function Layout({ children, onTaskSelect }: LayoutProps) {
               Client Communication
             </h3>
             {navigationCategories.clientWork.map((item) => (
-              <NavigationItem key={item.name} item={item} />
+              <NavigationItem 
+                key={item.name} 
+                item={item}
+                onClick={() => handleTaskSelect(item.path)}
+              />
             ))}
           </div>
 
@@ -101,7 +141,11 @@ export function Layout({ children, onTaskSelect }: LayoutProps) {
               Post-Production
             </h3>
             {navigationCategories.postProduction.map((item) => (
-              <NavigationItem key={item.name} item={item} />
+              <NavigationItem 
+                key={item.name} 
+                item={item}
+                onClick={() => handleTaskSelect(item.path)}
+              />
             ))}
           </div>
         </nav>
@@ -150,7 +194,10 @@ export function Layout({ children, onTaskSelect }: LayoutProps) {
                   <NavigationItem 
                     key={item.name} 
                     item={item}
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={() => {
+                      handleTaskSelect(item.path)
+                      setIsMobileMenuOpen(false)
+                    }}
                   />
                 ))}
               </div>
@@ -164,7 +211,10 @@ export function Layout({ children, onTaskSelect }: LayoutProps) {
                   <NavigationItem 
                     key={item.name} 
                     item={item}
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={() => {
+                      handleTaskSelect(item.path)
+                      setIsMobileMenuOpen(false)
+                    }}
                   />
                 ))}
               </div>
@@ -178,7 +228,10 @@ export function Layout({ children, onTaskSelect }: LayoutProps) {
                   <NavigationItem 
                     key={item.name} 
                     item={item}
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={() => {
+                      handleTaskSelect(item.path)
+                      setIsMobileMenuOpen(false)
+                    }}
                   />
                 ))}
               </div>
