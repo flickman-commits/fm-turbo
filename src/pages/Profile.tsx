@@ -239,37 +239,108 @@ export default function Account() {
 
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        <h1 className="text-4xl md:text-7xl font-bold mb-12 text-turbo-black tracking-tight">
-          Profile Settings
-        </h1>
-        
-        <div className="space-y-8">
-          {/* Profile Section */}
-          <div className="p-6 bg-white rounded-xl border-2 border-turbo-black">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold">Profile</h2>
-              {!isEditing && (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="text-sm font-medium text-turbo-black/60 hover:text-turbo-blue transition-colors"
-                >
-                  Edit Profile
-                </button>
+      <div className="max-w-5xl mx-auto px-4 py-12">
+        {/* Top Section with Photo and Stats */}
+        <div className="flex flex-col md:flex-row gap-8 mb-12">
+          {/* Left Column - Photo */}
+          <div className="flex-shrink-0">
+            <div className="w-32 h-32 rounded-full bg-turbo-black/5 flex items-center justify-center border-2 border-turbo-black overflow-hidden">
+              {profile?.avatar_url ? (
+                <img 
+                  src={profile.avatar_url} 
+                  alt={profile?.name || 'Profile'} 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <User className="w-16 h-16 text-turbo-black/40" />
               )}
             </div>
-            <div className="space-y-6">
-              {isEditing ? (
-                <>
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="w-16 h-16 rounded-full bg-turbo-black/5 flex items-center justify-center">
-                      <User className="w-8 h-8 text-turbo-black/40" />
-                    </div>
-                    <button className="px-4 py-2 text-sm font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black rounded-full transition-colors">
-                      Update Photo
-                    </button>
-                  </div>
+          </div>
 
+          {/* Right Column - Info */}
+          <div className="flex-grow">
+            <h1 className="text-4xl font-bold mb-4 text-turbo-black">
+              About {profile?.name || 'You'}
+            </h1>
+
+            {/* Quick Stats */}
+            <div className="flex flex-wrap gap-6 mb-6">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-turbo-beige border-2 border-turbo-black flex items-center justify-center">
+                  <span className="text-sm font-bold">{profile?.tasks_used || 0}</span>
+                </div>
+                <span className="text-turbo-black/60">Tasks Created</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-turbo-beige border-2 border-turbo-black flex items-center justify-center">
+                  <span className="text-sm font-bold">{credits}</span>
+                </div>
+                <span className="text-turbo-black/60">Credits Available</span>
+              </div>
+            </div>
+
+            {/* Identity Markers */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {profile?.role && (
+                <div className="flex items-center gap-2">
+                  <User className="w-5 h-5 text-turbo-black/60" />
+                  <span>{profile.role}</span>
+                </div>
+              )}
+              {profile?.company_name && (
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-turbo-black/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  </svg>
+                  <span>Works at {profile.company_name}</span>
+                </div>
+              )}
+              {profile?.business_type && (
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-turbo-black/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <span>{profile.business_type}</span>
+                </div>
+              )}
+              {profile?.message_style && (
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-turbo-black/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                  </svg>
+                  <span>{profile.message_style} communication style</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Edit Buttons - Fixed Position */}
+        {!isEditing && !isEditingCompanyInfo && (
+          <div className="fixed bottom-8 right-8 flex flex-col gap-2">
+            <button
+              onClick={() => setIsEditing(true)}
+              className="px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors shadow-lg"
+            >
+              Edit Profile
+            </button>
+            <button
+              onClick={() => setIsEditingCompanyInfo(true)}
+              className="px-6 py-3 text-sm font-medium text-turbo-black bg-turbo-beige hover:bg-turbo-blue hover:text-turbo-beige border-2 border-turbo-black rounded-full transition-colors shadow-lg"
+            >
+              Edit Company
+            </button>
+          </div>
+        )}
+
+        {/* Edit Forms */}
+        {(isEditing || isEditingCompanyInfo) && (
+          <div className="bg-white border-2 border-turbo-black rounded-xl p-8 mb-8">
+            {isEditing && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold mb-6">Edit Profile</h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-turbo-black mb-1">
                       Your Name
@@ -278,7 +349,7 @@ export default function Account() {
                       type="text"
                       value={formData.name}
                       onChange={(e) => handleInfoChange('name', e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-1 focus:ring-turbo-blue"
+                      className="w-full px-3 py-2 text-sm border-2 border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-2 focus:ring-turbo-blue"
                     />
                   </div>
 
@@ -290,25 +361,8 @@ export default function Account() {
                       type="email"
                       value={formData.email}
                       onChange={(e) => handleInfoChange('email', e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-1 focus:ring-turbo-blue"
+                      className="w-full px-3 py-2 text-sm border-2 border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-2 focus:ring-turbo-blue"
                     />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-turbo-black mb-1">
-                      Message Style
-                    </label>
-                    <select
-                      value={formData.messageStyle}
-                      onChange={(e) => handleInfoChange('messageStyle', e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-1 focus:ring-turbo-blue"
-                    >
-                      <option value="professional">Professional</option>
-                      <option value="casual">Casual</option>
-                      <option value="friendly">Friendly</option>
-                      <option value="direct">Direct</option>
-                      <option value="storytelling">Storytelling</option>
-                    </select>
                   </div>
 
                   <div>
@@ -319,18 +373,35 @@ export default function Account() {
                       type="text"
                       value={formData.role}
                       onChange={(e) => handleInfoChange('role', e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-1 focus:ring-turbo-blue"
+                      className="w-full px-3 py-2 text-sm border-2 border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-2 focus:ring-turbo-blue"
                     />
                   </div>
 
                   <div>
+                    <label className="block text-sm font-medium text-turbo-black mb-1">
+                      Message Style
+                    </label>
+                    <select
+                      value={formData.messageStyle}
+                      onChange={(e) => handleInfoChange('messageStyle', e.target.value)}
+                      className="w-full px-3 py-2 text-sm border-2 border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-2 focus:ring-turbo-blue"
+                    >
+                      <option value="professional">Professional</option>
+                      <option value="casual">Casual</option>
+                      <option value="friendly">Friendly</option>
+                      <option value="direct">Direct</option>
+                      <option value="storytelling">Storytelling</option>
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-turbo-black mb-1">
                       Outreach Type
                     </label>
                     <select
                       value={formData.outreachType || ''}
                       onChange={(e) => handleInfoChange('outreachType', e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-1 focus:ring-turbo-blue"
+                      className="w-full px-3 py-2 text-sm border-2 border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-2 focus:ring-turbo-blue"
                     >
                       <option value="">Select an outreach type</option>
                       <option value="getClients">Get Clients</option>
@@ -340,94 +411,35 @@ export default function Account() {
                       <option value="getSponsors">Get Sponsors</option>
                     </select>
                   </div>
+                </div>
 
-                  <div className="pt-4 mt-4 border-t border-turbo-black/10 flex justify-end gap-2">
-                    <button
-                      onClick={handleCancelUserInfo}
-                      className="px-4 py-2 text-sm font-medium text-turbo-black hover:text-turbo-blue transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSaveUserInfo}
-                      disabled={!isUserInfoValid() || isSubmitting}
-                      className={`px-6 py-2 text-sm font-medium text-turbo-beige rounded-full transition-colors ${
-                        isUserInfoValid() && !isSubmitting
-                          ? 'bg-turbo-blue hover:bg-turbo-black'
-                          : 'bg-turbo-black/40 cursor-not-allowed'
-                      }`}
-                    >
-                      {isSubmitting ? 'Saving...' : 'Save Changes'}
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="w-16 h-16 rounded-full bg-turbo-black/5 flex items-center justify-center">
-                      <User className="w-8 h-8 text-turbo-black/40" />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <p className="text-turbo-black/60 mb-1">Your Name</p>
-                    <p className="font-medium">{profile?.name || 'Not set'}</p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-turbo-black/60 mb-1">Email</p>
-                    <p className="font-medium">{profile?.email || 'Not set'}</p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-turbo-black/60 mb-1">Message Style</p>
-                    <p className="font-medium">{profile?.message_style === 'professional' ? 'Professional' : profile?.message_style || 'Not set'}</p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-turbo-black/60 mb-1">Role</p>
-                    <p className="font-medium">{profile?.role || 'Not set'}</p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-turbo-black/60 mb-1">Outreach Type</p>
-                    <p className="font-medium">{profile?.outreach_type || 'Not set'}</p>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Company Info Section */}
-          <div className="p-6 bg-white rounded-xl border-2 border-turbo-black">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold">Company Information</h2>
-              {!isEditingCompanyInfo && (
-                <button
-                  onClick={() => setIsEditingCompanyInfo(true)}
-                  className="text-sm font-medium text-turbo-black/60 hover:text-turbo-blue transition-colors"
-                >
-                  Edit Company
-                </button>
-              )}
-            </div>
-            <div className="space-y-6">
-              <div className="flex items-center gap-4 mb-8">
-                <img 
-                  src="/fm-logo.png" 
-                  alt="Company Logo" 
-                  className="w-16 h-16 object-contain border border-turbo-black/10 rounded-lg"
-                />
-                {isEditingCompanyInfo && (
-                  <button className="px-4 py-2 text-sm font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-black rounded-full transition-colors">
-                    Update Logo
+                <div className="pt-6 flex justify-end gap-2">
+                  <button
+                    onClick={handleCancelUserInfo}
+                    className="px-4 py-2 text-sm font-medium text-turbo-black hover:text-turbo-blue transition-colors"
+                  >
+                    Cancel
                   </button>
-                )}
+                  <button
+                    onClick={handleSaveUserInfo}
+                    disabled={!isUserInfoValid() || isSubmitting}
+                    className={`px-6 py-2 text-sm font-medium text-turbo-beige rounded-full transition-colors ${
+                      isUserInfoValid() && !isSubmitting
+                        ? 'bg-turbo-blue hover:bg-turbo-black'
+                        : 'bg-turbo-black/40 cursor-not-allowed'
+                    }`}
+                  >
+                    {isSubmitting ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
               </div>
+            )}
 
-              {isEditingCompanyInfo ? (
-                <>
+            {isEditingCompanyInfo && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold mb-6">Edit Company</h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-turbo-black mb-1">
                       Company Name
@@ -436,7 +448,7 @@ export default function Account() {
                       type="text"
                       value={formData.companyName}
                       onChange={(e) => handleInfoChange('companyName', e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-1 focus:ring-turbo-blue"
+                      className="w-full px-3 py-2 text-sm border-2 border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-2 focus:ring-turbo-blue"
                     />
                   </div>
                   
@@ -448,86 +460,66 @@ export default function Account() {
                       type="text"
                       value={formData.businessType}
                       onChange={(e) => handleInfoChange('businessType', e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-1 focus:ring-turbo-blue"
+                      className="w-full px-3 py-2 text-sm border-2 border-turbo-black rounded-lg bg-turbo-beige focus:outline-none focus:ring-2 focus:ring-turbo-blue"
                     />
                   </div>
+                </div>
 
-                  <div className="pt-4 mt-4 border-t border-turbo-black/10 flex justify-end gap-2">
-                    <button
-                      onClick={handleCancelCompanyInfo}
-                      className="px-4 py-2 text-sm font-medium text-turbo-black hover:text-turbo-blue transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSaveCompanyInfo}
-                      disabled={!isCompanyInfoValid() || isSubmitting}
-                      className={`px-6 py-2 text-sm font-medium text-turbo-beige rounded-full transition-colors ${
-                        isCompanyInfoValid() && !isSubmitting
-                          ? 'bg-turbo-blue hover:bg-turbo-black'
-                          : 'bg-turbo-black/40 cursor-not-allowed'
-                      }`}
-                    >
-                      {isSubmitting ? 'Saving...' : 'Save Changes'}
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <p className="text-turbo-black/60 mb-1">Company Name</p>
-                    <p className="font-medium">{profile?.company_name || 'Not set'}</p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-turbo-black/60 mb-1">Business Type</p>
-                    <p className="font-medium">{profile?.business_type || 'Not set'}</p>
-                  </div>
-                </>
-              )}
-
-              <div>
-                <p className="text-turbo-black/60 mb-1">Total Tasks Used</p>
-                <div className="flex items-center gap-2">
-                  <p className="font-medium">{profile?.tasks_used || 0}</p>
-                  <span className="text-xs text-turbo-black/40">all-time</span>
+                <div className="pt-6 flex justify-end gap-2">
+                  <button
+                    onClick={handleCancelCompanyInfo}
+                    className="px-4 py-2 text-sm font-medium text-turbo-black hover:text-turbo-blue transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveCompanyInfo}
+                    disabled={!isCompanyInfoValid() || isSubmitting}
+                    className={`px-6 py-2 text-sm font-medium text-turbo-beige rounded-full transition-colors ${
+                      isCompanyInfoValid() && !isSubmitting
+                        ? 'bg-turbo-blue hover:bg-turbo-black'
+                        : 'bg-turbo-black/40 cursor-not-allowed'
+                    }`}
+                  >
+                    {isSubmitting ? 'Saving...' : 'Save Changes'}
+                  </button>
                 </div>
               </div>
+            )}
+          </div>
+        )}
+
+        {/* Request Credits Section */}
+        <div className="bg-turbo-beige border-2 border-turbo-black rounded-xl p-8">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <CreditCard className="w-5 h-5 text-turbo-black" />
+              <h2 className="text-xl font-semibold">Need More Credits?</h2>
             </div>
           </div>
-
-          {/* Credits & Billing Section */}
-          <div id="billing" className="p-6 bg-white rounded-xl border-2 border-turbo-black">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <CreditCard className="w-5 h-5 text-turbo-black" />
-                <h2 className="text-xl font-semibold">Credits & Billing</h2>
-              </div>
+          
+          <div className="space-y-6">
+            <div>
+              <p className="text-3xl font-bold text-turbo-black mb-2">
+                {isLoadingCredits ? (
+                  <span className="inline-block w-12 h-8 bg-turbo-black/5 rounded animate-pulse" />
+                ) : (
+                  `${credits} credits remaining`
+                )}
+              </p>
+              <p className="text-turbo-black/60">Use credits to generate content with AI</p>
             </div>
             
-            <div className="space-y-6">
-              <div>
-                <p className="text-sm text-turbo-black/60 mb-2">Available Credits</p>
-                <p className="text-3xl font-bold text-turbo-black">
-                  {isLoadingCredits ? (
-                    <span className="inline-block w-12 h-8 bg-turbo-black/5 rounded animate-pulse" />
-                  ) : (
-                    credits
-                  )}
-                </p>
-              </div>
-              
-              <button
-                onClick={() => {
-                  const subject = encodeURIComponent("More Turbo Credits")
-                  const body = encodeURIComponent("Hey Matt,\n\nLoving Turbo so far... but I ran out of credits. Any way I could get some more?")
-                  window.location.href = `mailto:matt@flickmanmedia.com?subject=${subject}&body=${body}`
-                }}
-                className="w-full px-4 py-3 text-sm font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue rounded-lg transition-colors"
-              >
-                Request More Credits
-              </button>
-            </div>
+            <button
+              onClick={() => {
+                const subject = encodeURIComponent("More Turbo Credits")
+                const body = encodeURIComponent("Hey Matt,\n\nLoving Turbo so far... but I ran out of credits. Any way I could get some more?")
+                window.location.href = `mailto:matt@flickmanmedia.com?subject=${subject}&body=${body}`
+              }}
+              className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors"
+            >
+              Request More Credits
+            </button>
           </div>
         </div>
       </div>

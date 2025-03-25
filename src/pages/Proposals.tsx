@@ -24,8 +24,9 @@ const ViewState: Record<'Input' | 'Loading' | 'Result', ViewState> = {
 export default function Proposals() {
   const { initialized, session, incrementTasksUsed } = useAuth()
   const [formData, setFormData] = useState<FormDataWithWeather>(() => {
-    const saved = localStorage.getItem('proposal_form_data')
-    return saved ? JSON.parse(saved) : {}
+    // Clear localStorage on first load to ensure fresh start
+    localStorage.removeItem('proposal_form_data')
+    return {}
   })
   const [viewState, setViewState] = useState<ViewState>(() => {
     const savedResult = localStorage.getItem('proposal_result')
@@ -349,10 +350,13 @@ export default function Proposals() {
                                   reader.onload = (e) => {
                                     if (typeof e.target?.result === 'string') {
                                       handleFieldChange(field.id, e.target.result)
+                                      setSelectedFileName(file.name)
                                     }
                                   }
-                                  setSelectedFileName(file.name)
                                   reader.readAsText(file)
+                                } else {
+                                  setSelectedFileName('')
+                                  handleFieldChange(field.id, '')
                                 }
                               }}
                               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
@@ -361,8 +365,8 @@ export default function Proposals() {
                               <div className="flex items-center px-3 border-r border-turbo-black">
                                 Choose File
                               </div>
-                              <div className="flex items-center px-3 flex-1">
-                                {selectedFileName || 'No file chosen'}
+                              <div className="flex items-center px-3 flex-1 text-turbo-black/60">
+                                {formData[field.id] ? selectedFileName : 'No file chosen'}
                               </div>
                             </div>
                           </div>
