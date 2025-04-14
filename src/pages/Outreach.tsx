@@ -14,46 +14,11 @@ import { EmailComposer } from '@/components/outreach/EmailComposer'
 import { ProspectInfo } from '@/components/outreach/ProspectInfo'
 import { OutreachInput } from '@/components/outreach/OutreachInput'
 
-type OnboardingStep = 1 | 2 | 3 | 4
 type HasList = 'yes' | 'no' | null
-type SlideDirection = 'forward' | 'back' | null
 
 // Add new state types and enums
 type ProspectStatus = 'pending' | 'researching' | 'research_complete' | 'generating_emails' | 'ready'
 type InputMode = 'name' | 'company' | 'display'
-
-interface QuestionProps {
-  isActive: boolean
-  direction: SlideDirection
-  children: React.ReactNode
-  step: number
-  currentStep: number
-}
-
-// Question wrapper component to handle animations
-const Question = ({ isActive, direction, children, step, currentStep }: QuestionProps) => {
-  return (
-    <div
-      className={cn(
-        "absolute inset-0 transition-transform duration-500 ease-in-out",
-        !isActive && direction === null && "translate-x-full opacity-0",
-        !isActive && direction === 'forward' && (
-          currentStep > step 
-            ? "-translate-x-full opacity-0"
-            : "translate-x-full opacity-0"
-        ),
-        !isActive && direction === 'back' && (
-          currentStep < step
-            ? "translate-x-full opacity-0"
-            : "-translate-x-full opacity-0"
-        ),
-        isActive && "translate-x-0 opacity-100"
-      )}
-    >
-      {children}
-    </div>
-  )
-}
 
 // Add new state for queued emails
 interface QueuedEmail {
@@ -127,13 +92,11 @@ const OutreachContent = () => {
   const [inputMode, setInputMode] = useState<InputMode>('name')
   const [prospectName, setProspectName] = useState('')
   const [prospectCompany, setProspectCompany] = useState('')
-  const [currentStep, setCurrentStep] = useState<OnboardingStep>(1)
   const [outreachType, setOutreachType] = useState<OutreachType>(profile?.outreach_type as OutreachType || 'getClients')
   const [messageStyle, setMessageStyle] = useState<MessageStyle>('direct')
   const [hasList, setHasList] = useState<HasList>('no')
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [showMainUI, setShowMainUI] = useState(true)
-  const [slideDirection, setSlideDirection] = useState<SlideDirection>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [prospects, setProspects] = useState<Prospect[]>([])
   const [currentProspectIndex, setCurrentProspectIndex] = useState(0)
@@ -160,21 +123,6 @@ const OutreachContent = () => {
     
     return () => window.removeEventListener('resize', checkMobile) // Cleanup
   }, [])
-
-  // Handle navigation
-  const goToNextStep = () => {
-    setCurrentStep((prev: OnboardingStep) => (prev < 4 ? (prev + 1) as OnboardingStep : prev))
-    setSlideDirection('forward')
-    // Reset direction after animation completes
-    setTimeout(() => setSlideDirection(null), 500)
-  }
-
-  const goToPreviousStep = () => {
-    setCurrentStep((prev: OnboardingStep) => (prev > 1 ? (prev - 1) as OnboardingStep : prev))
-    setSlideDirection('back')
-    // Reset direction after animation completes
-    setTimeout(() => setSlideDirection(null), 500)
-  }
 
   // Handle selections
   const handleOutreachTypeSelect = async (type: NonNullable<OutreachType>) => {
@@ -205,8 +153,6 @@ const OutreachContent = () => {
         messageStyle: messageStyle || 'direct'
       }
       setUserInfo(updatedUserInfo)
-      
-      goToNextStep()
     } catch (error) {
       console.error('Error updating outreach type:', error)
     }
@@ -239,8 +185,6 @@ const OutreachContent = () => {
         messageStyle: style
       }
       setUserInfo(updatedUserInfo)
-      
-      goToNextStep()
     } catch (error) {
       console.error('Error updating message style:', error)
     }
@@ -252,8 +196,6 @@ const OutreachContent = () => {
       setChatMode(true)
       setIsLoading(true)
       setShowMainUI(true)
-    } else {
-      goToNextStep()
     }
   }
 
@@ -773,7 +715,7 @@ const OutreachContent = () => {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
 
-  // Add effects to persist state changes
+  // Update the localStorage effects
   useEffect(() => {
     localStorage.setItem('outreachChatMode', JSON.stringify(chatMode))
   }, [chatMode])
@@ -789,10 +731,6 @@ const OutreachContent = () => {
   useEffect(() => {
     localStorage.setItem('outreachProspectCompany', JSON.stringify(prospectCompany))
   }, [prospectCompany])
-
-  useEffect(() => {
-    localStorage.setItem('outreachCurrentStep', JSON.stringify(currentStep))
-  }, [currentStep])
 
   useEffect(() => {
     localStorage.setItem('outreachType', JSON.stringify(outreachType))
@@ -822,7 +760,6 @@ const OutreachContent = () => {
     localStorage.setItem('outreachEmailTemplates', JSON.stringify(emailTemplates))
   }, [emailTemplates])
 
-  // Add effects to persist the new states
   useEffect(() => {
     localStorage.setItem('outreachQueuedEmails', JSON.stringify(queuedEmails))
   }, [queuedEmails])
@@ -835,14 +772,13 @@ const OutreachContent = () => {
     localStorage.setItem('outreachCurrentTemplateIndex', JSON.stringify(currentTemplateIndex))
   }, [currentTemplateIndex])
 
-  // Update the beforeUnload handler to include new items
+  // Update the beforeUnload handler
   useEffect(() => {
     const handleBeforeUnload = () => {
       localStorage.removeItem('outreachChatMode')
       localStorage.removeItem('outreachInputMode')
       localStorage.removeItem('outreachProspectName')
       localStorage.removeItem('outreachProspectCompany')
-      localStorage.removeItem('outreachCurrentStep')
       localStorage.removeItem('outreachType')
       localStorage.removeItem('outreachMessageStyle')
       localStorage.removeItem('outreachHasList')
