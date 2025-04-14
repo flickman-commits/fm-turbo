@@ -1,4 +1,4 @@
-import { User, Send, Clock, FileText, Calendar, LayoutDashboard, Menu, X, Scale } from 'lucide-react'
+import { User, LayoutDashboard, Film, Briefcase } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
@@ -9,25 +9,16 @@ import { TaskType } from '@/types/tasks'
 const navigationCategories = {
   main: [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
-  ],
-  preProduction: [
-    { name: 'Run of Show', icon: Calendar, path: '/run-of-show' },
-    { name: 'Contractor Brief', icon: FileText, path: '/contractor-brief' },
-  ],
-  clientWork: [
-    { name: 'Proposals', icon: FileText, path: '/proposals' },
-    { name: 'Outreach', icon: Send, path: '/outreach' },
-    { name: 'Negotiation', icon: Scale, path: '/negotiation' },
-  ],
-  postProduction: [
-    { name: 'Timeline', icon: Clock, path: '/timeline', beta: true },
+    { name: 'Productions', icon: Film, path: '/productions' },
+    { name: 'Biz Dev', icon: Briefcase, path: '/biz-dev' },
   ]
 }
 
 // Mobile navigation shows main actions
 const mobileNavigationItems: Array<{ name: string; icon: LucideIcon; path: string; beta?: boolean }> = [
   { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
-  { name: 'Tasks', icon: Menu, path: '#' },
+  { name: 'Productions', icon: Film, path: '/productions' },
+  { name: 'Biz Dev', icon: Briefcase, path: '/biz-dev' },
   { name: 'Profile', icon: User, path: '/profile' }
 ]
 
@@ -46,24 +37,6 @@ export function Layout({ children, onTaskSelect }: LayoutProps) {
   const handleTaskSelect = (path: string) => {
     if (onTaskSelect) {
       switch (path) {
-        case '/run-of-show':
-          onTaskSelect('runOfShow')
-          break
-        case '/contractor-brief':
-          onTaskSelect('contractorBrief')
-          break
-        case '/proposals':
-          onTaskSelect('proposal')
-          break
-        case '/outreach':
-          onTaskSelect('outreach')
-          break
-        case '/negotiation':
-          onTaskSelect('negotiation')
-          break
-        case '/timeline':
-          onTaskSelect('timelineFromTranscript')
-          break
         default:
           onTaskSelect(null)
       }
@@ -106,48 +79,6 @@ export function Layout({ children, onTaskSelect }: LayoutProps) {
               onClick={() => handleTaskSelect(item.path)}
             />
           ))}
-
-          {/* Pre-Production Section */}
-          <div className="mt-8">
-            <h3 className="text-sm font-medium text-turbo-black/60 px-4 mb-2">
-              Pre-Production
-            </h3>
-            {navigationCategories.preProduction.map((item) => (
-              <NavigationItem 
-                key={item.name} 
-                item={item}
-                onClick={() => handleTaskSelect(item.path)}
-              />
-            ))}
-          </div>
-
-          {/* Client Work Section */}
-          <div className="mt-8">
-            <h3 className="text-sm font-medium text-turbo-black/60 px-4 mb-2">
-              Client Communication
-            </h3>
-            {navigationCategories.clientWork.map((item) => (
-              <NavigationItem 
-                key={item.name} 
-                item={item}
-                onClick={() => handleTaskSelect(item.path)}
-              />
-            ))}
-          </div>
-
-          {/* Post-Production Section */}
-          <div className="mt-8">
-            <h3 className="text-sm font-medium text-turbo-black/60 px-4 mb-2">
-              Post-Production
-            </h3>
-            {navigationCategories.postProduction.map((item) => (
-              <NavigationItem 
-                key={item.name} 
-                item={item}
-                onClick={() => handleTaskSelect(item.path)}
-              />
-            ))}
-          </div>
         </nav>
 
         {/* Fixed Bottom Section */}
@@ -174,67 +105,30 @@ export function Layout({ children, onTaskSelect }: LayoutProps) {
           <div className="flex flex-col h-full">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-turbo-black/10">
-              <h2 className="text-xl font-bold text-turbo-black">Tasks</h2>
+              <h2 className="text-xl font-bold text-turbo-black">Menu</h2>
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="p-2 text-turbo-black hover:text-turbo-blue"
               >
-                <X className="w-6 h-6" />
+                <span className="sr-only">Close menu</span>
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
 
             {/* Navigation Content */}
             <div className="flex-1 overflow-y-auto px-4 py-6">
-              {/* Pre-Production Section */}
-              <div className="mb-8">
-                <h3 className="text-sm font-medium text-turbo-black/60 px-4 mb-2">
-                  Pre-Production
-                </h3>
-                {navigationCategories.preProduction.map((item) => (
-                  <NavigationItem 
-                    key={item.name} 
-                    item={item}
-                    onClick={() => {
-                      handleTaskSelect(item.path)
-                      setIsMobileMenuOpen(false)
-                    }}
-                  />
-                ))}
-              </div>
-
-              {/* Client Work Section */}
-              <div className="mb-8">
-                <h3 className="text-sm font-medium text-turbo-black/60 px-4 mb-2">
-                  Client Communication
-                </h3>
-                {navigationCategories.clientWork.map((item) => (
-                  <NavigationItem 
-                    key={item.name} 
-                    item={item}
-                    onClick={() => {
-                      handleTaskSelect(item.path)
-                      setIsMobileMenuOpen(false)
-                    }}
-                  />
-                ))}
-              </div>
-
-              {/* Post-Production Section */}
-              <div className="mb-8">
-                <h3 className="text-sm font-medium text-turbo-black/60 px-4 mb-2">
-                  Post-Production
-                </h3>
-                {navigationCategories.postProduction.map((item) => (
-                  <NavigationItem 
-                    key={item.name} 
-                    item={item}
-                    onClick={() => {
-                      handleTaskSelect(item.path)
-                      setIsMobileMenuOpen(false)
-                    }}
-                  />
-                ))}
-              </div>
+              {navigationCategories.main.map((item) => (
+                <NavigationItem 
+                  key={item.name} 
+                  item={item}
+                  onClick={() => {
+                    handleTaskSelect(item.path)
+                    setIsMobileMenuOpen(false)
+                  }}
+                />
+              ))}
             </div>
           </div>
         </div>
@@ -273,8 +167,10 @@ export function Layout({ children, onTaskSelect }: LayoutProps) {
       </nav>
 
       {/* Main Content */}
-      <main className="md:pl-64 min-h-screen pb-24 pt-20 md:pt-0">
-        {children}
+      <main className="md:pl-64 min-h-screen pb-24 pt-20 md:pt-8">
+        <div className="max-w-7xl mx-auto px-4">
+          {children}
+        </div>
       </main>
 
       {showFeatureRequest && (

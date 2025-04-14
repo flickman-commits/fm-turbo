@@ -1,4 +1,5 @@
 import { Layout } from '@/components/Layout'
+import { BackButton } from '@/components/ui/back-button'
 import { useState, useEffect, useCallback } from 'react'
 import { Command, ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -8,9 +9,12 @@ import { Prospect, UserInfo, EmailTemplate, ProspectResearch } from '@/types/out
 import { DEFAULT_USER_INFO } from '@/config/constants'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
+import { OutreachHeader } from '@/components/outreach/OutreachHeader'
+import { OutreachSettings, MessageStyle, OutreachType } from '@/components/outreach/OutreachSettings'
+import { EmailComposer } from '@/components/outreach/EmailComposer'
+import { ProspectInfo } from '@/components/outreach/ProspectInfo'
+import { OutreachInput } from '@/components/outreach/OutreachInput'
 
-type OutreachType = 'getClients' | 'getJob' | 'getSpeakers' | 'getHotelStay' | 'getSponsors' | null
-type MessageStyle = 'direct' | 'casual' | 'storytelling'
 type OnboardingStep = 1 | 2 | 3 | 4
 type HasList = 'yes' | 'no' | null
 type SlideDirection = 'forward' | 'back' | null
@@ -115,101 +119,42 @@ const extractValue = (values: string[], columnIndex: number): string => {
   return value ? value.trim().replace(/^["']|["']$/g, '') : ''
 }
 
-export default function Outreach() {
+const OutreachContent = () => {
   const { initialized, incrementTasksUsed, profile, setProfile } = useAuth()
+  
+  // Add back necessary constants
+  const RESEARCH_WINDOW_SIZE = 3
+  const isEditing = false
+
   // Move all state declarations to the top
   const [chatMode, setChatMode] = useState(() => {
     const saved = localStorage.getItem('outreachChatMode')
     return saved ? JSON.parse(saved) : true
   })
-  const [inputMode, setInputMode] = useState<InputMode>(() => {
-    const saved = localStorage.getItem('outreachInputMode')
-    return saved ? JSON.parse(saved) : 'name'
-  })
-  const [prospectName, setProspectName] = useState(() => {
-    const saved = localStorage.getItem('outreachProspectName')
-    return saved ? JSON.parse(saved) : ''
-  })
-  const [prospectCompany, setProspectCompany] = useState(() => {
-    const saved = localStorage.getItem('outreachProspectCompany')
-    return saved ? JSON.parse(saved) : ''
-  })
-
-  const [currentStep, setCurrentStep] = useState<OnboardingStep>(() => {
-    const saved = localStorage.getItem('outreachCurrentStep')
-    return saved ? JSON.parse(saved) : 1
-  })
-  const [outreachType, setOutreachType] = useState<OutreachType>(() => {
-    return profile?.outreach_type as OutreachType || 'getClients'
-  })
-  const [messageStyle, setMessageStyle] = useState<MessageStyle>(() => {
-    return profile?.message_style as MessageStyle || 'direct'
-  })
-  const [hasList, setHasList] = useState<HasList>(() => {
-    const saved = localStorage.getItem('outreachHasList')
-    return saved ? JSON.parse(saved) : 'no'
-  })
+  const [inputMode, setInputMode] = useState<InputMode>('name')
+  const [prospectName, setProspectName] = useState('')
+  const [prospectCompany, setProspectCompany] = useState('')
+  const [currentStep, setCurrentStep] = useState<OnboardingStep>(1)
+  const [outreachType, setOutreachType] = useState<OutreachType>(profile?.outreach_type as OutreachType || 'getClients')
+  const [messageStyle, setMessageStyle] = useState<MessageStyle>('direct')
+  const [hasList, setHasList] = useState<HasList>('no')
   const [csvFile, setCsvFile] = useState<File | null>(null)
-  const [showMainUI, setShowMainUI] = useState(() => {
-    const saved = localStorage.getItem('outreachShowMainUI')
-    return saved ? JSON.parse(saved) : true
-  })
+  const [showMainUI, setShowMainUI] = useState(true)
   const [slideDirection, setSlideDirection] = useState<SlideDirection>(null)
   const [isLoading, setIsLoading] = useState(false)
-  
-  // New state for prospects
-  const [prospects, setProspects] = useState<Prospect[]>(() => {
-    const saved = localStorage.getItem('outreachProspects')
-    return saved ? JSON.parse(saved) : []
-  })
-  const [currentProspectIndex, setCurrentProspectIndex] = useState(() => {
-    const saved = localStorage.getItem('outreachCurrentProspectIndex')
-    return saved ? JSON.parse(saved) : 0
-  })
-  const currentProspect = prospects[currentProspectIndex]
-
-  // New state for email templates and research
-  const [currentTemplateIndex, setCurrentTemplateIndex] = useState(() => {
-    const saved = localStorage.getItem('outreachCurrentTemplateIndex')
-    return saved ? JSON.parse(saved) : 0
-  })
-  const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>(() => {
-    const saved = localStorage.getItem('outreachEmailTemplates')
-    return saved ? JSON.parse(saved) : []
-  })
+  const [prospects, setProspects] = useState<Prospect[]>([])
+  const [currentProspectIndex, setCurrentProspectIndex] = useState(0)
+  const [currentTemplateIndex, setCurrentTemplateIndex] = useState(0)
+  const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([])
   const [isResearching, setIsResearching] = useState(false)
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
-
-  // Research queue management
-  const RESEARCH_WINDOW_SIZE = 3
-
-  // Add new state for tracking email generation
   const [isGeneratingEmails, setIsGeneratingEmails] = useState(false)
-
-  // Add new state for process tracking
   const [processingQueue, setProcessingQueue] = useState<Set<string>>(new Set())
-  const [prospectStatuses, setProspectStatuses] = useState<Record<string, ProspectStatus>>(() => {
-    const saved = localStorage.getItem('outreachProspectStatuses')
-    return saved ? JSON.parse(saved) : {}
-  })
-
-  // Add new state for tracking emails sent today
-  const [emailsSentToday, setEmailsSentToday] = useState(() => {
-    const saved = localStorage.getItem('outreachEmailsSentToday')
-    return saved ? JSON.parse(saved) : 0
-  })
-
-  // Fix isEditing declaration - only use the value since setter is not needed
-  const isEditing = false
-
-  // Add new state for queued emails
-  const [queuedEmails, setQueuedEmails] = useState<QueuedEmail[]>(() => {
-    const saved = localStorage.getItem('outreachQueuedEmails')
-    return saved ? JSON.parse(saved) : []
-  })
-
-  // Add mobile check state
+  const [prospectStatuses, setProspectStatuses] = useState<Record<string, ProspectStatus>>({})
+  const [queuedEmails, setQueuedEmails] = useState<QueuedEmail[]>([])
   const [isMobile, setIsMobile] = useState(false)
+
+  const currentProspect = prospects[currentProspectIndex]
 
   // Add effect to check for mobile
   useEffect(() => {
@@ -324,6 +269,7 @@ export default function Outreach() {
     if (file && file.type === 'text/csv') {
       setCsvFile(file)
       setIsLoading(true)
+      setChatMode(false)
       try {
         await parseCSV(file)
         setShowMainUI(true)
@@ -561,8 +507,8 @@ export default function Outreach() {
         role: profile.role || 'Professional',
         email: profile.email || '',
         businessType: profile.business_type || 'business',
-        messageStyle: (profile.message_style as UserInfo['messageStyle']) || 'direct',
-        outreachType: (profile.outreach_type as UserInfo['outreachType']) || 'getClients'
+        messageStyle: (profile.message_style as MessageStyle) || 'direct',
+        outreachType: (profile.outreach_type as OutreachType) || 'getClients'
       }
       console.log('✅ Successfully loaded user info from profile:', userInfoFromProfile)
       setUserInfo(userInfoFromProfile)
@@ -734,7 +680,6 @@ export default function Outreach() {
       const mailtoLink = `mailto:${email.prospectEmail}?subject=${encodeURIComponent(email.subject)}&body=${encodeURIComponent(email.body)}`
       window.open(mailtoLink, '_blank')
     })
-    setEmailsSentToday((prev: number) => prev + queuedEmails.length)
     setQueuedEmails([])
   }
 
@@ -819,11 +764,11 @@ export default function Outreach() {
     const timeUntilMidnight = tomorrow.getTime() - now.getTime()
 
     const timer = setTimeout(() => {
-      setEmailsSentToday(0)
+      setQueuedEmails([])
     }, timeUntilMidnight)
 
     return () => clearTimeout(timer)
-  }, [emailsSentToday])
+  }, [queuedEmails])
 
   // Add keyboard event listener
   useEffect(() => {
@@ -886,10 +831,6 @@ export default function Outreach() {
   }, [queuedEmails])
 
   useEffect(() => {
-    localStorage.setItem('outreachEmailsSentToday', JSON.stringify(emailsSentToday))
-  }, [emailsSentToday])
-
-  useEffect(() => {
     localStorage.setItem('outreachProspectStatuses', JSON.stringify(prospectStatuses))
   }, [prospectStatuses])
 
@@ -913,7 +854,6 @@ export default function Outreach() {
       localStorage.removeItem('outreachCurrentProspectIndex')
       localStorage.removeItem('outreachEmailTemplates')
       localStorage.removeItem('outreachQueuedEmails')
-      localStorage.removeItem('outreachEmailsSentToday')
       localStorage.removeItem('outreachProspectStatuses')
       localStorage.removeItem('outreachCurrentTemplateIndex')
     }
@@ -1069,7 +1009,106 @@ export default function Outreach() {
     }
   }
 
-  // Show loading state while auth is initializing
+  return (
+    <div>
+      <div className="flex justify-between items-start mb-8">
+        <OutreachHeader />
+        {(prospects.length > 0 || currentProspect || isResearching || isGeneratingEmails) && (
+          <button
+            onClick={handleNewContact}
+            className="px-4 py-2 bg-turbo-blue text-white rounded-lg hover:bg-turbo-blue/90 transition-colors flex items-center gap-2"
+          >
+            New Contact
+            <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-white/30 bg-white/10 px-1.5 font-mono text-[10px] font-medium">
+              <Command className="h-3 w-3" />
+              <span className="text-xs">H</span>
+            </kbd>
+          </button>
+        )}
+      </div>
+
+      <div className="grid grid-cols-[1fr_350px] gap-6">
+        <div className="flex flex-col gap-4">
+          {(!prospects.length || !currentProspect) && !isResearching && !isGeneratingEmails ? (
+            <div className="rounded-lg border-2 border-turbo-black/10 p-4 bg-white">
+              <OutreachInput
+                prospectName={prospectName}
+                setProspectName={setProspectName}
+                prospectCompany={prospectCompany}
+                setProspectCompany={setProspectCompany}
+                inputMode={inputMode}
+                setInputMode={setInputMode}
+                handleChatSubmit={handleChatSubmit}
+                handleFileChange={handleFileChange}
+                hasList={hasList}
+                setHasList={setHasList}
+              />
+            </div>
+          ) : (
+            <EmailComposer
+              isGeneratingEmails={isGeneratingEmails}
+              emailTemplates={emailTemplates}
+              currentTemplateIndex={currentTemplateIndex}
+              setEmailTemplates={setEmailTemplates}
+              goToPreviousTemplate={goToPreviousTemplate}
+              goToNextTemplate={goToNextTemplate}
+              currentProspect={currentProspect}
+              prospectStatuses={prospectStatuses}
+              queuedEmails={queuedEmails}
+            />
+          )}
+
+          <OutreachSettings
+            outreachType={outreachType}
+            messageStyle={messageStyle}
+            setOutreachType={setOutreachType}
+            setMessageStyle={setMessageStyle}
+            profile={profile}
+            setProfile={setProfile}
+            userInfo={userInfo}
+            setUserInfo={setUserInfo}
+            onRegenerateEmails={regenerateEmailsForCurrentProspect}
+          />
+        </div>
+
+        <ProspectInfo
+          prospect={currentProspect}
+          isResearching={isResearching}
+        />
+      </div>
+
+      {/* Send Queued Button */}
+      {queuedEmails.length > 0 && (
+        <div className="fixed bottom-8 right-8">
+          <button
+            onClick={handleBatchSend}
+            className="px-6 py-3 bg-turbo-blue text-white rounded-full hover:bg-turbo-blue/90 transition-colors flex items-center gap-2 shadow-lg"
+          >
+            Send {queuedEmails.length} Queued
+            <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-white/30 bg-white/10 px-1.5 font-mono text-[10px] font-medium">
+              <Command className="h-3 w-3" />
+              <span className="text-xs">B</span>
+            </kbd>
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default function Outreach() {
+  const { initialized } = useAuth()
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
   if (!initialized) {
     return (
       <div className="min-h-screen bg-turbo-beige flex items-center justify-center">
@@ -1078,911 +1117,9 @@ export default function Outreach() {
     )
   }
 
-  if (isMobile) {
-    return (
-      <Layout>
-        <div className="h-screen flex flex-col items-center justify-center px-6 text-center">
-          <p className="text-xl font-medium text-turbo-black mb-4">
-            The Outreach feature is only available on Desktop currently.
-          </p>
-          <p className="text-turbo-black/60">
-            You can check out the other features on mobile.
-          </p>
-        </div>
-      </Layout>
-    )
-  }
-
-  if (showMainUI) {
-    if (isLoading) {
-      return (
-        <Layout>
-          <div className="h-screen flex flex-col items-center justify-center">
-            <div className="w-8 h-8 border-4 border-turbo-blue border-t-transparent rounded-full animate-spin mb-4" />
-            <p className="text-lg text-turbo-black/60">Getting ready to Turbocharge your outreach</p>
-          </div>
-        </Layout>
-      )
-    }
-
-    return (
-      <Layout>
-        {/* Inspirational Callout Bar */}
-        <div className="bg-turbo-blue text-white py-3 px-4">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <p className="text-lg font-medium">50 outreach emails a day could change your business forever.</p>
-            <div className="flex items-center gap-6">
-              <button
-                onClick={handleBatchSend}
-                disabled={queuedEmails.length === 0}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-full transition-colors",
-                  queuedEmails.length > 0 
-                    ? "bg-white text-turbo-blue hover:bg-white/90"
-                    : "bg-white/20 text-white/60 cursor-not-allowed"
-                )}
-              >
-                Send {queuedEmails.length} Queued
-                <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-current/30 bg-current/10 px-1.5 font-mono text-[10px] font-medium">
-                  <Command className="h-3 w-3" />
-                  <span className="text-xs">B</span>
-                </kbd>
-              </button>
-              <div className="flex items-center gap-4">
-                <div className="text-sm">
-                  {emailsSentToday}/50 emails sent today
-                </div>
-                <div className="w-32 h-2 bg-white/20 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-white transition-all duration-500 ease-out"
-                    style={{ width: `${Math.min((emailsSentToday / 50) * 100, 100)}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="grid grid-cols-[1fr_350px] gap-6">
-            {/* Left Column - List + Email Composer */}
-            <div className="flex flex-col gap-4">
-              {/* Chat Bar or Current Prospect Bar */}
-              {chatMode ? (
-                <div>
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-semibold text-turbo-black">Who You Want to Talk To</h3>
-                    <label 
-                      className="text-sm text-turbo-blue hover:text-turbo-black transition-colors cursor-pointer flex items-center gap-2"
-                    >
-                      Import List
-                      <input 
-                        type="file" 
-                        className="hidden" 
-                        accept=".csv"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0]
-                          if (file && file.type === 'text/csv') {
-                            setCsvFile(file)
-                            setIsLoading(true)
-                            setChatMode(false)
-                            parseCSV(file).then(() => {
-                              setShowMainUI(true)
-                            }).catch((error) => {
-                              console.error('Error parsing CSV:', error)
-                              setIsLoading(false)
-                            })
-                          }
-                        }}
-                      />
-                    </label>
-                  </div>
-                  <div className="flex items-center justify-between bg-white rounded-lg border-2 border-turbo-black/10 p-6 overflow-hidden min-h-[72px]">
-                    <div className="flex-1 flex items-center gap-4 relative">
-                      <div className="w-full flex items-center gap-4">
-                        {/* Name Input */}
-                        <div 
-                          className={cn(
-                            "w-full flex items-center gap-4 absolute inset-0 transition-all duration-300",
-                            inputMode === 'name' ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
-                          )}
-                        >
-                          <input
-                            type="text"
-                            value={prospectName}
-                            onChange={(e) => setProspectName(e.target.value)}
-                            placeholder="Name of person"
-                            className="flex-1 px-4 py-3 text-sm bg-transparent focus:outline-none"
-                            onKeyDown={(e) => {
-                              if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && prospectName) {
-                                e.preventDefault()
-                                setInputMode('company')
-                              }
-                            }}
-                          />
-                          <button
-                            onClick={() => {
-                              if (prospectName) {
-                                setInputMode('company')
-                              }
-                            }}
-                            disabled={!prospectName}
-                            className="px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-blue/90 disabled:opacity-50 rounded-full transition-colors"
-                          >
-                            Next
-                          </button>
-                        </div>
-
-                        {/* Company Input */}
-                        <div 
-                          className={cn(
-                            "w-full flex items-center gap-4 absolute inset-0 transition-all duration-300",
-                            inputMode === 'company' ? "translate-x-0 opacity-100" : 
-                            inputMode === 'name' ? "translate-x-full opacity-0" : "-translate-x-full opacity-0"
-                          )}
-                        >
-                          <input
-                            type="text"
-                            value={prospectCompany}
-                            onChange={(e) => setProspectCompany(e.target.value)}
-                            placeholder="What company are they at?"
-                            className="flex-1 px-4 py-3 text-sm bg-transparent focus:outline-none"
-                            onKeyDown={(e) => {
-                              if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && prospectCompany) {
-                                e.preventDefault()
-                                handleChatSubmit()
-                              }
-                            }}
-                          />
-                          <button
-                            onClick={handleChatSubmit}
-                            disabled={!prospectCompany}
-                            className="px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-blue/90 disabled:opacity-50 rounded-full transition-colors"
-                          >
-                            Submit
-                          </button>
-                        </div>
-
-                        {/* Display State */}
-                        <div 
-                          className={cn(
-                            "w-full flex items-center justify-between absolute inset-0 transition-all duration-300",
-                            inputMode === 'display' ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
-                          )}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold text-turbo-black">{prospectName}</span>
-                            <span className="text-sm text-turbo-black/60">at {prospectCompany}</span>
-                          </div>
-                          <button
-                            onClick={handleNewContact}
-                            className="px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-blue hover:bg-turbo-blue/90 rounded-full transition-colors flex items-center gap-2"
-                          >
-                            New Contact
-                            <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-white/30 bg-white/10 px-1.5 font-mono text-[10px] font-medium">
-                              <Command className="h-3 w-3" />
-                              <span className="text-xs">H</span>
-                            </kbd>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-2 text-left">
-                    <a href="/profile" className="text-xs text-turbo-blue/60 hover:text-turbo-blue transition-colors">
-                      Change sender info
-                    </a>
-                  </div>
-                </div>
-              ) : (
-                // Original Current Prospect Bar
-                <div className="flex items-center justify-between bg-white rounded-lg border-2 border-turbo-black/10 p-4 overflow-hidden">
-                  <div className="flex items-center gap-3">
-                    <div className="flex flex-col relative h-[48px] w-[300px]">
-                      {prospects.map((prospect, index) => (
-                        <div
-                          key={prospect.id}
-                          className={cn(
-                            "absolute top-0 left-0 w-full h-full flex flex-col justify-center transition-all duration-300",
-                            index === currentProspectIndex 
-                              ? "translate-y-0 opacity-100 pointer-events-auto" 
-                              : index < currentProspectIndex
-                                ? "-translate-y-12 opacity-0 pointer-events-none"
-                                : "translate-y-12 opacity-0 pointer-events-none"
-                          )}
-                          style={{
-                            transform: `translateY(${index === currentProspectIndex ? 0 : index < currentProspectIndex ? -48 : 48}px)`
-                          }}
-                        >
-                          <div className="flex flex-col justify-center">
-                            <span className="text-sm font-medium text-turbo-black truncate leading-tight">{prospect.name}</span>
-                            <span className="text-xs text-turbo-black/60 truncate leading-tight">{prospect.company}</span>
-                          </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  <div className="flex items-center gap-4">
-                    {/* Status Indicator */}
-                    <div className="flex items-center gap-1">
-                      {(() => {
-                        const status = prospectStatuses[currentProspect?.id || ''] || 'pending'
-                        if (status === 'researching' || status === 'generating_emails') {
-                          return (
-                            <div className="w-4 h-4 border-2 border-turbo-blue border-t-transparent rounded-full animate-spin" />
-                          )
-                        } else if (status === 'ready') {
-                          return (
-                            <svg className="w-4 h-4 text-turbo-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                          )
-                        } else {
-                          return (
-                            <svg className="w-4 h-4 text-turbo-black/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          )
-                        }
-                      })()}
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <div className="flex flex-col items-center">
-                        <button 
-                          onClick={goToPreviousProspect}
-                          disabled={currentProspectIndex === 0}
-                          className="p-1 text-turbo-black/40 hover:text-turbo-blue transition-colors disabled:opacity-30"
-                        >
-                          <ArrowLeft className="w-4 h-4 rotate-90" />
-                        </button>
-                        <kbd className="mt-1 inline-flex h-5 items-center gap-1 rounded border border-turbo-black/30 bg-turbo-black/5 px-1.5 font-mono text-[10px] font-medium text-turbo-black/60">
-                          I
-                        </kbd>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <button 
-                          onClick={goToNextProspect}
-                          disabled={currentProspectIndex === prospects.length - 1}
-                          className="p-1 text-turbo-black/40 hover:text-turbo-blue transition-colors disabled:opacity-30"
-                        >
-                          <ArrowLeft className="w-4 h-4 -rotate-90" />
-                        </button>
-                        <kbd className="mt-1 inline-flex h-5 items-center gap-1 rounded border border-turbo-black/30 bg-turbo-black/5 px-1.5 font-mono text-[10px] font-medium text-turbo-black/60">
-                          K
-                        </kbd>
-                    </div>
-                      <span className="text-sm text-turbo-black/60 ml-2">
-                        {currentProspectIndex + 1}/{prospects.length}
-                      </span>
-                </div>
-              </div>
-            </div>
-              )}
-
-              {/* Settings Panel */}
-              <div className="rounded-lg border-2 border-turbo-black/10 p-4 bg-white">
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Context of Outreach Selector */}
-                  <div>
-                    <label className="block text-xs font-medium text-turbo-black mb-1">Outreach Type</label>
-                    <select
-                      value={outreachType || 'getClients'}
-                      onChange={async (e) => {
-                        const newType = e.target.value as OutreachType
-                        setOutreachType(newType)
-                        console.log('📝 Outreach type changed:', { from: outreachType, to: newType })
-                        
-                        try {
-                          // Update profile in Supabase
-                          const { data, error } = await supabase
-                            .from('users')
-                            .update({ outreach_type: newType })
-                            .eq('id', profile?.id)
-                            .select()
-                            .single()
-
-                          if (error) throw error
-
-                          // Update local profile state
-                          if (data && setProfile) {
-                            setProfile(data)
-                          }
-
-                          // Update userInfo and regenerate emails
-                          if (newType) {
-                            const updatedUserInfo: UserInfo = {
-                              ...DEFAULT_USER_INFO,
-                              ...userInfo,
-                              outreachType: newType,
-                              messageStyle: messageStyle || 'direct'
-                            }
-                            setUserInfo(updatedUserInfo)
-                            
-                            // Regenerate emails with new type
-                            await regenerateEmailsForCurrentProspect(newType, messageStyle)
-                          }
-                        } catch (error) {
-                          console.error('Error updating outreach type:', error)
-                        }
-                      }}
-                      className="w-full px-2 py-1.5 text-sm rounded-lg border-2 border-turbo-black/10 focus:border-turbo-blue focus:outline-none transition-colors"
-                    >
-                      <option value="getClients">Get New Clients</option>
-                      <option value="getJob">Land a New Job</option>
-                      <option value="getSpeakers">Get Event Speakers</option>
-                      <option value="getHotelStay">Get Hotel Stay</option>
-                      <option value="getSponsors">Get Sponsors</option>
-                    </select>
-                  </div>
-
-                  {/* Message Style Selector */}
-                  <div>
-                    <label className="block text-xs font-medium text-turbo-black mb-1">Message Style</label>
-                    <select
-                      value={messageStyle || 'casual'}
-                      onChange={async (e) => {
-                        const newStyle = e.target.value as MessageStyle
-                        setMessageStyle(newStyle)
-                        console.log('📝 Message style changed:', { from: messageStyle, to: newStyle })
-                        
-                        try {
-                          // Update profile in Supabase
-                          const { data, error } = await supabase
-                            .from('users')
-                            .update({ message_style: newStyle })
-                            .eq('id', profile?.id)
-                            .select()
-                            .single()
-
-                          if (error) throw error
-
-                          // Update local profile state
-                          if (data && setProfile) {
-                            setProfile(data)
-                          }
-
-                          // Update userInfo for email generation
-                          const updatedUserInfo: UserInfo = {
-                            ...DEFAULT_USER_INFO,
-                            ...userInfo,
-                            messageStyle: newStyle
-                          }
-                          setUserInfo(updatedUserInfo)
-                          
-                          goToNextStep()
-                        } catch (error) {
-                          console.error('Error updating message style:', error)
-                        }
-                      }}
-                      className="w-full px-2 py-1.5 text-sm rounded-lg border-2 border-turbo-black/10 focus:border-turbo-blue focus:outline-none transition-colors"
-                    >
-                      <option value="direct">Direct & Professional</option>
-                      <option value="casual">Casual & Friendly</option>
-                      <option value="storytelling">Story-Driven</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Email Composer */}
-              <div className="flex-1 rounded-lg border-2 border-turbo-black/10 p-6 overflow-hidden flex flex-col bg-white">
-                <h3 className="text-xl font-semibold mb-6 text-turbo-black">What You're Going to Send <span className="text-turbo-black/60">(editable)</span></h3>
-                <div className="flex-1 relative">
-                  {isGeneratingEmails || (emailTemplates.length === 0 && (prospectStatuses[currentProspect?.id || ''] === 'researching' || prospectStatuses[currentProspect?.id || ''] === 'generating_emails')) ? (
-                      <div className="flex flex-col items-center justify-center h-full">
-                        <div className="w-8 h-8 border-4 border-turbo-blue border-t-transparent rounded-full animate-spin mb-4" />
-                        <p className="text-turbo-black/60">Writing email starters...</p>
-                      </div>
-                  ) : emailTemplates.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-turbo-black/40">
-                      <p>No email templates available yet</p>
-                    </div>
-                  ) : (
-                    <div 
-                      className="absolute inset-0 transition-transform duration-300 ease-in-out"
-                      style={{ transform: `translateX(${-currentTemplateIndex * 100}%)` }}
-                    >
-                      {emailTemplates.map((template, index) => (
-                        <div 
-                          key={index}
-                          className="absolute inset-0 w-full transition-opacity duration-300 flex flex-col"
-                          style={{ 
-                            transform: `translateX(${index * 100}%)`,
-                            opacity: currentTemplateIndex === index ? 1 : 0,
-                            pointerEvents: currentTemplateIndex === index ? 'auto' : 'none'
-                          }}
-                        >
-                          {queuedEmails.some(
-                            email => email.prospectId === currentProspect?.id && email.templateIndex === index
-                          ) && (
-                            <div className="absolute top-0 right-0 bg-turbo-black/5 text-turbo-black/60 px-3 py-1 rounded-bl-lg text-sm flex items-center gap-2">
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                              Queued
-                            </div>
-                          )}
-                          <div className="relative group mb-4">
-                            <div className="flex items-center mb-4">
-                              <span className="font-bold text-turbo-black mr-2">Subject:</span>
-                              <input
-                                type="text"
-                                value={template?.subject || ''}
-                                onChange={(e) => {
-                                  const newTemplates = [...emailTemplates]
-                                  newTemplates[index] = {
-                                    ...template,
-                                    subject: e.target.value
-                                  }
-                                  setEmailTemplates(newTemplates)
-                                }}
-                                className="flex-1 p-2 border-b-2 border-transparent hover:border-turbo-black/10 focus:border-turbo-blue focus:outline-none transition-colors rounded-lg"
-                                placeholder="Subject line..."
-                              />
-                  </div>
-                </div>
-                          <div className="relative group flex-1">
-                            <textarea
-                              value={template?.body || ''}
-                              onChange={(e) => {
-                                const newTemplates = [...emailTemplates]
-                                newTemplates[index] = {
-                                  ...template,
-                                  body: e.target.value
-                                }
-                                setEmailTemplates(newTemplates)
-                              }}
-                              className="w-full h-full p-4 text-turbo-black whitespace-pre-wrap resize-none border-2 border-transparent hover:border-turbo-black/10 focus:border-turbo-blue focus:outline-none transition-colors rounded-lg bg-[#FAF9F6]"
-                              placeholder="Email body content will go here..."
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-              </div>
-
-              {/* Navigation and Send Controls */}
-                <div className="flex items-center justify-between mt-6 px-4">
-                  <div className="flex flex-col items-center">
-                    <span className="text-[10px] text-turbo-black/40 whitespace-nowrap mb-2">Browse through email starters</span>
-                    <div className="flex gap-8 items-center">
-                      <div className="flex flex-col items-center">
-                  <button 
-                    onClick={goToPreviousTemplate}
-                    disabled={currentTemplateIndex === 0 || isResearching}
-                    className="p-2 text-turbo-black/40 hover:text-turbo-blue transition-colors disabled:opacity-30 disabled:hover:text-turbo-black/40"
-                  >
-                    <ArrowLeft className="w-6 h-6" />
-                  </button>
-                        <div className="flex flex-col items-center gap-1">
-                          <kbd className="inline-flex h-5 items-center gap-1 rounded border border-turbo-black/30 bg-turbo-black/5 px-1.5 font-mono text-[10px] font-medium text-turbo-black/60">
-                            J
-                          </kbd>
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-center">
-                  <button 
-                    onClick={goToNextTemplate}
-                    disabled={currentTemplateIndex === emailTemplates.length - 1 || isResearching}
-                    className="p-2 text-turbo-black/40 hover:text-turbo-blue transition-colors disabled:opacity-30 disabled:hover:text-turbo-black/40"
-                  >
-                    <ArrowLeft className="w-6 h-6 rotate-180" />
-                  </button>
-                        <div className="flex flex-col items-center gap-1">
-                          <kbd className="inline-flex h-5 items-center gap-1 rounded border border-turbo-black/30 bg-turbo-black/5 px-1.5 font-mono text-[10px] font-medium text-turbo-black/60">
-                            L
-                          </kbd>
-                </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Template Position Indicators */}
-                  <div className="flex gap-2">
-                    {[0, 1, 2, 3, 4].map((index) => (
-                      <div
-                        key={index}
-                        className={cn(
-                          "w-2 h-2 rounded-full transition-colors",
-                          currentTemplateIndex === index
-                            ? "bg-turbo-blue"
-                            : index < emailTemplates.length
-                              ? "bg-turbo-black/20"
-                              : "bg-turbo-black/10"
-                        )}
-                      />
-                    ))}
-                  </div>
-
-                <button
-                    onClick={() => {
-                      if (isCurrentTemplateQueued()) {
-                        handleRemoveFromQueue()
-                      } else {
-                        chatMode ? handleQueueSingleEmail() : handleQueueEmail()
-                      }
-                    }}
-                    disabled={isResearching || !emailTemplates[currentTemplateIndex]}
-                    className={cn(
-                      "px-6 py-3 rounded-full flex items-center gap-2 transition-colors",
-                      isCurrentTemplateQueued()
-                        ? "bg-turbo-black/10 text-turbo-black hover:bg-turbo-black/20"
-                        : "bg-turbo-blue text-white hover:bg-turbo-blue/90",
-                      "disabled:opacity-50",
-                      // Only hide button during name/company input in chat mode
-                      (chatMode && (inputMode === 'name' || inputMode === 'company')) && "hidden"
-                    )}
-                  >
-                    {isCurrentTemplateQueued() ? (
-                      <>
-                        <div className="flex items-center gap-2">
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          <span>Queued</span>
-                        </div>
-                        <span className="text-xs opacity-60">(click to remove)</span>
-                      </>
-                    ) : (
-                      <>
-                        Queue Email
-                        <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-white/30 bg-white/10 px-1.5 font-mono text-[10px] font-medium">
-                          <Command className="h-3 w-3" />
-                          <span className="text-xs">↵</span>
-                        </kbd>
-                      </>
-                    )}
-                </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column - Prospect Info */}
-            <div className="flex flex-col gap-4">
-              {/* Prospect Info Panel */}
-              <div className="rounded-lg border-2 border-turbo-black/10 p-6 bg-white h-[calc(100vh-200px)] sticky top-4 overflow-y-auto">
-                {isResearching ? (
-                  <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
-                    <div className="w-8 h-8 border-4 border-turbo-blue border-t-transparent rounded-full animate-spin mb-4" />
-                    <p className="text-turbo-black/60">Researching this lovely person...</p>
-                    <p className="text-sm text-turbo-black/40 mt-2">Finding all the good stuff about them</p>
-                  </div>
-                ) : !currentProspect ? (
-                  <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
-                    <p className="text-turbo-black/40">No personal or company insights yet.</p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="mb-6">
-                      <div>
-                        <h2 className="text-2xl font-bold text-turbo-black">{currentProspect?.name}</h2>
-                        <p className="text-lg text-turbo-black/60">
-                          {currentProspect?.title} 
-                          {currentProspect?.title && currentProspect?.company && ' at '}
-                          {currentProspect?.company}
-                        </p>
-                        {currentProspect.research?.sources[0]?.startsWith('https://www.linkedin.com/in/') && (
-                          <a
-                            href={currentProspect.research.sources[0]}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-3 inline-flex items-center gap-2 text-sm text-turbo-blue hover:underline"
-                          >
-                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-                            </svg>
-                            View LinkedIn Profile
-                          </a>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Personal Insights */}
-                    {currentProspect?.research?.personInfo && currentProspect.research.personInfo.length > 0 && (
-                      <div className="mb-6">
-                        <p className="text-sm font-medium text-turbo-black mb-2">Personal Insights</p>
-                        <div className="space-y-2">
-                          {currentProspect.research.personInfo.map((info, index) => (
-                            <div 
-                              key={index}
-                              className="text-sm text-turbo-black/60 pl-4 relative"
-                            >
-                              <div className="absolute left-0 top-[0.5em] w-1.5 h-1.5 rounded-full bg-turbo-blue" />
-                              {info}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Company Insights */}
-                    {currentProspect?.research?.companyInfo && currentProspect.research.companyInfo.length > 0 && (
-                      <div className="mb-6">
-                        <p className="text-sm font-medium text-turbo-black mb-2">Company Insights</p>
-                        <div className="space-y-2">
-                          {currentProspect.research.companyInfo.map((info, index) => (
-                            <div 
-                              key={index}
-                              className="text-sm text-turbo-black/60 pl-4 relative"
-                            >
-                              <div className="absolute left-0 top-[0.5em] w-1.5 h-1.5 rounded-full bg-turbo-blue" />
-                              {info}
-                      </div>
-                          ))}
-                    </div>
-                      </div>
-                    )}
-
-                    {/* Sources */}
-                    {currentProspect?.research?.sources && currentProspect.research.sources.length > 0 && (
-                      <div>
-                        <p className="text-sm font-medium text-turbo-black mb-2">Sources</p>
-                        <div className="space-y-1">
-                          {currentProspect.research.sources.map((source, index) => (
-                            <a
-                              key={index}
-                              href={source}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-turbo-blue hover:underline block truncate"
-                            >
-                              {source}
-                            </a>
-                  ))}
-                </div>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </Layout>
-    )
-  }
-
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        {/* Progress Bar */}
-        <div className="mb-12">
-          <div className="h-1 bg-turbo-black/10 rounded-full">
-            <div 
-              className="h-full bg-turbo-blue rounded-full transition-all duration-500"
-              style={{ width: `${(currentStep / 4) * 100}%` }}
-            />
-          </div>
-        </div>
-
-        <div className="min-h-[60vh] flex flex-col relative">
-          {/* Back Button */}
-          {currentStep > 1 && (
-            <button
-              onClick={goToPreviousStep}
-              className="absolute -top-20 left-0 text-turbo-black/60 hover:text-turbo-blue transition-colors flex items-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Back</span>
-            </button>
-          )}
-
-          {/* Questions Container */}
-          <div className="flex-1 relative overflow-hidden">
-            {/* Question 1 */}
-            <Question 
-              isActive={currentStep === 1} 
-              direction={slideDirection}
-              step={1}
-              currentStep={currentStep}
-            >
-              <div className="space-y-8">
-                <h2 className="text-4xl font-bold tracking-tight text-turbo-black">
-                  What are you doing outreach for?
-                </h2>
-                <div className="grid gap-4">
-                  <button
-                    onClick={() => handleOutreachTypeSelect('getClients')}
-                    className={cn(
-                      "p-4 text-left rounded-lg border-2 transition-colors",
-                      outreachType === 'getClients'
-                        ? 'border-turbo-blue bg-turbo-blue text-turbo-beige'
-                        : 'border-turbo-black hover:bg-turbo-black/5'
-                    )}
-                  >
-                    Get new clients
-                  </button>
-                  <button
-                    onClick={() => handleOutreachTypeSelect('getJob')}
-                    className={cn(
-                      "p-4 text-left rounded-lg border-2 transition-colors",
-                      outreachType === 'getJob'
-                        ? 'border-turbo-blue bg-turbo-blue text-turbo-beige'
-                        : 'border-turbo-black hover:bg-turbo-black/5'
-                    )}
-                  >
-                    Land a new job
-                  </button>
-                  <button
-                    onClick={() => handleOutreachTypeSelect('getSpeakers')}
-                    className={cn(
-                      "p-4 text-left rounded-lg border-2 transition-colors",
-                      outreachType === 'getSpeakers'
-                        ? 'border-turbo-blue bg-turbo-blue text-turbo-beige'
-                        : 'border-turbo-black hover:bg-turbo-black/5'
-                    )}
-                  >
-                    Get speakers for an event
-                  </button>
-                  <button
-                    onClick={() => handleOutreachTypeSelect('getHotelStay')}
-                    className={cn(
-                      "p-4 text-left rounded-lg border-2 transition-colors",
-                      outreachType === 'getHotelStay'
-                        ? 'border-turbo-blue bg-turbo-blue text-turbo-beige'
-                        : 'border-turbo-black hover:bg-turbo-black/5'
-                    )}
-                  >
-                    Get free hotel stay for content
-                  </button>
-                  <button
-                    onClick={() => handleOutreachTypeSelect('getSponsors')}
-                    className={cn(
-                      "p-4 text-left rounded-lg border-2 transition-colors",
-                      outreachType === 'getSponsors'
-                        ? 'border-turbo-blue bg-turbo-blue text-turbo-beige'
-                        : 'border-turbo-black hover:bg-turbo-black/5'
-                    )}
-                  >
-                    Get sponsors for a project
-                  </button>
-                </div>
-              </div>
-            </Question>
-
-            {/* Question 2 - Message Style */}
-            <Question 
-              isActive={currentStep === 2} 
-              direction={slideDirection}
-              step={2}
-              currentStep={currentStep}
-            >
-              <div className="space-y-8">
-                <h2 className="text-4xl font-bold tracking-tight text-turbo-black">
-                  Choose which high-converting messaging style you want
-                </h2>
-                <div className="grid gap-4">
-                  <button
-                    onClick={() => handleMessageStyleSelect('direct')}
-                    className={cn(
-                      "p-6 text-left rounded-lg border-2 transition-colors",
-                      messageStyle === 'direct'
-                        ? 'border-turbo-blue bg-turbo-blue text-turbo-beige'
-                        : 'border-turbo-black hover:bg-turbo-black/5'
-                    )}
-                  >
-                    <div className="space-y-2">
-                      <div className="font-semibold">Direct & Professional</div>
-                      <p className="text-sm opacity-80">Clear and straight to the point. Perfect for busy executives and formal industries.</p>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => handleMessageStyleSelect('casual')}
-                    className={cn(
-                      "p-6 text-left rounded-lg border-2 transition-colors",
-                      messageStyle === 'casual'
-                        ? 'border-turbo-blue bg-turbo-blue text-turbo-beige'
-                        : 'border-turbo-black hover:bg-turbo-black/5'
-                    )}
-                  >
-                    <div className="space-y-2">
-                      <div className="font-semibold">Casual & Friendly</div>
-                      <p className="text-sm opacity-80">Warm and conversational. Great for creative industries and building personal connections.</p>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => handleMessageStyleSelect('storytelling')}
-                    className={cn(
-                      "p-6 text-left rounded-lg border-2 transition-colors",
-                      messageStyle === 'storytelling'
-                        ? 'border-turbo-blue bg-turbo-blue text-turbo-beige'
-                        : 'border-turbo-black hover:bg-turbo-black/5'
-                    )}
-                  >
-                    <div className="space-y-2">
-                      <div className="font-semibold">Story-Driven</div>
-                      <p className="text-sm opacity-80">Engaging and narrative-focused. Ideal for building emotional connections and memorable outreach.</p>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            </Question>
-
-            {/* Question 3 - Has List (previously Question 2) */}
-            <Question 
-              isActive={currentStep === 3} 
-              direction={slideDirection}
-              step={3}
-              currentStep={currentStep}
-            >
-              <div className="space-y-8">
-                <h2 className="text-4xl font-bold tracking-tight text-turbo-black">
-                  Do you have a list you want to work through?
-                </h2>
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    onClick={() => handleHasListSelect('yes')}
-                    className={cn(
-                      "p-4 text-center rounded-lg border-2 transition-colors",
-                      hasList === 'yes'
-                        ? 'border-turbo-blue bg-turbo-blue text-turbo-beige'
-                        : 'border-turbo-black hover:bg-turbo-black/5'
-                    )}
-                  >
-                    Yes
-                  </button>
-                  <button
-                    onClick={() => handleHasListSelect('no')}
-                    className={cn(
-                      "p-4 text-center rounded-lg border-2 transition-colors",
-                      hasList === 'no'
-                        ? 'border-turbo-blue bg-turbo-blue text-turbo-beige'
-                        : 'border-turbo-black hover:bg-turbo-black/5'
-                    )}
-                  >
-                    No
-                  </button>
-                </div>
-              </div>
-            </Question>
-
-            {/* Question 4 */}
-            <Question 
-              isActive={currentStep === 4} 
-              direction={slideDirection}
-              step={4}
-              currentStep={currentStep}
-            >
-              <div className="space-y-8">
-                <h2 className="text-4xl font-bold tracking-tight text-turbo-black">
-                  Import List Here
-                </h2>
-                <div className="space-y-4">
-                  <label 
-                    className={cn(
-                      "flex flex-col items-center justify-center w-full h-32",
-                      "border-2 border-dashed rounded-lg",
-                      "cursor-pointer transition-colors",
-                      "border-turbo-black hover:bg-turbo-black/5",
-                      "border-turbo-blue hover:bg-turbo-blue/5",
-                      csvFile 
-                        ? 'border-turbo-blue bg-turbo-blue/5' 
-                        : 'border-turbo-black hover:bg-turbo-black/5'
-                    )}
-                  >
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <p className="mb-2 text-sm text-turbo-black">
-                        {csvFile ? csvFile.name : 'Click to upload CSV file'}
-                      </p>
-                      <p className="text-xs text-turbo-black/60">
-                        Only CSV files are accepted
-                      </p>
-                    </div>
-                    <input 
-                      type="file" 
-                      className="hidden" 
-                      accept=".csv"
-                      onChange={handleFileChange}
-                    />
-                  </label>
-                </div>
-              </div>
-            </Question>
-          </div>
-        </div>
-      </div>
+      <OutreachContent />
     </Layout>
   )
 } 

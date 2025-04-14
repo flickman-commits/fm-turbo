@@ -28,6 +28,8 @@ export default function Account() {
   const [isEditingCompanyInfo, setIsEditingCompanyInfo] = useState(false)
   const [credits, setCredits] = useState<number>(0)
   const [isLoadingCredits, setIsLoadingCredits] = useState(true)
+  const [openProductions, setOpenProductions] = useState<number>(0)
+  const [isLoadingProductions, setIsLoadingProductions] = useState(true)
   
   // Handle scroll to billing section
   useEffect(() => {
@@ -81,6 +83,31 @@ export default function Account() {
     }
 
     loadCredits()
+  }, [session?.user?.id])
+
+  // Load open productions count
+  useEffect(() => {
+    const loadOpenProductions = async () => {
+      if (!session?.user?.id) return
+      
+      try {
+        setIsLoadingProductions(true)
+        const { data, error } = await supabase
+          .from('productions')
+          .select('id', { count: 'exact' })
+          .eq('user_id', session.user.id)
+          .not('status', 'in', '("completed","archived")')
+
+        if (error) throw error
+        setOpenProductions(data?.length || 0)
+      } catch (error) {
+        console.error('Failed to load productions:', error)
+      } finally {
+        setIsLoadingProductions(false)
+      }
+    }
+
+    loadOpenProductions()
   }, [session?.user?.id])
 
   // Update form data when profile changes
@@ -418,11 +445,21 @@ export default function Account() {
                 </div>
                 <span className="text-turbo-black/60">Credits Available</span>
               </div>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-turbo-beige border-2 border-turbo-black flex items-center justify-center">
+                  {isLoadingProductions ? (
+                    <span className="w-4 h-4 border-2 border-turbo-black/20 border-t-turbo-black rounded-full animate-spin" />
+                  ) : (
+                    <span className="text-sm font-bold">{openProductions}</span>
+                  )}
+                </div>
+                <span className="text-turbo-black/60">Open Productions</span>
+              </div>
             </div>
 
             {/* Identity Markers */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {profile?.role && (
+              {profile && profile.role && (
                 <div className="flex items-center gap-2">
                   <User className="w-5 h-5 text-turbo-black/60" />
                   <span>{profile.role}</span>
@@ -456,18 +493,18 @@ export default function Account() {
           </div>
         </div>
 
-        {/* Edit Buttons - Fixed Position */}
+        {/* Edit Buttons - Mobile Friendly */}
         {!isEditing && !isEditingCompanyInfo && (
-          <div className="fixed bottom-8 right-8 flex flex-col gap-2">
+          <div className="flex flex-col gap-3 mb-8 px-4 md:px-0">
             <button
               onClick={() => setIsEditing(true)}
-              className="px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue rounded-full transition-colors shadow-lg"
+              className="w-full md:w-auto px-6 py-3 text-sm font-medium text-turbo-beige bg-turbo-black hover:bg-turbo-blue rounded-lg transition-colors"
             >
               Edit Profile
             </button>
             <button
               onClick={() => setIsEditingCompanyInfo(true)}
-              className="px-6 py-3 text-sm font-medium text-turbo-black bg-turbo-beige hover:bg-turbo-blue hover:text-turbo-beige border-2 border-turbo-black rounded-full transition-colors shadow-lg"
+              className="w-full md:w-auto px-6 py-3 text-sm font-medium text-turbo-black bg-turbo-beige hover:bg-turbo-blue hover:text-turbo-beige border-2 border-turbo-black rounded-lg transition-colors"
             >
               Edit Company
             </button>

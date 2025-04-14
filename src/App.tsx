@@ -9,6 +9,9 @@ import Outreach from '@/pages/Outreach'
 import TimelineFromTranscript from '@/pages/TimelineFromTranscript'
 import Proposals from '@/pages/Proposals'
 import Negotiation from '@/pages/Negotiation'
+import Productions from '@/pages/Productions'
+import NewProduction from '@/pages/NewProduction'
+import BizDev from '@/pages/BizDev'
 import { CompanyInfoProvider } from '@/contexts/CompanyInfoContext'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
@@ -33,6 +36,21 @@ export default function App() {
             } />
 
             {/* Protected Routes */}
+            <Route path="/productions" element={
+              <ProtectedRoute>
+                <Productions />
+              </ProtectedRoute>
+            } />
+            <Route path="/productions/new" element={
+              <ProtectedRoute>
+                <NewProduction />
+              </ProtectedRoute>
+            } />
+            <Route path="/biz-dev" element={
+              <ProtectedRoute>
+                <BizDev />
+              </ProtectedRoute>
+            } />
             <Route path="/proposals" element={
               <ProtectedRoute>
                 <Proposals />
