@@ -103,11 +103,6 @@ const findMatchingColumn = (headers: string[], targetField: ColumnKey): number =
       cleanHeader.includes(variation.toLowerCase())
     )
   })
-  console.log(`Looking for ${targetField} column:`, {
-    variations,
-    headers,
-    foundIndex: headerIndex
-  })
   return headerIndex
 }
 
@@ -749,8 +744,13 @@ const OutreachContent = () => {
     currentProspectIndex, 
     queuedEmails.length,
     chatMode,
-    handleQueueEmail,
+    handleNewContact,
+    goToPreviousTemplate,
+    goToNextTemplate,
+    goToPreviousProspect,
+    goToNextProspect,
     handleQueueSingleEmail,
+    handleQueueEmail,
     handleBatchSend
   ])
 
