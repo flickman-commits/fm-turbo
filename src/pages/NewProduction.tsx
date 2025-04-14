@@ -2,7 +2,7 @@ import { Layout } from '@/components/Layout'
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
-import { Production, ProductionStatus, ProductionType } from '@/types/productions'
+import { Production } from '@/types/productions'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 
