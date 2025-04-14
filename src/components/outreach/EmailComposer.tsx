@@ -12,8 +12,14 @@ interface EmailComposerProps {
   prospectStatuses: Record<string, string>;
   queuedEmails: Array<{
     prospectId: string;
+    prospectName: string;
+    prospectEmail: string;
+    subject: string;
+    body: string;
     templateIndex: number;
   }>;
+  onQueueEmail: () => void;
+  onRemoveFromQueue: () => void;
 }
 
 export function EmailComposer({
@@ -25,7 +31,9 @@ export function EmailComposer({
   goToNextTemplate,
   currentProspect,
   prospectStatuses,
-  queuedEmails
+  queuedEmails,
+  onQueueEmail,
+  onRemoveFromQueue
 }: EmailComposerProps) {
   return (
     <div className="flex-1 rounded-lg border-2 border-turbo-black/10 p-6 overflow-hidden flex flex-col bg-white">

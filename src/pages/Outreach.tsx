@@ -1,7 +1,6 @@
 import { Layout } from '@/components/Layout'
 import { useState, useEffect, useCallback } from 'react'
 import { Command } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { queryPerplexity } from '@/services/perplexity'
 import { createEmailTemplates } from '@/services/email'
 import { Prospect, UserInfo, EmailTemplate, ProspectResearch } from '@/types/outreach'
@@ -79,7 +78,7 @@ const extractValue = (values: string[], columnIndex: number): string => {
 }
 
 const OutreachContent = () => {
-  const { initialized, incrementTasksUsed, profile } = useAuth()
+  const { incrementTasksUsed, profile } = useAuth()
   
   // Add back necessary constants
   const RESEARCH_WINDOW_SIZE = 3
@@ -95,7 +94,6 @@ const OutreachContent = () => {
   const [outreachType, setOutreachType] = useState<OutreachType>(profile?.outreach_type as OutreachType || 'getClients')
   const [messageStyle, setMessageStyle] = useState<MessageStyle>('direct')
   const [hasList, setHasList] = useState<HasList>('no')
-  const [csvFile, setCsvFile] = useState<File | null>(null)
   const [showMainUI, setShowMainUI] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [prospects, setProspects] = useState<Prospect[]>([])
@@ -112,17 +110,44 @@ const OutreachContent = () => {
 
   const currentProspect = prospects[currentProspectIndex]
 
+  // Handle file upload
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file && file.type === 'text/csv') {
+      setIsLoading(true)
+      setChatMode(false)
+      try {
+        await parseCSV(file)
+        setShowMainUI(true)
+      } catch (error) {
+        console.error('Error parsing CSV:', error)
+        setIsLoading(false)
+      }
+    }
+  }
+
+  // Check if current template is queued
+  const isCurrentTemplateQueued = useCallback(() => {
+    if (!currentProspect) return false
+    return queuedEmails.some(
+      email => email.prospectId === currentProspect.id && email.templateIndex === currentTemplateIndex
+    )
+  }, [queuedEmails, currentProspect?.id, currentTemplateIndex])
+
   // Add effect to check for mobile
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768) // 768px is standard tablet/mobile breakpoint
+      const isMobileView = window.innerWidth < 768 // 768px is standard tablet/mobile breakpoint
+      if (isMobileView !== isMobile) {
+        setIsMobile(isMobileView)
+      }
     }
     
     checkMobile() // Check initially
     window.addEventListener('resize', checkMobile) // Listen for resize
     
     return () => window.removeEventListener('resize', checkMobile) // Cleanup
-  }, [])
+  }, [isMobile])
 
   // Handle selections
   const handleOutreachTypeSelect = async (type: NonNullable<OutreachType>) => {
@@ -196,22 +221,6 @@ const OutreachContent = () => {
       setChatMode(true)
       setIsLoading(true)
       setShowMainUI(true)
-    }
-  }
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file && file.type === 'text/csv') {
-      setCsvFile(file)
-      setIsLoading(true)
-      setChatMode(false)
-      try {
-        await parseCSV(file)
-        setShowMainUI(true)
-      } catch (error) {
-        console.error('Error parsing CSV:', error)
-        setIsLoading(false)
-      }
     }
   }
 
@@ -503,14 +512,6 @@ const OutreachContent = () => {
       return () => clearTimeout(timer)
     }
   }, [isLoading])
-
-  // Update the isCurrentTemplateQueued function to be more specific
-  const isCurrentTemplateQueued = useCallback(() => {
-    if (!currentProspect) return false
-    return queuedEmails.some(
-      email => email.prospectId === currentProspect.id && email.templateIndex === currentTemplateIndex
-    )
-  }, [queuedEmails, currentProspect?.id, currentTemplateIndex])
 
   // Update handleNewContact to generate a unique ID for new contacts
   const handleNewContact = () => {
@@ -975,6 +976,8 @@ const OutreachContent = () => {
                 handleFileChange={handleFileChange}
                 hasList={hasList}
                 setHasList={setHasList}
+                chatMode={chatMode}
+                setChatMode={setChatMode}
               />
             </div>
           ) : (
@@ -988,6 +991,8 @@ const OutreachContent = () => {
               currentProspect={currentProspect}
               prospectStatuses={prospectStatuses}
               queuedEmails={queuedEmails}
+              onQueueEmail={handleQueueEmail}
+              onRemoveFromQueue={handleRemoveFromQueue}
             />
           )}
 
@@ -1031,16 +1036,6 @@ const OutreachContent = () => {
 
 export default function Outreach() {
   const { initialized } = useAuth()
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
 
   if (!initialized) {
     return (
