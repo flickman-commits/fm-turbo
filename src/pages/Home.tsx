@@ -6,6 +6,7 @@ import { Production } from '@/types/productions'
 import { Link } from 'react-router-dom'
 import { FileText, Send, Scale, Plus } from 'lucide-react'
 import { creditsManager } from '@/utils/credits'
+import { motion } from 'framer-motion'
 
 // Status badge component
 const StatusBadge = ({ status }: { status: Production['status'] }) => {
@@ -21,6 +22,69 @@ const StatusBadge = ({ status }: { status: Production['status'] }) => {
     <span className={`px-3 py-1 rounded-full text-sm font-medium ${colors[status]}`}>
       {status.replace('_', ' ')}
     </span>
+  )
+}
+
+// Add CircularProgress component
+const CircularProgress = ({ 
+  value, 
+  max, 
+  size = 120, 
+  strokeWidth = 8,
+  label,
+  sublabel,
+  color = '#2563EB' // turbo-blue
+}: { 
+  value: number
+  max: number
+  size?: number
+  strokeWidth?: number
+  label: string
+  sublabel?: React.ReactNode
+  color?: string
+}) => {
+  const radius = (size - strokeWidth) / 2
+  const circumference = 2 * Math.PI * radius
+  const progress = Math.min((value / max) * 100, 100)
+  const offset = circumference - (progress / 100) * circumference
+
+  return (
+    <div className="flex flex-col items-center">
+      <div className="relative" style={{ width: size, height: size }}>
+        {/* Background circle */}
+        <svg width={size} height={size} className="rotate-[-90deg]">
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke="#E5E7EB"
+            strokeWidth={strokeWidth}
+          />
+          <motion.circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={color}
+            strokeWidth={strokeWidth}
+            strokeDasharray={circumference}
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset: offset }}
+            transition={{ duration: 1, ease: "easeOut" }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-4xl font-bold">{value}</span>
+          {sublabel && (
+            <div className="text-sm text-turbo-blue hover:text-turbo-blue/80 transition-colors">
+              {sublabel}
+            </div>
+          )}
+        </div>
+      </div>
+      <h3 className="mt-4 text-sm font-medium text-turbo-black/60">{label}</h3>
+    </div>
   )
 }
 
@@ -208,42 +272,52 @@ export default function Home() {
           </div>
 
           {/* Account Insights Panel */}
-          <div className="bg-white rounded-xl border-2 border-turbo-black p-6 space-y-8 lg:sticky lg:top-8">
-            <h2 className="text-xl font-bold mb-6">Account Insights</h2>
+          <div className="bg-white rounded-xl border-2 border-turbo-black p-8 space-y-12 lg:sticky lg:top-8">
+            <h2 className="text-xl font-bold">Account Insights</h2>
             
-            {/* Tasks Completed */}
-            <div>
-              <h3 className="text-sm font-medium text-turbo-black/60 mb-2">Tasks Completed</h3>
-              <p className="text-4xl font-bold">{profile?.tasks_used || 0}</p>
-            </div>
+            <div className="grid grid-cols-1 gap-12">
+              {/* Tasks Completed */}
+              <CircularProgress
+                value={profile?.tasks_used || 0}
+                max={100}
+                label="Tasks Completed"
+                color="#2563EB"
+              />
 
-            {/* Available Credits */}
-            <div>
-              <h3 className="text-sm font-medium text-turbo-black/60 mb-2">Available Credits</h3>
+              {/* Available Credits */}
               {isLoadingCredits ? (
-                <div className="w-6 h-6 border-2 border-turbo-black/20 border-t-turbo-black rounded-full animate-spin" />
-              ) : (
-                <div className="flex items-end gap-2">
-                  <p className="text-4xl font-bold">{credits}</p>
-                  <Link
-                    to="/profile#billing"
-                    className="text-sm text-turbo-blue hover:text-turbo-blue/80 transition-colors"
-                  >
-                    Get More
-                  </Link>
+                <div className="flex justify-center">
+                  <div className="w-8 h-8 border-4 border-turbo-black/20 border-t-turbo-black rounded-full animate-spin" />
                 </div>
-              )}
-            </div>
-
-            {/* Active Productions */}
-            <div>
-              <h3 className="text-sm font-medium text-turbo-black/60 mb-2">Active Productions</h3>
-              {isLoadingProductions ? (
-                <div className="w-6 h-6 border-2 border-turbo-black/20 border-t-turbo-black rounded-full animate-spin" />
               ) : (
-                <p className="text-4xl font-bold">
-                  {productions.filter(p => p.status !== 'archived' && p.status !== 'completed').length}
-                </p>
+                <CircularProgress
+                  value={credits || 0}
+                  max={100}
+                  label="Available Credits"
+                  sublabel={
+                    <Link
+                      to="/profile#billing"
+                      className="text-sm text-turbo-blue hover:text-turbo-blue/80 transition-colors"
+                    >
+                      Get More
+                    </Link>
+                  }
+                  color="#0891B2" // cyan-600
+                />
+              )}
+
+              {/* Active Productions */}
+              {isLoadingProductions ? (
+                <div className="flex justify-center">
+                  <div className="w-8 h-8 border-4 border-turbo-black/20 border-t-turbo-black rounded-full animate-spin" />
+                </div>
+              ) : (
+                <CircularProgress
+                  value={productions.filter(p => p.status !== 'archived' && p.status !== 'completed').length}
+                  max={10}
+                  label="Active Productions"
+                  color="#059669" // emerald-600
+                />
               )}
             </div>
           </div>
