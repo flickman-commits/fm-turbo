@@ -126,14 +126,6 @@ const OutreachContent = () => {
     }
   }
 
-  // Check if current template is queued
-  const isCurrentTemplateQueued = useCallback(() => {
-    if (!currentProspect) return false
-    return queuedEmails.some(
-      email => email.prospectId === currentProspect.id && email.templateIndex === currentTemplateIndex
-    )
-  }, [queuedEmails, currentProspect?.id, currentTemplateIndex])
-
   // Add effect to check for mobile
   useEffect(() => {
     const checkMobile = () => {
@@ -150,71 +142,6 @@ const OutreachContent = () => {
   }, [isMobile])
 
   // Handle selections
-  const handleOutreachTypeSelect = async (type: NonNullable<OutreachType>) => {
-    setOutreachType(type)
-    console.log('📝 Outreach type changed:', { from: outreachType, to: type })
-    
-    try {
-      // Update profile in Supabase
-      const { data, error } = await supabase
-        .from('users')
-        .update({ outreach_type: type })
-        .eq('id', profile?.id)
-        .select()
-        .single()
-
-      if (error) throw error
-
-      // Update local profile state
-      if (data && setUserInfo) {
-        setUserInfo(data)
-      }
-
-      // Update userInfo for email generation
-      const updatedUserInfo: UserInfo = {
-        ...DEFAULT_USER_INFO,
-        ...userInfo,
-        outreachType: type,
-        messageStyle: messageStyle || 'direct'
-      }
-      setUserInfo(updatedUserInfo)
-    } catch (error) {
-      console.error('Error updating outreach type:', error)
-    }
-  }
-
-  const handleMessageStyleSelect = async (style: NonNullable<MessageStyle>) => {
-    setMessageStyle(style)
-    console.log('📝 Message style changed:', { from: messageStyle, to: style })
-    
-    try {
-      // Update profile in Supabase
-      const { data, error } = await supabase
-        .from('users')
-        .update({ message_style: style })
-        .eq('id', profile?.id)
-        .select()
-        .single()
-
-      if (error) throw error
-
-      // Update local profile state
-      if (data && setUserInfo) {
-        setUserInfo(data)
-      }
-
-      // Update userInfo for email generation
-      const updatedUserInfo: UserInfo = {
-        ...DEFAULT_USER_INFO,
-        ...userInfo,
-        messageStyle: style
-      }
-      setUserInfo(updatedUserInfo)
-    } catch (error) {
-      console.error('Error updating message style:', error)
-    }
-  }
-
   const handleHasListSelect = (value: HasList) => {
     setHasList(value)
     if (value === 'no') {
@@ -247,6 +174,31 @@ const OutreachContent = () => {
     if (currentProspectIndex > 0) {
       setCurrentProspectIndex((prev: number) => prev - 1)
     }
+  }
+
+  // Queue management
+  const handleQueueEmail = () => {
+    const template = emailTemplates[currentTemplateIndex]
+    if (template && currentProspect?.email) {
+      const queuedEmail: QueuedEmail = {
+        prospectId: currentProspect.id,
+        prospectName: currentProspect.name,
+        prospectEmail: currentProspect.email,
+        subject: template.subject,
+        body: template.body,
+        templateIndex: currentTemplateIndex
+      }
+      setQueuedEmails(prev => [...prev, queuedEmail])
+      goToNextProspect()
+    }
+  }
+
+  const handleRemoveFromQueue = () => {
+    setQueuedEmails((prev: QueuedEmail[]) => 
+      prev.filter(
+        email => !(email.prospectId === currentProspect?.id && email.templateIndex === currentTemplateIndex)
+      )
+    )
   }
 
   // Update the research and email generation process
@@ -582,32 +534,6 @@ const OutreachContent = () => {
       }
       setQueuedEmails(prev => [...prev, queuedEmail])
     }
-  }
-
-  // Modify handleQueueEmail to include templateIndex
-  const handleQueueEmail = () => {
-    const template = emailTemplates[currentTemplateIndex]
-    if (template && currentProspect?.email) {
-      const queuedEmail: QueuedEmail = {
-        prospectId: currentProspect.id,
-        prospectName: currentProspect.name,
-        prospectEmail: currentProspect.email,
-        subject: template.subject,
-        body: template.body,
-        templateIndex: currentTemplateIndex
-      }
-      setQueuedEmails(prev => [...prev, queuedEmail])
-      goToNextProspect()
-    }
-  }
-
-  // Add function to remove from queue
-  const handleRemoveFromQueue = () => {
-    setQueuedEmails((prev: QueuedEmail[]) => 
-      prev.filter(
-        email => !(email.prospectId === currentProspect?.id && email.templateIndex === currentTemplateIndex)
-      )
-    )
   }
 
   // Add batch send function
@@ -975,9 +901,7 @@ const OutreachContent = () => {
                 handleChatSubmit={handleChatSubmit}
                 handleFileChange={handleFileChange}
                 hasList={hasList}
-                setHasList={setHasList}
-                chatMode={chatMode}
-                setChatMode={setChatMode}
+                setHasList={handleHasListSelect}
               />
             </div>
           ) : (

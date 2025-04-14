@@ -12,8 +12,6 @@ interface OutreachInputProps {
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   hasList: 'yes' | 'no' | null
   setHasList: (value: 'yes' | 'no' | null) => void
-  chatMode: boolean
-  setChatMode: (value: boolean) => void
 }
 
 export function OutreachInput({
@@ -26,9 +24,7 @@ export function OutreachInput({
   handleChatSubmit,
   handleFileChange,
   hasList,
-  setHasList,
-  chatMode,
-  setChatMode
+  setHasList
 }: OutreachInputProps) {
   const [isDragging, setIsDragging] = useState(false)
 

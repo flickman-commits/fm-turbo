@@ -1,5 +1,5 @@
 import { EmailTemplate, Prospect } from '@/types/outreach'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Command } from 'lucide-react'
 
 interface EmailComposerProps {
   isGeneratingEmails: boolean;
@@ -35,11 +35,30 @@ export function EmailComposer({
   onQueueEmail,
   onRemoveFromQueue
 }: EmailComposerProps) {
+  const isQueued = queuedEmails.some(
+    email => email.prospectId === currentProspect?.id && email.templateIndex === currentTemplateIndex
+  );
+
   return (
     <div className="flex-1 rounded-lg border-2 border-turbo-black/10 p-6 overflow-hidden flex flex-col bg-white">
-      <h3 className="text-xl font-semibold mb-6 text-turbo-black">
-        What You're Going to Send <span className="text-turbo-black/60">(editable)</span>
-      </h3>
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-xl font-semibold text-turbo-black">
+          What You're Going to Send <span className="text-turbo-black/60">(editable)</span>
+        </h3>
+        {!isGeneratingEmails && emailTemplates.length > 0 && (
+          <button
+            onClick={isQueued ? onRemoveFromQueue : onQueueEmail}
+            className="px-4 py-2 bg-turbo-blue text-white rounded-lg hover:bg-turbo-blue/90 transition-colors flex items-center gap-2"
+          >
+            {isQueued ? 'Remove from Queue' : 'Add to Queue'}
+            <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-white/30 bg-white/10 px-1.5 font-mono text-[10px] font-medium">
+              <Command className="h-3 w-3" />
+              <span className="text-xs">Enter</span>
+            </kbd>
+          </button>
+        )}
+      </div>
+
       <div className="flex-1 relative">
         {isGeneratingEmails || (emailTemplates.length === 0 && (prospectStatuses[currentProspect?.id || ''] === 'researching' || prospectStatuses[currentProspect?.id || ''] === 'generating_emails')) ? (
           <div className="flex flex-col items-center justify-center h-full">
