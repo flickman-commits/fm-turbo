@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { Production, ProductionStatus } from '@/types/productions'
-import { Film, Plus, Calendar, Clock, CheckCircle, Archive } from 'lucide-react'
+import { Film, Plus, Calendar, Clock } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 

@@ -1,7 +1,6 @@
 import { Layout } from '@/components/Layout'
-import { BackButton } from '@/components/ui/back-button'
 import { useState, useEffect, useCallback } from 'react'
-import { Command, ArrowLeft } from 'lucide-react'
+import { Command } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { queryPerplexity } from '@/services/perplexity'
 import { createEmailTemplates } from '@/services/email'
@@ -120,11 +119,10 @@ const extractValue = (values: string[], columnIndex: number): string => {
 }
 
 const OutreachContent = () => {
-  const { initialized, incrementTasksUsed, profile, setProfile } = useAuth()
+  const { initialized, incrementTasksUsed, profile } = useAuth()
   
   // Add back necessary constants
   const RESEARCH_WINDOW_SIZE = 3
-  const isEditing = false
 
   // Move all state declarations to the top
   const [chatMode, setChatMode] = useState(() => {
@@ -200,8 +198,8 @@ const OutreachContent = () => {
       if (error) throw error
 
       // Update local profile state
-      if (data && setProfile) {
-        setProfile(data)
+      if (data && setUserInfo) {
+        setUserInfo(data)
       }
 
       // Update userInfo for email generation
@@ -235,8 +233,8 @@ const OutreachContent = () => {
       if (error) throw error
 
       // Update local profile state
-      if (data && setProfile) {
-        setProfile(data)
+      if (data && setUserInfo) {
+        setUserInfo(data)
       }
 
       // Update userInfo for email generation
@@ -686,7 +684,7 @@ const OutreachContent = () => {
   // Update the keyboard navigation handler
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     // Don't trigger shortcuts if user is editing text
-    if (isEditing || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) {
+    if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) {
       return
     }
 
@@ -747,7 +745,6 @@ const OutreachContent = () => {
     currentTemplateIndex, 
     currentProspect?.email, 
     isResearching, 
-    isEditing, 
     prospects.length, 
     currentProspectIndex, 
     queuedEmails.length,
@@ -1064,7 +1061,7 @@ const OutreachContent = () => {
             setOutreachType={setOutreachType}
             setMessageStyle={setMessageStyle}
             profile={profile}
-            setProfile={setProfile}
+            setProfile={setUserInfo}
             userInfo={userInfo}
             setUserInfo={setUserInfo}
             onRegenerateEmails={regenerateEmailsForCurrentProspect}
