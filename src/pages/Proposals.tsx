@@ -25,8 +25,6 @@ const ViewState: Record<'Input' | 'Loading' | 'Result', ViewState> = {
 export default function Proposals() {
   const { initialized, session, incrementTasksUsed } = useAuth()
   const [formData, setFormData] = useState<FormDataWithWeather>(() => {
-    // Clear localStorage on first load to ensure fresh start
-    localStorage.removeItem('proposal_form_data')
     return {}
   })
   const [viewState, setViewState] = useState<ViewState>(() => {
@@ -102,16 +100,6 @@ export default function Proposals() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [viewState, formData, isFormValid])
-
-  // Clear loading state on unmount or navigation
-  useEffect(() => {
-    return () => {
-      if (viewState === ViewState.Loading) {
-        setViewState(ViewState.Input)
-        localStorage.removeItem('proposal_view_state')
-      }
-    }
-  }, [viewState])
 
   const handleBackToForm = () => {
     setViewState(ViewState.Input)
@@ -227,9 +215,9 @@ export default function Proposals() {
       const newResult = { content: response.content }
       console.log('💾 Setting result:', newResult)
       setResult(newResult)
+      setViewState(ViewState.Result)
       localStorage.setItem('proposal_result', JSON.stringify(newResult))
       localStorage.setItem('proposal_view_state', ViewState.Result)
-      setViewState(ViewState.Result)
     } catch (error) {
       console.error('❌ Error generating proposal:', error)
       toast.error('Failed to generate content. Please try again.')
