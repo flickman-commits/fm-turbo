@@ -7,13 +7,21 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+      },
       colors: {
         // Brand Colors
-        'turbo-beige': '#F5F0E8',
-        'turbo-blue': '#1f4dd3',
-        'turbo-yellow': '#ceff00',
-        'turbo-green': '#4CAF50',
-        'turbo-black': '#000000',
+        'off-white': '#F6F5F2',
+        'off-black': '#121212',
+        'border-gray': '#E5E5E5',
+        'subtle-gray': '#FAFAFA',
+        'success-green': '#4CAF50',
+        'warning-amber': '#F59E0B',
+        // Legacy aliases (for gradual migration)
+        'turbo-beige': '#F6F5F2',
+        'turbo-blue': '#121212',
+        'turbo-black': '#121212',
         // System Colors
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
@@ -62,9 +70,22 @@ export default {
         'color-5': 'hsl(var(--color-5))'
       },
       borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)'
+        lg: '8px',
+        md: '6px',
+        sm: '4px',
+        DEFAULT: '6px',
+        none: '0',
+      },
+      letterSpacing: {
+        tight: '-0.033em',
+      },
+      fontSize: {
+        'heading-xl': ['32px', { lineHeight: '1.2', fontWeight: '700' }],
+        'heading-lg': ['24px', { lineHeight: '1.3', fontWeight: '700' }],
+        'heading-md': ['20px', { lineHeight: '1.4', fontWeight: '600' }],
+        'heading-sm': ['18px', { lineHeight: '1.4', fontWeight: '600' }],
+        'body': ['16px', { lineHeight: '1.5', fontWeight: '400' }],
+        'body-sm': ['14px', { lineHeight: '1.5', fontWeight: '400' }],
       },
       animation: {
         'wave-pulse': 'wave-pulse 4s ease-in-out infinite',

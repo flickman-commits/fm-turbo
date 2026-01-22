@@ -1,5 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Trackstar Database Schema
+// https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
@@ -10,33 +10,70 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  vimeoUserId   String?
-  vimeoConnected Boolean  @default(false)
-  videos        Video[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+model Order {
+  id               String    @id @default(cuid())
+  orderNumber      String    @unique
+  source           String    // "shopify" or "etsy"
+  arteloOrderData  Json      // Full order object from Artelo
+  shopifyOrderData Json?     // Personalization data if Shopify
+  raceName         String
+  raceYear         Int
+  runnerName       String
+  productSize      String
+  frameType        String
+  status           String    @default("pending") // "pending", "ready", "flagged", "completed"
+  researchedAt     DateTime?
+  createdAt        DateTime  @default(now())
+
+  // Relations
+  runnerResearch   RunnerResearch[]
+
+  @@index([orderNumber])
+  @@index([status])
+  @@index([raceName, raceYear])
 }
 
-model Video {
-  id          String    @id @default(cuid())
-  vimeoId     String    @unique
-  title       String
-  description String?   @db.Text
-  url         String
-  thumbnail   String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  views       Int       @default(0)
-  likes       Int       @default(0)
-  tags        String[]
-  categories  String[]
-  isPublic    Boolean   @default(true)
-  user        User      @relation(fields: [userId], references: [id])
-  userId      String
+model Race {
+  id               Int       @id @default(autoincrement())
+  raceName         String
+  year             Int
+  raceDate         DateTime
+  eventTypes       Json      // Array like ["Marathon", "Half Marathon"]
+  resultsUrl       String?
+  resultsSiteType  String?
+  location         String?
+  weatherCondition String?   // "sunny", "cloudy", or "rainy"
+  weatherTemp      String?
+  weatherFetchedAt DateTime?
+  createdAt        DateTime  @default(now())
 
-  @@index([userId])
-  @@index([vimeoId])
-} 
+  // Relations
+  runnerResearch   RunnerResearch[]
+
+  @@unique([raceName, year])
+  @@index([raceName])
+  @@index([year])
+}
+
+model RunnerResearch {
+  id             Int      @id @default(autoincrement())
+  orderNumber    String
+  raceId         Int
+  runnerName     String
+  bibNumber      String?
+  officialTime   String?
+  officialPace   String?
+  eventType      String?  // "Marathon" or "Half Marathon"
+  yearFound      Int?
+  researchStatus String   @default("pending") // "found", "not_found", "ambiguous"
+  researchNotes  String?
+  createdAt      DateTime @default(now())
+
+  // Relations
+  order          Order    @relation(fields: [orderNumber], references: [orderNumber])
+  race           Race     @relation(fields: [raceId], references: [id])
+
+  @@index([orderNumber])
+  @@index([raceId])
+  @@index([researchStatus])
+}

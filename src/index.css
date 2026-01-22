@@ -1,31 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
  
 @layer base {
   :root {
-    --background: 37 33% 93%; /* Turbo Beige */
-    --foreground: 0 0% 0%; /* Turbo Black */
-    --card: 37 33% 93%;
-    --card-foreground: 0 0% 0%;
-    --popover: 37 33% 93%;
-    --popover-foreground: 0 0% 0%;
-    --primary: 227 75% 47%; /* Turbo Blue */
-    --primary-foreground: 37 33% 93%;
-    --secondary: 0 0% 0%; /* Turbo Black */
-    --secondary-foreground: 37 33% 93%;
-    --muted: 37 33% 93%;
-    --muted-foreground: 0 0% 0%;
-    --accent: 65 100% 50%; /* Turbo Yellow */
-    --accent-foreground: 0 0% 0%;
-    --success: 122 41% 49%; /* Turbo Green */
-    --success-foreground: 37 33% 93%;
+    --background: 45 14% 96%; /* Off-white #F6F5F2 */
+    --foreground: 0 0% 7%; /* Off-black #121212 */
+    --card: 0 0% 100%; /* White cards */
+    --card-foreground: 0 0% 7%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 7%;
+    --primary: 0 0% 7%; /* Off-black for primary buttons */
+    --primary-foreground: 0 0% 100%; /* White text on primary */
+    --secondary: 0 0% 100%; /* White for secondary */
+    --secondary-foreground: 0 0% 7%;
+    --muted: 0 0% 98%; /* Subtle gray */
+    --muted-foreground: 0 0% 45%;
+    --accent: 0 0% 7%; /* Off-black accent */
+    --accent-foreground: 0 0% 100%;
+    --success: 122 41% 49%; /* Keep green */
+    --success-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
-    --destructive-foreground: 37 33% 93%;
-    --border: 0 0% 0%;
-    --input: 0 0% 0%;
-    --ring: 225 75% 56%;
-    --radius: 0.5rem;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 90%; /* Light gray #E5E5E5 */
+    --input: 0 0% 90%;
+    --ring: 0 0% 7%;
+    --radius: 6px;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -72,6 +74,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    letter-spacing: -0.033em;
   }
 }
 
