@@ -1,12 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { prisma } from '../lib/prisma'
+import { PrismaClient } from '@prisma/client'
 import {
-  corsHeaders,
   fetchShopifyOrder,
   parseRaceName,
   parsePersonalization,
   extractPersonalizationFromLineItems
 } from '../lib/helpers'
+
+const prisma = new PrismaClient()
 
 // Artelo API configuration
 const ARTELO_API_URL = 'https://www.artelo.io/api/open/orders/get'
@@ -32,14 +33,15 @@ interface ArteloOrder {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return res.status(200).setHeader('Access-Control-Allow-Origin', '*').end()
+    return res.status(200).end()
   }
-
-  Object.entries(corsHeaders).forEach(([key, value]) => {
-    res.setHeader(key, value)
-  })
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -202,5 +204,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (error) {
     console.error('Error importing orders:', error)
     return res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to import orders' })
+  } finally {
+    await prisma.$disconnect()
   }
 }

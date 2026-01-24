@@ -1,19 +1,19 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { corsHeaders } from './lib/helpers'
 
 // Note: In serverless, this won't persist across invocations
 // For production, use a database or KV store
 let currentUserCount = 23
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return res.status(200).setHeader('Access-Control-Allow-Origin', '*').end()
+    return res.status(200).end()
   }
-
-  Object.entries(corsHeaders).forEach(([key, value]) => {
-    res.setHeader(key, value)
-  })
 
   if (req.method === 'GET') {
     return res.status(200).json({ count: currentUserCount })
