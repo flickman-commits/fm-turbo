@@ -146,7 +146,10 @@ export default function Dashboard() {
         headers: { 'Content-Type': 'application/json' }
       })
 
-      if (!response.ok) throw new Error('Failed to import orders')
+      if (!response.ok) {
+        const errorData = await response.text()
+        throw new Error(`Import failed (${response.status}): ${errorData}`)
+      }
 
       const data = await response.json()
       const parts = []
@@ -162,7 +165,8 @@ export default function Dashboard() {
       await fetchOrders()
     } catch (error) {
       console.error('Error importing orders:', error)
-      setToast({ message: 'Failed to import orders from Artelo', type: 'error' })
+      const message = error instanceof Error ? error.message : 'Failed to import orders from Artelo'
+      setToast({ message, type: 'error' })
     } finally {
       setIsImporting(false)
     }
