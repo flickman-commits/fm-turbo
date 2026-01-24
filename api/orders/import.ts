@@ -167,12 +167,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         // Create the order
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await prisma.order.create({
           data: {
             orderNumber: order.orderId,
             source,
-            arteloOrderData: order as unknown as Record<string, unknown>,
-            shopifyOrderData: shopifyOrderData as unknown as Record<string, unknown> | null,
+            arteloOrderData: order as any,
+            shopifyOrderData: shopifyOrderData as any,
             raceName,
             raceYear,
             runnerName,
