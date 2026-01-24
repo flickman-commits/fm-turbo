@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { Search, ChevronDown, ChevronRight, Upload, Copy, Loader2 } from 'lucide-react'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+// API calls now go to /api/* serverless functions (same origin)
 
 interface Order {
   id: string
@@ -109,7 +109,7 @@ export default function Dashboard() {
   // Fetch orders from database
   const fetchOrders = useCallback(async () => {
     try {
-      const response = await fetch(`${API_URL}/api/orders`)
+      const response = await fetch(`/api/orders`)
       if (!response.ok) throw new Error('Failed to fetch orders')
       const data = await response.json()
 
@@ -141,7 +141,7 @@ export default function Dashboard() {
   const importOrders = async () => {
     setIsImporting(true)
     try {
-      const response = await fetch(`${API_URL}/api/orders/import`, {
+      const response = await fetch(`/api/orders/import`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       })
