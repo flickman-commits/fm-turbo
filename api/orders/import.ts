@@ -171,8 +171,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           data: {
             orderNumber: order.orderId,
             source,
-            arteloOrderData: order,
-            shopifyOrderData,
+            arteloOrderData: order as unknown as Record<string, unknown>,
+            shopifyOrderData: shopifyOrderData as unknown as Record<string, unknown> | null,
             raceName,
             raceYear,
             runnerName,
