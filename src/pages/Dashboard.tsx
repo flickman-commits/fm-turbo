@@ -211,14 +211,14 @@ export default function Dashboard() {
     fetchOrders()
   }, [fetchOrders])
 
-  // Orders to fulfill: pending + flagged + ready + missing_year, sorted with flagged first, then missing_year, then pending, then ready
+  // Orders to fulfill: pending + flagged + ready + missing_year, sorted by most recent first
   const ordersToFulfill = useMemo(() => {
     const fulfillOrders = orders.filter(o =>
       o.status === 'flagged' || o.status === 'ready' || o.status === 'pending' || o.status === 'missing_year'
     )
-    const statusOrder: Record<string, number> = { flagged: 0, missing_year: 1, pending: 2, ready: 3, completed: 4 }
+    // Sort by createdAt descending (most recent first)
     return fulfillOrders.sort((a, b) => {
-      return (statusOrder[a.status] ?? 5) - (statusOrder[b.status] ?? 5)
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     })
   }, [orders])
 
@@ -322,11 +322,11 @@ Thank you!`
             <table className="w-full">
               <thead className="bg-subtle-gray border-b border-border-gray">
                 <tr>
-                  <th className="text-left pl-6 pr-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider">Order #</th>
+                  <th className="text-center pl-6 pr-2 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider w-12">Src</th>
+                  <th className="text-left px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider">Order #</th>
                   <th className="text-center px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider w-20">Status</th>
                   <th className="text-left px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider">Runner</th>
-                  <th className="text-left px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider hidden md:table-cell">Race</th>
-                  <th className="text-left px-3 pr-6 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider hidden md:table-cell w-20">Size</th>
+                  <th className="text-left px-3 pr-6 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider hidden md:table-cell">Race</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-gray">
@@ -336,7 +336,12 @@ Thank you!`
                     onClick={() => setSelectedOrder(order)}
                     className={`hover:bg-subtle-gray cursor-pointer transition-colors ${index % 2 === 1 ? 'bg-subtle-gray/30' : ''}`}
                   >
-                    <td className="pl-6 pr-3 py-5">
+                    <td className="pl-6 pr-2 py-5 text-center">
+                      <span className="text-lg" title={order.source === 'shopify' ? 'Shopify' : 'Etsy'}>
+                        {order.source === 'shopify' ? '🛒' : '🧶'}
+                      </span>
+                    </td>
+                    <td className="px-3 py-5">
                       <span className="text-sm font-medium text-off-black">{order.displayOrderNumber}</span>
                     </td>
                     <td className="px-3 py-5 text-center">
@@ -358,11 +363,8 @@ Thank you!`
                         <p className="text-xs text-off-black/40 mt-1 leading-tight">Pending Research</p>
                       )}
                     </td>
-                    <td className="px-3 py-5 text-sm text-off-black/60 hidden md:table-cell">
-                      {order.raceName} {order.raceYear}
-                    </td>
                     <td className="px-3 pr-6 py-5 text-sm text-off-black/60 hidden md:table-cell">
-                      {order.productSize}
+                      {order.raceName} {order.raceYear}
                     </td>
                   </tr>
                 ))}
@@ -404,11 +406,11 @@ Thank you!`
               <table className="w-full">
                 <thead className="bg-subtle-gray border-b border-border-gray">
                   <tr>
-                    <th className="text-left pl-6 pr-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider">Order #</th>
+                    <th className="text-center pl-6 pr-2 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider w-12">Src</th>
+                    <th className="text-left px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider">Order #</th>
                     <th className="text-center px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider w-20">Status</th>
                     <th className="text-left px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider">Runner</th>
-                    <th className="text-left px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider hidden md:table-cell">Race</th>
-                    <th className="text-left px-3 pr-6 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider hidden md:table-cell w-28">Completed</th>
+                    <th className="text-left px-3 pr-6 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider hidden md:table-cell">Race</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-gray">
@@ -418,7 +420,12 @@ Thank you!`
                       onClick={() => setSelectedOrder(order)}
                       className={`hover:bg-subtle-gray cursor-pointer transition-colors ${index % 2 === 1 ? 'bg-subtle-gray/30' : ''}`}
                     >
-                      <td className="pl-6 pr-3 py-5">
+                      <td className="pl-6 pr-2 py-5 text-center">
+                        <span className="text-lg" title={order.source === 'shopify' ? 'Shopify' : 'Etsy'}>
+                          {order.source === 'shopify' ? '🛒' : '🧶'}
+                        </span>
+                      </td>
+                      <td className="px-3 py-5">
                         <span className="text-sm font-medium text-off-black">{order.displayOrderNumber}</span>
                       </td>
                       <td className="px-3 py-5 text-center">
@@ -427,11 +434,8 @@ Thank you!`
                       <td className="px-3 py-5 text-sm text-off-black">
                         {order.runnerName}
                       </td>
-                      <td className="px-3 py-5 text-sm text-off-black/60 hidden md:table-cell">
-                        {order.raceName} {order.raceYear}
-                      </td>
                       <td className="px-3 pr-6 py-5 text-sm text-off-black/60 hidden md:table-cell">
-                        {order.completedAt}
+                        {order.raceName} {order.raceYear}
                       </td>
                     </tr>
                   ))}

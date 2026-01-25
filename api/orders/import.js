@@ -90,8 +90,8 @@ async function fetchShopifyComments(shopifyOrderId) {
 
     if (comments.length === 0) return null
 
-    // Return as formatted string for simple storage, or could return array
-    return comments.map(c => `[${c.author}]: ${c.body}`).join(' | ')
+    // Return just the messages, separated by |
+    return comments.map(c => c.body).join(' | ')
   } catch (error) {
     console.error(`Failed to fetch comments for order ${shopifyOrderId}:`, error.message)
     return null
