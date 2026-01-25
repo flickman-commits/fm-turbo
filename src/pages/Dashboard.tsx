@@ -8,12 +8,14 @@ interface Order {
   orderNumber: string
   source: 'shopify' | 'etsy'
   raceName: string
-  raceYear: number
+  raceYear: number | null
   raceDate?: string
   eventType?: string
   runnerName: string
   productSize: string
-  status: 'pending' | 'ready' | 'flagged' | 'completed'
+  frameType?: string
+  notes?: string
+  status: 'pending' | 'ready' | 'flagged' | 'completed' | 'missing_year'
   flagReason?: string
   completedAt?: string
   createdAt: string
@@ -75,6 +77,29 @@ function CopyableField({ label, value }: { label: string; value: string }) {
   )
 }
 
+// Static field without copy button
+function StaticField({ label, value, flag }: { label: string; value: string; flag?: boolean }) {
+  return (
+    <div className="flex justify-between items-center">
+      <span className="text-body-sm text-off-black/60">{label}</span>
+      <div className="flex items-center gap-2">
+        <span className="text-body-sm font-medium text-off-black">{value}</span>
+        {flag && <span className="text-warning-amber" title="Year Missing">🚩</span>}
+      </div>
+    </div>
+  )
+}
+
+// Pending field for data not yet available
+function PendingField({ label }: { label: string }) {
+  return (
+    <div className="flex justify-between items-center">
+      <span className="text-body-sm text-off-black/60">{label}</span>
+      <span className="text-body-sm text-off-black/30 italic">Pending research</span>
+    </div>
+  )
+}
+
 function getGreeting(): string {
   const now = new Date()
   const costaRicaTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Costa_Rica' }))
@@ -119,10 +144,12 @@ export default function Dashboard() {
         orderNumber: order.orderNumber as string,
         source: order.source as 'shopify' | 'etsy',
         raceName: order.raceName as string,
-        raceYear: order.raceYear as number,
+        raceYear: order.raceYear as number | null,
         runnerName: order.runnerName as string,
         productSize: order.productSize as string,
-        status: order.status as 'pending' | 'ready' | 'flagged' | 'completed',
+        frameType: order.frameType as string | undefined,
+        notes: order.notes as string | undefined,
+        status: order.status as 'pending' | 'ready' | 'flagged' | 'completed' | 'missing_year',
         createdAt: order.createdAt as string,
         completedAt: order.researchedAt as string | undefined
       }))
@@ -156,6 +183,8 @@ export default function Dashboard() {
       if (data.imported > 0) parts.push(`${data.imported} imported`)
       if (data.skipped > 0) parts.push(`${data.skipped} skipped`)
       if (data.removed > 0) parts.push(`${data.removed} removed`)
+      if (data.enriched > 0) parts.push(`${data.enriched} enriched`)
+      if (data.needsAttention > 0) parts.push(`${data.needsAttention} missing year`)
       setToast({
         message: parts.length > 0 ? parts.join(', ') : 'No changes',
         type: 'success'
@@ -177,12 +206,14 @@ export default function Dashboard() {
     fetchOrders()
   }, [fetchOrders])
 
-  // Orders to fulfill: pending + flagged + ready, sorted with flagged first, then pending, then ready
+  // Orders to fulfill: pending + flagged + ready + missing_year, sorted with flagged first, then missing_year, then pending, then ready
   const ordersToFulfill = useMemo(() => {
-    const fulfillOrders = orders.filter(o => o.status === 'flagged' || o.status === 'ready' || o.status === 'pending')
-    const statusOrder: Record<string, number> = { flagged: 0, pending: 1, ready: 2, completed: 3 }
+    const fulfillOrders = orders.filter(o =>
+      o.status === 'flagged' || o.status === 'ready' || o.status === 'pending' || o.status === 'missing_year'
+    )
+    const statusOrder: Record<string, number> = { flagged: 0, missing_year: 1, pending: 2, ready: 3, completed: 4 }
     return fulfillOrders.sort((a, b) => {
-      return (statusOrder[a.status] ?? 4) - (statusOrder[b.status] ?? 4)
+      return (statusOrder[a.status] ?? 5) - (statusOrder[b.status] ?? 5)
     })
   }, [orders])
 
@@ -305,13 +336,18 @@ Thank you!`
                     </td>
                     <td className="px-3 py-5 text-center">
                       <span className="text-lg">
-                        {order.status === 'flagged' ? '⚠️' : order.status === 'pending' ? '⏳' : '📦'}
+                        {order.status === 'flagged' ? '⚠️' :
+                         order.status === 'missing_year' ? '📅' :
+                         order.status === 'pending' ? '⏳' : '📦'}
                       </span>
                     </td>
                     <td className="px-3 py-5">
-                      <span className="text-sm text-off-black">{order.runnerName}</span>
+                      <span className="text-sm text-off-black">{order.runnerName || 'Unknown Runner'}</span>
                       {order.status === 'flagged' && order.flagReason && (
                         <p className="text-xs text-warning-amber mt-1 leading-tight">{order.flagReason}</p>
+                      )}
+                      {order.status === 'missing_year' && (
+                        <p className="text-xs text-warning-amber mt-1 leading-tight">Year Missing</p>
                       )}
                       {order.status === 'pending' && (
                         <p className="text-xs text-off-black/40 mt-1 leading-tight">Pending Research</p>
@@ -423,7 +459,10 @@ Thank you!`
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
                     <span className="text-xl">
-                      {selectedOrder.status === 'flagged' ? '⚠️' : selectedOrder.status === 'completed' ? '✅' : selectedOrder.status === 'pending' ? '⏳' : '📦'}
+                      {selectedOrder.status === 'flagged' ? '⚠️' :
+                       selectedOrder.status === 'completed' ? '✅' :
+                       selectedOrder.status === 'missing_year' ? '📅' :
+                       selectedOrder.status === 'pending' ? '⏳' : '📦'}
                     </span>
                     <h3 className="text-heading-md text-off-black">
                       Order {selectedOrder.orderNumber}
@@ -441,11 +480,11 @@ Thank you!`
                   {/* Product Info */}
                   <div>
                     <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Product Info</h4>
-                    <div className="bg-subtle-gray border border-border-gray rounded-md p-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-body-sm text-off-black/60">Size</span>
-                        <span className="text-body-sm font-medium text-off-black">{selectedOrder.productSize}</span>
-                      </div>
+                    <div className="bg-subtle-gray border border-border-gray rounded-md p-4 space-y-3">
+                      <StaticField label="Size" value={selectedOrder.productSize} />
+                      {selectedOrder.frameType && (
+                        <StaticField label="Frame" value={selectedOrder.frameType} />
+                      )}
                     </div>
                   </div>
 
@@ -453,26 +492,34 @@ Thank you!`
                   <div>
                     <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Race Info</h4>
                     <div className="bg-subtle-gray border border-border-gray rounded-md p-4 space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-body-sm text-off-black/60">Race</span>
-                        <span className="text-body-sm font-medium text-off-black">{selectedOrder.raceName}</span>
-                      </div>
-                      {selectedOrder.eventType && (
-                        <div className="flex justify-between items-center">
-                          <span className="text-body-sm text-off-black/60">Event</span>
-                          <span className="text-body-sm font-medium text-off-black">{selectedOrder.eventType}</span>
-                        </div>
+                      <StaticField label="Race" value={selectedOrder.raceName} />
+                      {selectedOrder.raceYear ? (
+                        <StaticField label="Year" value={String(selectedOrder.raceYear)} />
+                      ) : (
+                        <StaticField label="Year" value="Missing" flag={true} />
                       )}
-                      {selectedOrder.raceDate && (
+                      {selectedOrder.eventType ? (
+                        <StaticField label="Event" value={selectedOrder.eventType} />
+                      ) : (
+                        <PendingField label="Event" />
+                      )}
+                      {selectedOrder.raceDate ? (
                         <CopyableField label="Date" value={selectedOrder.raceDate} />
+                      ) : (
+                        <PendingField label="Date" />
                       )}
-                      {selectedOrder.weather && (
+                      {selectedOrder.weather ? (
                         <>
                           <CopyableField
                             label="Weather"
                             value={selectedOrder.weather.condition.charAt(0).toUpperCase() + selectedOrder.weather.condition.slice(1)}
                           />
                           <CopyableField label="Temp" value={selectedOrder.weather.temp} />
+                        </>
+                      ) : (
+                        <>
+                          <PendingField label="Weather" />
+                          <PendingField label="Temp" />
                         </>
                       )}
                     </div>
@@ -482,18 +529,38 @@ Thank you!`
                   <div>
                     <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Runner Data</h4>
                     <div className="bg-subtle-gray border border-border-gray rounded-md p-4 space-y-3">
-                      <CopyableField label="Name" value={selectedOrder.runnerName} />
-                      {selectedOrder.bibNumber && (
+                      {selectedOrder.runnerName ? (
+                        <CopyableField label="Name" value={selectedOrder.runnerName} />
+                      ) : (
+                        <PendingField label="Name" />
+                      )}
+                      {selectedOrder.bibNumber ? (
                         <CopyableField label="Bib" value={selectedOrder.bibNumber} />
+                      ) : (
+                        <PendingField label="Bib" />
                       )}
-                      {selectedOrder.officialTime && (
+                      {selectedOrder.officialTime ? (
                         <CopyableField label="Time" value={selectedOrder.officialTime} />
+                      ) : (
+                        <PendingField label="Time" />
                       )}
-                      {selectedOrder.officialPace && (
+                      {selectedOrder.officialPace ? (
                         <CopyableField label="Pace" value={selectedOrder.officialPace} />
+                      ) : (
+                        <PendingField label="Pace" />
                       )}
                     </div>
                   </div>
+
+                  {/* Notes - only show if there are notes */}
+                  {selectedOrder.notes && (
+                    <div>
+                      <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Notes</h4>
+                      <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                        <p className="text-body-sm text-blue-800 whitespace-pre-wrap">{selectedOrder.notes}</p>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Flag Reason - only for flagged orders */}
                   {selectedOrder.status === 'flagged' && selectedOrder.flagReason && (
@@ -501,6 +568,16 @@ Thank you!`
                       <h4 className="text-xs font-semibold text-warning-amber uppercase tracking-tight mb-2">Flag Reason</h4>
                       <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
                         <p className="text-body-sm text-amber-800">{selectedOrder.flagReason}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Missing Year Warning */}
+                  {selectedOrder.status === 'missing_year' && (
+                    <div>
+                      <h4 className="text-xs font-semibold text-warning-amber uppercase tracking-tight mb-2">Action Required</h4>
+                      <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
+                        <p className="text-body-sm text-amber-800">This order is missing the race year. Please contact the customer to confirm which year they ran the race.</p>
                       </div>
                     </div>
                   )}

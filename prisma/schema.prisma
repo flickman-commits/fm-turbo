@@ -22,7 +22,8 @@ model Order {
   runnerName       String
   productSize      String
   frameType        String
-  status           String    @default("pending") // "pending", "ready", "flagged", "completed"
+  notes            String?   // Notes from Shopify (year corrections, etc.)
+  status           String    @default("pending") // "pending", "missing_year", "ready", "flagged", "completed"
   researchedAt     DateTime?
   createdAt        DateTime  @default(now())
 
