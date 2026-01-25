@@ -5,7 +5,8 @@ import { Search, ChevronDown, ChevronRight, Upload, Copy, Loader2 } from 'lucide
 
 interface Order {
   id: string
-  orderNumber: string
+  orderNumber: string        // Internal ID for reconciliation (Shopify order.id)
+  displayOrderNumber: string // Friendly display number (Shopify order.name like "2585")
   source: 'shopify' | 'etsy'
   raceName: string
   raceYear: number | null
@@ -13,7 +14,6 @@ interface Order {
   eventType?: string
   runnerName: string
   productSize: string
-  frameType?: string
   notes?: string
   status: 'pending' | 'ready' | 'flagged' | 'completed' | 'missing_year'
   flagReason?: string
@@ -139,20 +139,26 @@ export default function Dashboard() {
       const data = await response.json()
 
       // Transform database orders to match our Order interface
-      const transformedOrders: Order[] = (data.orders || []).map((order: Record<string, unknown>) => ({
-        id: order.id as string,
-        orderNumber: order.orderNumber as string,
-        source: order.source as 'shopify' | 'etsy',
-        raceName: order.raceName as string,
-        raceYear: order.raceYear as number | null,
-        runnerName: order.runnerName as string,
-        productSize: order.productSize as string,
-        frameType: order.frameType as string | undefined,
-        notes: order.notes as string | undefined,
-        status: order.status as 'pending' | 'ready' | 'flagged' | 'completed' | 'missing_year',
-        createdAt: order.createdAt as string,
-        completedAt: order.researchedAt as string | undefined
-      }))
+      const transformedOrders: Order[] = (data.orders || []).map((order: Record<string, unknown>) => {
+        // Extract display order number from shopifyOrderData if available
+        const shopifyData = order.shopifyOrderData as Record<string, unknown> | null
+        const displayNum = shopifyData?.name as string | undefined
+
+        return {
+          id: order.id as string,
+          orderNumber: order.orderNumber as string,
+          displayOrderNumber: displayNum || (order.orderNumber as string),
+          source: order.source as 'shopify' | 'etsy',
+          raceName: order.raceName as string,
+          raceYear: order.raceYear as number | null,
+          runnerName: order.runnerName as string,
+          productSize: order.productSize as string,
+          notes: order.notes as string | undefined,
+          status: order.status as 'pending' | 'ready' | 'flagged' | 'completed' | 'missing_year',
+          createdAt: order.createdAt as string,
+          completedAt: order.researchedAt as string | undefined
+        }
+      })
 
       setOrders(transformedOrders)
       setLastUpdated(new Date())
@@ -181,9 +187,8 @@ export default function Dashboard() {
       const data = await response.json()
       const parts = []
       if (data.imported > 0) parts.push(`${data.imported} imported`)
+      if (data.updated > 0) parts.push(`${data.updated} updated`)
       if (data.skipped > 0) parts.push(`${data.skipped} skipped`)
-      if (data.removed > 0) parts.push(`${data.removed} removed`)
-      if (data.enriched > 0) parts.push(`${data.enriched} enriched`)
       if (data.needsAttention > 0) parts.push(`${data.needsAttention} missing year`)
       setToast({
         message: parts.length > 0 ? parts.join(', ') : 'No changes',
@@ -332,7 +337,7 @@ Thank you!`
                     className={`hover:bg-subtle-gray cursor-pointer transition-colors ${index % 2 === 1 ? 'bg-subtle-gray/30' : ''}`}
                   >
                     <td className="pl-6 pr-3 py-5">
-                      <span className="text-sm font-medium text-off-black">{order.orderNumber}</span>
+                      <span className="text-sm font-medium text-off-black">{order.displayOrderNumber}</span>
                     </td>
                     <td className="px-3 py-5 text-center">
                       <span className="text-lg">
@@ -414,7 +419,7 @@ Thank you!`
                       className={`hover:bg-subtle-gray cursor-pointer transition-colors ${index % 2 === 1 ? 'bg-subtle-gray/30' : ''}`}
                     >
                       <td className="pl-6 pr-3 py-5">
-                        <span className="text-sm font-medium text-off-black">{order.orderNumber}</span>
+                        <span className="text-sm font-medium text-off-black">{order.displayOrderNumber}</span>
                       </td>
                       <td className="px-3 py-5 text-center">
                         <span className="text-lg">✅</span>
@@ -465,7 +470,7 @@ Thank you!`
                        selectedOrder.status === 'pending' ? '⏳' : '📦'}
                     </span>
                     <h3 className="text-heading-md text-off-black">
-                      Order {selectedOrder.orderNumber}
+                      Order {selectedOrder.displayOrderNumber}
                     </h3>
                   </div>
                   <button
@@ -480,11 +485,8 @@ Thank you!`
                   {/* Product Info */}
                   <div>
                     <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Product Info</h4>
-                    <div className="bg-subtle-gray border border-border-gray rounded-md p-4 space-y-3">
+                    <div className="bg-subtle-gray border border-border-gray rounded-md p-4">
                       <StaticField label="Size" value={selectedOrder.productSize} />
-                      {selectedOrder.frameType && (
-                        <StaticField label="Frame" value={selectedOrder.frameType} />
-                      )}
                     </div>
                   </div>
 
@@ -525,9 +527,9 @@ Thank you!`
                     </div>
                   </div>
 
-                  {/* Runner Data */}
+                  {/* Runner Info */}
                   <div>
-                    <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Runner Data</h4>
+                    <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Runner Info</h4>
                     <div className="bg-subtle-gray border border-border-gray rounded-md p-4 space-y-3">
                       {selectedOrder.runnerName ? (
                         <CopyableField label="Name" value={selectedOrder.runnerName} />

@@ -142,6 +142,7 @@ export default async function handler(req, res) {
     // 2. Save to database
     let imported = 0
     let skipped = 0
+    let updated = 0
     let enriched = 0
     let needsAttention = 0
 
@@ -151,8 +152,40 @@ export default async function handler(req, res) {
         where: { orderNumber: order.orderId }
       })
 
+      const isShopify = !order.channelName?.toLowerCase().includes('etsy')
+
+      // If order exists but is missing Shopify data, update it
       if (existing) {
-        skipped++
+        if (isShopify && !existing.shopifyOrderData) {
+          console.log(`Updating existing order ${order.orderId} with Shopify data...`)
+          const shopifyData = await fetchShopifyOrderData(order.orderId)
+
+          if (shopifyData) {
+            const updateData = {
+              raceName: shopifyData.raceName || existing.raceName,
+              runnerName: shopifyData.runnerName || existing.runnerName,
+              raceYear: shopifyData.raceYear || existing.raceYear,
+              shopifyOrderData: shopifyData.shopifyOrderData,
+              notes: shopifyData.notes || existing.notes
+            }
+
+            // Update status if missing year
+            if (shopifyData.needsAttention && existing.status === 'pending') {
+              updateData.status = 'missing_year'
+              needsAttention++
+            }
+
+            await prisma.order.update({
+              where: { orderNumber: order.orderId },
+              data: updateData
+            })
+
+            updated++
+            enriched++
+          }
+        } else {
+          skipped++
+        }
         continue
       }
 
@@ -160,7 +193,6 @@ export default async function handler(req, res) {
       const firstItem = order.orderItems?.[0]
       const rawSize = firstItem?.product?.size || 'Unknown'
       const productSize = rawSize.startsWith('x') ? rawSize.slice(1) : rawSize
-      const isShopify = !order.channelName?.toLowerCase().includes('etsy')
 
       // Default values (from Artelo)
       let raceName = 'Unknown Race'
@@ -213,6 +245,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       success: true,
       imported,
+      updated,
       skipped,
       enriched,
       needsAttention,
