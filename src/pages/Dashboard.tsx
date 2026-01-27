@@ -529,62 +529,62 @@ Thank you!`
 
   return (
     <div className="h-screen overflow-hidden bg-[#f3f3f3] flex flex-col">
-      <div className="max-w-4xl mx-auto px-6 md:px-8 lg:px-12 w-full flex flex-col h-full">
-        {/* Header - Centered with lots of space */}
-        <div className="pt-12 md:pt-16 lg:pt-20 pb-8 md:pb-10 text-center flex-shrink-0">
-          {/* Logo */}
-          <div className="mb-6">
-            <img
-              src="/trackstar-logo.png"
-              alt="Trackstar"
-              className="h-10 md:h-12 mx-auto"
-            />
+      <div className="max-w-5xl mx-auto px-6 md:px-8 lg:px-12 w-full flex flex-col h-full">
+        {/* Header - Left-aligned with compact vertical space */}
+        <div className="pt-6 md:pt-8 lg:pt-10 pb-4 md:pb-6 flex items-start justify-between gap-6 flex-shrink-0">
+          {/* Left side: logo, greeting, and summary */}
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <img
+                src="/trackstar-logo.png"
+                alt="Trackstar"
+                className="h-10 md:h-11"
+              />
+            </div>
+            <div>
+              <h1 className="text-3xl md:text-4xl lg:text-[40px] font-bold text-off-black mb-1">
+                {getGreeting()}, Elí
+              </h1>
+              <p className="text-sm md:text-base text-off-black/60">
+                {ordersToFulfill.length} orders to fulfill
+                {researchableCount > 0 && ` • ${researchableCount} can be auto-researched`}
+                {' • '}Last updated {formatLastUpdated(lastUpdated)}
+              </p>
+            </div>
           </div>
 
-          {/* Greeting */}
-          <h1 className="text-4xl md:text-5xl lg:text-[60px] font-bold text-off-black mb-3">
-            {getGreeting()}, Elí
-          </h1>
-
-          {/* Subtitle with order count and last updated */}
-          <p className="text-body text-off-black/50">
-            {ordersToFulfill.length} orders to fulfill • {researchableCount > 0 && `${researchableCount} can be auto-researched • `}Last updated {formatLastUpdated(lastUpdated)}
-          </p>
-
-          {/* Import button - centered below */}
-          <div className="mt-6 flex justify-center gap-3">
+          {/* Right side: primary actions, right-aligned */}
+          <div className="flex flex-col items-end gap-2">
             <button
               onClick={importOrders}
               disabled={isImporting}
-              className="inline-flex items-center gap-2 px-8 py-3.5 bg-off-black text-white rounded-md hover:opacity-90 transition-opacity font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-off-black text-white rounded-md hover:opacity-90 transition-opacity font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isImporting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <Upload className="w-4 h-4" />
               )}
-              {isImporting ? 'Importing...' : 'Import New Orders'}
+              {isImporting ? 'Importing…' : 'Import New Orders'}
             </button>
-          </div>
-
-          {/* Quick links */}
-          <div className="mt-4 flex justify-center gap-4">
-            <a
-              href="https://www.artelo.io/app/orders?tab=ACTION_REQUIRED"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-off-black/40 hover:text-off-black/70 transition-colors"
-            >
-              Go to Artelo Orders &rarr;
-            </a>
-            <a
-              href="https://admin.shopify.com/store/flickman-3247/orders"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-off-black/40 hover:text-off-black/70 transition-colors"
-            >
-              Go to Shopify Orders &rarr;
-            </a>
+            <div className="flex flex-col items-end gap-1">
+              <a
+                href="https://www.artelo.io/app/orders?tab=ACTION_REQUIRED"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs md:text-sm text-off-black/40 hover:text-off-black/70 transition-colors"
+              >
+                Go to Artelo Orders &rarr;
+              </a>
+              <a
+                href="https://admin.shopify.com/store/flickman-3247/orders"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs md:text-sm text-off-black/40 hover:text-off-black/70 transition-colors"
+              >
+                Go to Shopify Orders &rarr;
+              </a>
+            </div>
           </div>
         </div>
 
