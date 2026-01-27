@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import { Search, ChevronDown, ChevronRight, Upload, Copy, Loader2 } from 'lucide-react'
+import { Search, ChevronDown, ChevronRight, Upload, Copy, Loader2, FlaskConical } from 'lucide-react'
 
 // API calls now go to /api/* serverless functions (same origin)
 
@@ -11,6 +11,7 @@ interface Order {
   raceName: string
   raceYear: number | null
   raceDate?: string
+  raceLocation?: string
   eventType?: string
   runnerName: string
   productSize: string
@@ -19,19 +20,21 @@ interface Order {
   flagReason?: string
   completedAt?: string
   createdAt: string
-  // Runner research data (only for ready/completed orders)
+  // Runner research data
   bibNumber?: string
   officialTime?: string
   officialPace?: string
+  researchStatus?: 'found' | 'not_found' | 'ambiguous' | null
+  researchNotes?: string
   // Weather data
-  weather?: {
-    condition: 'sunny' | 'cloudy' | 'rainy'
-    temp: string
-  }
+  weatherTemp?: string
+  weatherCondition?: string
+  // Scraper availability
+  hasScraperAvailable?: boolean
 }
 
 // Toast notification component
-function Toast({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) {
+function Toast({ message, type, onClose }: { message: string; type: 'success' | 'error' | 'info'; onClose: () => void }) {
   useEffect(() => {
     const timer = setTimeout(onClose, 3000)
     return () => clearTimeout(timer)
@@ -39,7 +42,9 @@ function Toast({ message, type, onClose }: { message: string; type: 'success' | 
 
   return (
     <div className={`fixed bottom-4 right-4 px-4 py-3 rounded-lg shadow-lg z-50 ${
-      type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+      type === 'success' ? 'bg-green-600 text-white' :
+      type === 'error' ? 'bg-red-600 text-white' :
+      'bg-blue-600 text-white'
     }`}>
       {message}
     </div>
@@ -100,6 +105,16 @@ function PendingField({ label }: { label: string }) {
   )
 }
 
+// Not available field (no scraper for this race)
+function NotAvailableField({ label }: { label: string }) {
+  return (
+    <div className="flex justify-between items-center">
+      <span className="text-body-sm text-off-black/60">{label}</span>
+      <span className="text-body-sm text-off-black/30 italic">Manual entry needed</span>
+    </div>
+  )
+}
+
 function getGreeting(): string {
   const now = new Date()
   const costaRicaTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Costa_Rica' }))
@@ -121,6 +136,15 @@ function formatLastUpdated(date: Date): string {
   })
 }
 
+function formatRaceDate(dateString: string): string {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  })
+}
+
 export default function Dashboard() {
   const [orders, setOrders] = useState<Order[]>([])
   const [searchQuery, setSearchQuery] = useState('')
@@ -128,8 +152,9 @@ export default function Dashboard() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isImporting, setIsImporting] = useState(false)
+  const [isResearching, setIsResearching] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
 
   // Fetch orders from database
   const fetchOrders = useCallback(async () => {
@@ -151,12 +176,26 @@ export default function Dashboard() {
           source: order.source as 'shopify' | 'etsy',
           raceName: order.raceName as string,
           raceYear: order.raceYear as number | null,
+          raceDate: order.raceDate as string | undefined,
+          raceLocation: order.raceLocation as string | undefined,
           runnerName: order.runnerName as string,
           productSize: order.productSize as string,
           notes: order.notes as string | undefined,
           status: order.status as 'pending' | 'ready' | 'flagged' | 'completed' | 'missing_year',
           createdAt: order.createdAt as string,
-          completedAt: order.researchedAt as string | undefined
+          completedAt: order.researchedAt as string | undefined,
+          // Research data
+          bibNumber: order.bibNumber as string | undefined,
+          officialTime: order.officialTime as string | undefined,
+          officialPace: order.officialPace as string | undefined,
+          eventType: order.eventType as string | undefined,
+          researchStatus: order.researchStatus as 'found' | 'not_found' | 'ambiguous' | null,
+          researchNotes: order.researchNotes as string | undefined,
+          // Weather
+          weatherTemp: order.weatherTemp as string | undefined,
+          weatherCondition: order.weatherCondition as string | undefined,
+          // Scraper
+          hasScraperAvailable: order.hasScraperAvailable as boolean | undefined
         }
       })
 
@@ -206,6 +245,95 @@ export default function Dashboard() {
     }
   }
 
+  // Research a single order
+  const researchOrder = async (orderNumber: string) => {
+    setIsResearching(true)
+    try {
+      setToast({ message: 'Researching runner...', type: 'info' })
+
+      const response = await fetch(`/api/orders/research-runner`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderNumber })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Research failed')
+      }
+
+      const data = await response.json()
+
+      if (data.found) {
+        setToast({
+          message: `Found! Bib: ${data.results.bibNumber}, Time: ${data.results.officialTime}`,
+          type: 'success'
+        })
+      } else if (data.ambiguous) {
+        setToast({
+          message: 'Multiple runners found with that name',
+          type: 'error'
+        })
+      } else {
+        setToast({
+          message: 'Runner not found in race results',
+          type: 'error'
+        })
+      }
+
+      // Refresh orders and update selected order
+      await fetchOrders()
+
+      // Update the selected order with new data
+      if (selectedOrder) {
+        const updatedOrders = await fetch(`/api/orders`).then(r => r.json())
+        const updated = updatedOrders.orders?.find((o: { orderNumber: string }) => o.orderNumber === orderNumber)
+        if (updated) {
+          const shopifyData = updated.shopifyOrderData as Record<string, unknown> | null
+          setSelectedOrder({
+            ...selectedOrder,
+            bibNumber: updated.bibNumber,
+            officialTime: updated.officialTime,
+            officialPace: updated.officialPace,
+            eventType: updated.eventType,
+            raceDate: updated.raceDate,
+            weatherTemp: updated.weatherTemp,
+            weatherCondition: updated.weatherCondition,
+            researchStatus: updated.researchStatus,
+            status: updated.status,
+            displayOrderNumber: (shopifyData?.name as string) || updated.orderNumber
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Error researching order:', error)
+      const message = error instanceof Error ? error.message : 'Research failed'
+      setToast({ message, type: 'error' })
+    } finally {
+      setIsResearching(false)
+    }
+  }
+
+  // Mark order as completed
+  const markAsCompleted = async (orderNumber: string) => {
+    try {
+      const response = await fetch(`/api/orders/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderNumber })
+      })
+
+      if (!response.ok) throw new Error('Failed to mark as completed')
+
+      setToast({ message: 'Order marked as completed!', type: 'success' })
+      setSelectedOrder(null)
+      await fetchOrders()
+    } catch (error) {
+      console.error('Error completing order:', error)
+      setToast({ message: 'Failed to complete order', type: 'error' })
+    }
+  }
+
   // Fetch orders on mount
   useEffect(() => {
     fetchOrders()
@@ -235,6 +363,16 @@ export default function Dashboard() {
     )
   }, [ordersToFulfill, searchQuery])
 
+  // Count orders that can be researched
+  const researchableCount = useMemo(() => {
+    return ordersToFulfill.filter(o =>
+      o.hasScraperAvailable &&
+      o.raceYear &&
+      o.status !== 'ready' &&
+      o.researchStatus !== 'found'
+    ).length
+  }, [ordersToFulfill])
+
   const handleCopyEmail = (order: Order) => {
     const emailText = `Hi,
 
@@ -246,6 +384,16 @@ Could you please verify the runner's name and race details?
 
 Thank you!`
     navigator.clipboard.writeText(emailText)
+  }
+
+  // Get status icon and color for table
+  const getStatusDisplay = (order: Order) => {
+    if (order.status === 'flagged') return { icon: '⚠️', label: 'Flagged' }
+    if (order.status === 'missing_year') return { icon: '📅', label: 'Missing Year' }
+    if (order.status === 'ready') return { icon: '✅', label: 'Ready' }
+    if (order.researchStatus === 'found') return { icon: '✅', label: 'Researched' }
+    if (order.hasScraperAvailable) return { icon: '🔍', label: 'Can Research' }
+    return { icon: '⏳', label: 'Pending' }
   }
 
   return (
@@ -269,11 +417,11 @@ Thank you!`
 
           {/* Subtitle with order count and last updated */}
           <p className="text-body text-off-black/50">
-            {ordersToFulfill.length} orders to fulfill • Last updated {formatLastUpdated(lastUpdated)}
+            {ordersToFulfill.length} orders to fulfill • {researchableCount > 0 && `${researchableCount} can be auto-researched • `}Last updated {formatLastUpdated(lastUpdated)}
           </p>
 
           {/* Import button - centered below */}
-          <div className="mt-8">
+          <div className="mt-8 flex justify-center gap-3">
             <button
               onClick={importOrders}
               disabled={isImporting}
@@ -330,44 +478,51 @@ Thank you!`
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-gray">
-                {filteredOrders.map((order, index) => (
-                  <tr
-                    key={order.id}
-                    onClick={() => setSelectedOrder(order)}
-                    className={`hover:bg-subtle-gray cursor-pointer transition-colors ${index % 2 === 1 ? 'bg-subtle-gray/30' : ''}`}
-                  >
-                    <td className="pl-6 pr-2 py-5 text-center">
-                      <span className="text-lg" title={order.source === 'shopify' ? 'Shopify' : 'Etsy'}>
-                        {order.source === 'shopify' ? '🛒' : '🧶'}
-                      </span>
-                    </td>
-                    <td className="px-3 py-5">
-                      <span className="text-sm font-medium text-off-black">{order.displayOrderNumber}</span>
-                    </td>
-                    <td className="px-3 py-5 text-center">
-                      <span className="text-lg">
-                        {order.status === 'flagged' ? '⚠️' :
-                         order.status === 'missing_year' ? '📅' :
-                         order.status === 'pending' ? '⏳' : '📦'}
-                      </span>
-                    </td>
-                    <td className="px-3 py-5">
-                      <span className="text-sm text-off-black">{order.runnerName || 'Unknown Runner'}</span>
-                      {order.status === 'flagged' && order.flagReason && (
-                        <p className="text-xs text-warning-amber mt-1 leading-tight">{order.flagReason}</p>
-                      )}
-                      {order.status === 'missing_year' && (
-                        <p className="text-xs text-warning-amber mt-1 leading-tight">Year Missing</p>
-                      )}
-                      {order.status === 'pending' && (
-                        <p className="text-xs text-off-black/40 mt-1 leading-tight">Pending Research</p>
-                      )}
-                    </td>
-                    <td className="px-3 pr-6 py-5 text-sm text-off-black/60 hidden md:table-cell">
-                      {order.raceName} {order.raceYear}
-                    </td>
-                  </tr>
-                ))}
+                {filteredOrders.map((order, index) => {
+                  const statusDisplay = getStatusDisplay(order)
+                  return (
+                    <tr
+                      key={order.id}
+                      onClick={() => setSelectedOrder(order)}
+                      className={`hover:bg-subtle-gray cursor-pointer transition-colors ${index % 2 === 1 ? 'bg-subtle-gray/30' : ''}`}
+                    >
+                      <td className="pl-6 pr-2 py-5 text-center">
+                        <span className="text-lg" title={order.source === 'shopify' ? 'Shopify' : 'Etsy'}>
+                          {order.source === 'shopify' ? '🛒' : '🧶'}
+                        </span>
+                      </td>
+                      <td className="px-3 py-5">
+                        <span className="text-sm font-medium text-off-black">{order.displayOrderNumber}</span>
+                      </td>
+                      <td className="px-3 py-5 text-center">
+                        <span className="text-lg" title={statusDisplay.label}>
+                          {statusDisplay.icon}
+                        </span>
+                      </td>
+                      <td className="px-3 py-5">
+                        <span className="text-sm text-off-black">{order.runnerName || 'Unknown Runner'}</span>
+                        {order.status === 'flagged' && order.flagReason && (
+                          <p className="text-xs text-warning-amber mt-1 leading-tight">{order.flagReason}</p>
+                        )}
+                        {order.status === 'missing_year' && (
+                          <p className="text-xs text-warning-amber mt-1 leading-tight">Year Missing</p>
+                        )}
+                        {order.status === 'ready' && order.bibNumber && (
+                          <p className="text-xs text-green-600 mt-1 leading-tight">Bib: {order.bibNumber} • {order.officialTime}</p>
+                        )}
+                        {order.status === 'pending' && order.hasScraperAvailable && order.raceYear && (
+                          <p className="text-xs text-blue-600 mt-1 leading-tight">Ready to research</p>
+                        )}
+                        {order.status === 'pending' && !order.hasScraperAvailable && (
+                          <p className="text-xs text-off-black/40 mt-1 leading-tight">Manual research needed</p>
+                        )}
+                      </td>
+                      <td className="px-3 pr-6 py-5 text-sm text-off-black/60 hidden md:table-cell">
+                        {order.raceName} {order.raceYear}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
 
@@ -471,7 +626,8 @@ Thank you!`
                       {selectedOrder.status === 'flagged' ? '⚠️' :
                        selectedOrder.status === 'completed' ? '✅' :
                        selectedOrder.status === 'missing_year' ? '📅' :
-                       selectedOrder.status === 'pending' ? '⏳' : '📦'}
+                       selectedOrder.status === 'ready' ? '✅' :
+                       selectedOrder.researchStatus === 'found' ? '✅' : '⏳'}
                     </span>
                     <h3 className="text-heading-md text-off-black">
                       Order {selectedOrder.displayOrderNumber}
@@ -506,27 +662,30 @@ Thank you!`
                       )}
                       {selectedOrder.eventType ? (
                         <StaticField label="Event" value={selectedOrder.eventType} />
-                      ) : (
+                      ) : selectedOrder.hasScraperAvailable ? (
                         <PendingField label="Event" />
+                      ) : (
+                        <NotAvailableField label="Event" />
                       )}
                       {selectedOrder.raceDate ? (
-                        <CopyableField label="Date" value={selectedOrder.raceDate} />
-                      ) : (
+                        <CopyableField label="Date" value={formatRaceDate(selectedOrder.raceDate)} />
+                      ) : selectedOrder.hasScraperAvailable ? (
                         <PendingField label="Date" />
-                      )}
-                      {selectedOrder.weather ? (
-                        <>
-                          <CopyableField
-                            label="Weather"
-                            value={selectedOrder.weather.condition.charAt(0).toUpperCase() + selectedOrder.weather.condition.slice(1)}
-                          />
-                          <CopyableField label="Temp" value={selectedOrder.weather.temp} />
-                        </>
                       ) : (
-                        <>
-                          <PendingField label="Weather" />
-                          <PendingField label="Temp" />
-                        </>
+                        <NotAvailableField label="Date" />
+                      )}
+                      {selectedOrder.weatherCondition ? (
+                        <CopyableField
+                          label="Weather"
+                          value={selectedOrder.weatherCondition.charAt(0).toUpperCase() + selectedOrder.weatherCondition.slice(1)}
+                        />
+                      ) : (
+                        <PendingField label="Weather" />
+                      )}
+                      {selectedOrder.weatherTemp ? (
+                        <CopyableField label="Temp" value={selectedOrder.weatherTemp} />
+                      ) : (
+                        <PendingField label="Temp" />
                       )}
                     </div>
                   </div>
@@ -542,21 +701,43 @@ Thank you!`
                       )}
                       {selectedOrder.bibNumber ? (
                         <CopyableField label="Bib" value={selectedOrder.bibNumber} />
-                      ) : (
+                      ) : selectedOrder.hasScraperAvailable ? (
                         <PendingField label="Bib" />
+                      ) : (
+                        <NotAvailableField label="Bib" />
                       )}
                       {selectedOrder.officialTime ? (
                         <CopyableField label="Time" value={selectedOrder.officialTime} />
-                      ) : (
+                      ) : selectedOrder.hasScraperAvailable ? (
                         <PendingField label="Time" />
+                      ) : (
+                        <NotAvailableField label="Time" />
                       )}
                       {selectedOrder.officialPace ? (
                         <CopyableField label="Pace" value={selectedOrder.officialPace} />
-                      ) : (
+                      ) : selectedOrder.hasScraperAvailable ? (
                         <PendingField label="Pace" />
+                      ) : (
+                        <NotAvailableField label="Pace" />
                       )}
                     </div>
                   </div>
+
+                  {/* Research Status */}
+                  {selectedOrder.researchStatus && selectedOrder.researchStatus !== 'found' && (
+                    <div>
+                      <h4 className="text-xs font-semibold text-warning-amber uppercase tracking-tight mb-2">Research Status</h4>
+                      <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
+                        <p className="text-body-sm text-amber-800">
+                          {selectedOrder.researchStatus === 'not_found' && 'Runner not found in race results. Please verify the name and year.'}
+                          {selectedOrder.researchStatus === 'ambiguous' && 'Multiple runners found with this name. Manual verification needed.'}
+                        </p>
+                        {selectedOrder.researchNotes && (
+                          <p className="text-body-sm text-amber-700 mt-2">{selectedOrder.researchNotes}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Notes - only show if there are notes */}
                   {selectedOrder.notes && (
@@ -588,10 +769,45 @@ Thank you!`
                     </div>
                   )}
 
+                  {/* Scraper Not Available Warning */}
+                  {!selectedOrder.hasScraperAvailable && selectedOrder.status !== 'completed' && (
+                    <div>
+                      <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Manual Research Required</h4>
+                      <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
+                        <p className="text-body-sm text-gray-600">
+                          Auto-research is not yet available for {selectedOrder.raceName}.
+                          Please manually look up the runner's bib number, time, and pace.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Actions */}
                   <div className="flex gap-3 pt-3">
-                    {selectedOrder.status === 'ready' && (
-                      <button className="flex-1 px-5 py-3 bg-off-black text-white rounded-md hover:opacity-90 transition-opacity font-medium">
+                    {/* Research button - show if scraper available and not already researched */}
+                    {selectedOrder.hasScraperAvailable &&
+                     selectedOrder.raceYear &&
+                     selectedOrder.researchStatus !== 'found' &&
+                     selectedOrder.status !== 'completed' && (
+                      <button
+                        onClick={() => researchOrder(selectedOrder.orderNumber)}
+                        disabled={isResearching}
+                        className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isResearching ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <FlaskConical className="w-4 h-4" />
+                        )}
+                        {isResearching ? 'Researching...' : 'Research Runner'}
+                      </button>
+                    )}
+                    {(selectedOrder.status === 'ready' || selectedOrder.researchStatus === 'found') &&
+                     selectedOrder.status !== 'completed' && (
+                      <button
+                        onClick={() => markAsCompleted(selectedOrder.orderNumber)}
+                        className="flex-1 px-5 py-3 bg-off-black text-white rounded-md hover:opacity-90 transition-opacity font-medium"
+                      >
                         Mark as Completed
                       </button>
                     )}
