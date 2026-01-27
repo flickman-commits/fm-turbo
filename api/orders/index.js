@@ -3,6 +3,29 @@ import { hasScraperForRace } from '../../server/scrapers/index.js'
 
 const prisma = new PrismaClient()
 
+/**
+ * Format date as MM.DD.YY (e.g., "12.02.18")
+ */
+function formatRaceDate(date) {
+  if (!date) return null
+  const d = new Date(date)
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const year = String(d.getFullYear()).slice(-2)
+  return `${month}.${day}.${year}`
+}
+
+/**
+ * Format temperature with degree symbol (e.g., "39°")
+ */
+function formatTemp(temp) {
+  if (!temp) return null
+  // If already has degree symbol, return as is
+  if (temp.includes('°')) return temp
+  // Add degree symbol
+  return `${temp}°`
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
 
@@ -37,11 +60,12 @@ export default async function handler(req, res) {
         eventType: research?.eventType || null,
         researchStatus: research?.researchStatus || null,
         researchNotes: research?.researchNotes || null,
-        // Race data (Tier 1)
-        raceDate: race?.raceDate || null,
+        // Race data (Tier 1) - formatted for direct copy to Illustrator
+        raceDate: formatRaceDate(race?.raceDate),
         raceLocation: race?.location || null,
-        weatherTemp: race?.weatherTemp || null,
-        weatherCondition: race?.weatherCondition || null,
+        weatherTemp: formatTemp(race?.weatherTemp),
+        weatherCondition: race?.weatherCondition ?
+          race.weatherCondition.charAt(0).toUpperCase() + race.weatherCondition.slice(1) : null,
         // Scraper availability
         hasScraperAvailable: hasScraperForRace(order.raceName),
         // Clean up - don't send nested objects to frontend

@@ -186,13 +186,23 @@ export class NYCMarathonScraper extends BaseScraper {
   }
 
   /**
+   * Format pace as "X:XX / mi" (no leading zero, with unit)
+   */
+  formatPace(pace) {
+    if (!pace) return null
+    // Remove leading zero if present (07:15 -> 7:15)
+    const cleaned = pace.replace(/^0/, '')
+    return `${cleaned} / mi`
+  }
+
+  /**
    * Extract standardized data from NYRR result object
    */
   extractRunnerData(runner) {
     // The API returns pace already formatted and time in h:mm:ss
     const time = runner.overallTime || null
     const bib = runner.bib || null
-    const pace = runner.pace || null
+    const pace = this.formatPace(runner.pace)
 
     return {
       found: true,

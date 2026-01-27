@@ -136,14 +136,9 @@ function formatLastUpdated(date: Date): string {
   })
 }
 
-function formatRaceDate(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
-  })
-}
+// Date and pace are now pre-formatted by the API for direct copy to Illustrator
+// Date: MM.DD.YY (e.g., "11.02.25")
+// Pace: X:XX / mi (e.g., "7:15 / mi")
 
 export default function Dashboard() {
   const [orders, setOrders] = useState<Order[]>([])
@@ -668,17 +663,14 @@ Thank you!`
                         <NotAvailableField label="Event" />
                       )}
                       {selectedOrder.raceDate ? (
-                        <CopyableField label="Date" value={formatRaceDate(selectedOrder.raceDate)} />
+                        <CopyableField label="Date" value={selectedOrder.raceDate} />
                       ) : selectedOrder.hasScraperAvailable ? (
                         <PendingField label="Date" />
                       ) : (
                         <NotAvailableField label="Date" />
                       )}
                       {selectedOrder.weatherCondition ? (
-                        <CopyableField
-                          label="Weather"
-                          value={selectedOrder.weatherCondition.charAt(0).toUpperCase() + selectedOrder.weatherCondition.slice(1)}
-                        />
+                        <CopyableField label="Weather" value={selectedOrder.weatherCondition} />
                       ) : (
                         <PendingField label="Weather" />
                       )}
