@@ -22,6 +22,9 @@ export class NYCMarathonScraper extends BaseScraper {
   async getRaceInfo() {
     console.log(`[NYC Marathon ${this.year}] Fetching race info...`)
 
+    // Prefer the official event date returned by NYRR's API.
+    // ResearchService will cache this in the Race table so we only need
+    // to discover it once per year; subsequent calls will read from the DB.
     try {
       // Fetch event details from API
       const response = await fetch(`${this.baseUrl}/events/details`, {
@@ -39,8 +42,13 @@ export class NYCMarathonScraper extends BaseScraper {
         console.log(`[NYC Marathon ${this.year}] Got event details from API`)
 
         if (data.eventDetails) {
+          const apiDate = data.eventDetails.eventDate
+            ? new Date(data.eventDetails.eventDate)
+            : null
+
           return {
-            raceDate: data.eventDetails.eventDate ? new Date(data.eventDetails.eventDate) : this.calculateNYCMarathonDate(this.year),
+            // Use exact date from API when available
+            raceDate: apiDate ?? this.calculateNYCMarathonDate(this.year),
             location: 'New York, NY',
             eventTypes: ['Marathon'],
             resultsUrl: `https://results.nyrr.org/event/${this.eventCode}/finishers`,
@@ -186,22 +194,17 @@ export class NYCMarathonScraper extends BaseScraper {
   }
 
   /**
-   * Format pace as "X:XX / mi" (no leading zero, with unit)
-   */
-  formatPace(pace) {
-    if (!pace) return null
-    // Remove leading zero if present (07:15 -> 7:15)
-    const cleaned = pace.replace(/^0/, '')
-    return `${cleaned} / mi`
-  }
-
-  /**
    * Extract standardized data from NYRR result object
    */
   extractRunnerData(runner) {
     // The API returns pace already formatted and time in h:mm:ss
-    const time = runner.overallTime || null
+    const rawTime = runner.overallTime || null
     const bib = runner.bib || null
+
+    // Format time (remove leading zero: 04:14:45 -> 4:14:45)
+    const time = this.formatTime(rawTime)
+
+    // Format pace (NYRR API already returns pace, just add " / mi")
     const pace = this.formatPace(runner.pace)
 
     return {

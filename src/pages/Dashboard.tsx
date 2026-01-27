@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import { Search, ChevronDown, ChevronRight, Upload, Copy, Loader2, FlaskConical } from 'lucide-react'
+import { Search, ChevronDown, ChevronRight, Upload, Copy, Loader2, FlaskConical, Pencil, Check, X } from 'lucide-react'
 
 // API calls now go to /api/* serverless functions (same origin)
 
@@ -31,6 +31,15 @@ interface Order {
   weatherCondition?: string
   // Scraper availability
   hasScraperAvailable?: boolean
+  // Override fields
+  yearOverride?: number | null
+  raceNameOverride?: string | null
+  runnerNameOverride?: string | null
+  // Effective values (computed by API)
+  effectiveRaceYear?: number | null
+  effectiveRaceName?: string
+  effectiveRunnerName?: string
+  hasOverrides?: boolean
 }
 
 // Toast notification component
@@ -190,7 +199,16 @@ export default function Dashboard() {
           weatherTemp: order.weatherTemp as string | undefined,
           weatherCondition: order.weatherCondition as string | undefined,
           // Scraper
-          hasScraperAvailable: order.hasScraperAvailable as boolean | undefined
+          hasScraperAvailable: order.hasScraperAvailable as boolean | undefined,
+          // Override fields
+          yearOverride: order.yearOverride as number | null | undefined,
+          raceNameOverride: order.raceNameOverride as string | null | undefined,
+          runnerNameOverride: order.runnerNameOverride as string | null | undefined,
+          // Effective values
+          effectiveRaceYear: order.effectiveRaceYear as number | null | undefined,
+          effectiveRaceName: order.effectiveRaceName as string | undefined,
+          effectiveRunnerName: order.effectiveRunnerName as string | undefined,
+          hasOverrides: order.hasOverrides as boolean | undefined
         }
       })
 
@@ -276,28 +294,57 @@ export default function Dashboard() {
         })
       }
 
-      // Refresh orders and update selected order
-      await fetchOrders()
+      // Fetch fresh data and update both orders list and selected order
+      const freshResponse = await fetch(`/api/orders`)
+      if (freshResponse.ok) {
+        const freshData = await freshResponse.json()
+        const freshOrders: Order[] = (freshData.orders || []).map((order: Record<string, unknown>) => {
+          const shopifyData = order.shopifyOrderData as Record<string, unknown> | null
+          const displayNum = shopifyData?.name as string | undefined
+          return {
+            id: order.id as string,
+            orderNumber: order.orderNumber as string,
+            displayOrderNumber: displayNum || (order.orderNumber as string),
+            source: order.source as 'shopify' | 'etsy',
+            raceName: order.raceName as string,
+            raceYear: order.raceYear as number | null,
+            raceDate: order.raceDate as string | undefined,
+            raceLocation: order.raceLocation as string | undefined,
+            runnerName: order.runnerName as string,
+            productSize: order.productSize as string,
+            notes: order.notes as string | undefined,
+            status: order.status as 'pending' | 'ready' | 'flagged' | 'completed' | 'missing_year',
+            createdAt: order.createdAt as string,
+            completedAt: order.researchedAt as string | undefined,
+            bibNumber: order.bibNumber as string | undefined,
+            officialTime: order.officialTime as string | undefined,
+            officialPace: order.officialPace as string | undefined,
+            eventType: order.eventType as string | undefined,
+            researchStatus: order.researchStatus as 'found' | 'not_found' | 'ambiguous' | null,
+            researchNotes: order.researchNotes as string | undefined,
+            weatherTemp: order.weatherTemp as string | undefined,
+            weatherCondition: order.weatherCondition as string | undefined,
+            hasScraperAvailable: order.hasScraperAvailable as boolean | undefined,
+            yearOverride: order.yearOverride as number | null | undefined,
+            raceNameOverride: order.raceNameOverride as string | null | undefined,
+            runnerNameOverride: order.runnerNameOverride as string | null | undefined,
+            effectiveRaceYear: order.effectiveRaceYear as number | null | undefined,
+            effectiveRaceName: order.effectiveRaceName as string | undefined,
+            effectiveRunnerName: order.effectiveRunnerName as string | undefined,
+            hasOverrides: order.hasOverrides as boolean | undefined
+          }
+        })
 
-      // Update the selected order with new data
-      if (selectedOrder) {
-        const updatedOrders = await fetch(`/api/orders`).then(r => r.json())
-        const updated = updatedOrders.orders?.find((o: { orderNumber: string }) => o.orderNumber === orderNumber)
-        if (updated) {
-          const shopifyData = updated.shopifyOrderData as Record<string, unknown> | null
-          setSelectedOrder({
-            ...selectedOrder,
-            bibNumber: updated.bibNumber,
-            officialTime: updated.officialTime,
-            officialPace: updated.officialPace,
-            eventType: updated.eventType,
-            raceDate: updated.raceDate,
-            weatherTemp: updated.weatherTemp,
-            weatherCondition: updated.weatherCondition,
-            researchStatus: updated.researchStatus,
-            status: updated.status,
-            displayOrderNumber: (shopifyData?.name as string) || updated.orderNumber
-          })
+        // Update orders list
+        setOrders(freshOrders)
+        setLastUpdated(new Date())
+
+        // Update selected order with fresh data
+        const updatedOrder = freshOrders.find(o => o.orderNumber === orderNumber)
+        console.log('[Research] Looking for order:', orderNumber)
+        console.log('[Research] Updated order found:', updatedOrder?.orderNumber, 'researchStatus:', updatedOrder?.researchStatus, 'status:', updatedOrder?.status)
+        if (updatedOrder) {
+          setSelectedOrder(updatedOrder)
         }
       }
     } catch (error) {
@@ -329,6 +376,95 @@ export default function Dashboard() {
     }
   }
 
+  // Edit mode state
+  const [isEditing, setIsEditing] = useState(false)
+  const [editValues, setEditValues] = useState<{
+    yearOverride: string
+    raceNameOverride: string
+    runnerNameOverride: string
+  }>({ yearOverride: '', raceNameOverride: '', runnerNameOverride: '' })
+  const [isSaving, setIsSaving] = useState(false)
+
+  // Start editing mode
+  const startEditing = (order: Order) => {
+    setEditValues({
+      yearOverride: order.yearOverride?.toString() || order.raceYear?.toString() || '',
+      raceNameOverride: order.raceNameOverride || order.raceName || '',
+      runnerNameOverride: order.runnerNameOverride || order.runnerName || ''
+    })
+    setIsEditing(true)
+  }
+
+  // Cancel editing
+  const cancelEditing = () => {
+    setIsEditing(false)
+    setEditValues({ yearOverride: '', raceNameOverride: '', runnerNameOverride: '' })
+  }
+
+  // Save overrides
+  const saveOverrides = async (orderNumber: string, originalOrder: Order) => {
+    setIsSaving(true)
+    try {
+      // Determine what changed (only send overrides if different from original)
+      const updates: Record<string, string | number | null> = {}
+
+      const newYear = editValues.yearOverride ? parseInt(editValues.yearOverride, 10) : null
+      if (newYear !== originalOrder.raceYear) {
+        updates.yearOverride = newYear
+      } else if (originalOrder.yearOverride !== null) {
+        updates.yearOverride = null // Clear override if matches original
+      }
+
+      if (editValues.raceNameOverride !== originalOrder.raceName) {
+        updates.raceNameOverride = editValues.raceNameOverride || null
+      } else if (originalOrder.raceNameOverride !== null) {
+        updates.raceNameOverride = null
+      }
+
+      if (editValues.runnerNameOverride !== originalOrder.runnerName) {
+        updates.runnerNameOverride = editValues.runnerNameOverride || null
+      } else if (originalOrder.runnerNameOverride !== null) {
+        updates.runnerNameOverride = null
+      }
+
+      const response = await fetch(`/api/orders/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderNumber, ...updates })
+      })
+
+      if (!response.ok) throw new Error('Failed to save changes')
+
+      setToast({ message: 'Changes saved!', type: 'success' })
+      setIsEditing(false)
+      await fetchOrders()
+
+      // Update selected order with new data
+      const updatedOrders = await fetch(`/api/orders`).then(r => r.json())
+      const updated = updatedOrders.orders?.find((o: { orderNumber: string }) => o.orderNumber === orderNumber)
+      if (updated) {
+        const shopifyData = updated.shopifyOrderData as Record<string, unknown> | null
+        setSelectedOrder({
+          ...selectedOrder!,
+          ...updated,
+          displayOrderNumber: (shopifyData?.name as string) || updated.orderNumber
+        })
+      }
+    } catch (error) {
+      console.error('Error saving overrides:', error)
+      setToast({ message: 'Failed to save changes', type: 'error' })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // Close modal and reset edit state
+  const closeModal = () => {
+    setSelectedOrder(null)
+    setIsEditing(false)
+    setEditValues({ yearOverride: '', raceNameOverride: '', runnerNameOverride: '' })
+  }
+
   // Fetch orders on mount
   useEffect(() => {
     fetchOrders()
@@ -358,11 +494,11 @@ export default function Dashboard() {
     )
   }, [ordersToFulfill, searchQuery])
 
-  // Count orders that can be researched
+  // Count orders that can be researched (use effective year which includes overrides)
   const researchableCount = useMemo(() => {
     return ordersToFulfill.filter(o =>
       o.hasScraperAvailable &&
-      o.raceYear &&
+      (o.effectiveRaceYear || o.raceYear) &&
       o.status !== 'ready' &&
       o.researchStatus !== 'found'
     ).length
@@ -392,10 +528,10 @@ Thank you!`
   }
 
   return (
-    <div className="min-h-screen bg-off-white">
-      <div className="max-w-4xl mx-auto px-6 md:px-8 lg:px-12">
+    <div className="h-screen overflow-hidden bg-[#f3f3f3] flex flex-col">
+      <div className="max-w-4xl mx-auto px-6 md:px-8 lg:px-12 w-full flex flex-col h-full">
         {/* Header - Centered with lots of space */}
-        <div className="pt-20 md:pt-28 lg:pt-32 pb-12 md:pb-16 text-center">
+        <div className="pt-12 md:pt-16 lg:pt-20 pb-8 md:pb-10 text-center flex-shrink-0">
           {/* Logo */}
           <div className="mb-6">
             <img
@@ -406,7 +542,7 @@ Thank you!`
           </div>
 
           {/* Greeting */}
-          <h1 className="text-3xl md:text-4xl lg:text-[40px] font-bold text-off-black mb-3">
+          <h1 className="text-4xl md:text-5xl lg:text-[60px] font-bold text-off-black mb-3">
             {getGreeting()}, Elí
           </h1>
 
@@ -416,7 +552,7 @@ Thank you!`
           </p>
 
           {/* Import button - centered below */}
-          <div className="mt-8 flex justify-center gap-3">
+          <div className="mt-6 flex justify-center gap-3">
             <button
               onClick={importOrders}
               disabled={isImporting}
@@ -430,13 +566,33 @@ Thank you!`
               {isImporting ? 'Importing...' : 'Import New Orders'}
             </button>
           </div>
+
+          {/* Quick links */}
+          <div className="mt-4 flex justify-center gap-4">
+            <a
+              href="https://www.artelo.io/app/orders?tab=ACTION_REQUIRED"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-off-black/40 hover:text-off-black/70 transition-colors"
+            >
+              Go to Artelo Orders &rarr;
+            </a>
+            <a
+              href="https://admin.shopify.com/store/flickman-3247/orders"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-off-black/40 hover:text-off-black/70 transition-colors"
+            >
+              Go to Shopify Orders &rarr;
+            </a>
+          </div>
         </div>
 
         {/* Orders to Fulfill Section */}
         {!isLoading && (
-        <section className="pb-16">
+        <section className="flex-1 flex flex-col min-h-0 pb-4">
           {/* Section Header */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4 flex-shrink-0">
             <div className="flex items-center gap-3">
               <h2 className="text-lg font-semibold text-off-black uppercase tracking-tight">Orders to Fulfill</h2>
               <span className="px-2.5 py-1 bg-off-black/10 text-off-black/60 text-sm font-medium rounded">
@@ -446,9 +602,9 @@ Thank you!`
           </div>
 
           {/* Content Card */}
-          <div className="bg-white border border-border-gray rounded-lg shadow-sm overflow-hidden">
+          <div className="bg-white border border-border-gray rounded-lg shadow-sm overflow-hidden flex-1 flex flex-col min-h-0">
             {/* Search inside card */}
-            <div className="p-6 border-b border-border-gray">
+            <div className="p-4 border-b border-border-gray flex-shrink-0">
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-off-black/40" />
                 <input
@@ -461,100 +617,10 @@ Thank you!`
               </div>
             </div>
 
-            {/* Table */}
-            <table className="w-full">
-              <thead className="bg-subtle-gray border-b border-border-gray">
-                <tr>
-                  <th className="text-center pl-6 pr-2 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider w-12">Src</th>
-                  <th className="text-left px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider">Order #</th>
-                  <th className="text-center px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider w-20">Status</th>
-                  <th className="text-left px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider">Runner</th>
-                  <th className="text-left px-3 pr-6 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider hidden md:table-cell">Race</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border-gray">
-                {filteredOrders.map((order, index) => {
-                  const statusDisplay = getStatusDisplay(order)
-                  return (
-                    <tr
-                      key={order.id}
-                      onClick={() => setSelectedOrder(order)}
-                      className={`hover:bg-subtle-gray cursor-pointer transition-colors ${index % 2 === 1 ? 'bg-subtle-gray/30' : ''}`}
-                    >
-                      <td className="pl-6 pr-2 py-5 text-center">
-                        <span className="text-lg" title={order.source === 'shopify' ? 'Shopify' : 'Etsy'}>
-                          {order.source === 'shopify' ? '🛒' : '🧶'}
-                        </span>
-                      </td>
-                      <td className="px-3 py-5">
-                        <span className="text-sm font-medium text-off-black">{order.displayOrderNumber}</span>
-                      </td>
-                      <td className="px-3 py-5 text-center">
-                        <span className="text-lg" title={statusDisplay.label}>
-                          {statusDisplay.icon}
-                        </span>
-                      </td>
-                      <td className="px-3 py-5">
-                        <span className="text-sm text-off-black">{order.runnerName || 'Unknown Runner'}</span>
-                        {order.status === 'flagged' && order.flagReason && (
-                          <p className="text-xs text-warning-amber mt-1 leading-tight">{order.flagReason}</p>
-                        )}
-                        {order.status === 'missing_year' && (
-                          <p className="text-xs text-warning-amber mt-1 leading-tight">Year Missing</p>
-                        )}
-                        {order.status === 'ready' && order.bibNumber && (
-                          <p className="text-xs text-green-600 mt-1 leading-tight">Bib: {order.bibNumber} • {order.officialTime}</p>
-                        )}
-                        {order.status === 'pending' && order.hasScraperAvailable && order.raceYear && (
-                          <p className="text-xs text-blue-600 mt-1 leading-tight">Ready to research</p>
-                        )}
-                        {order.status === 'pending' && !order.hasScraperAvailable && (
-                          <p className="text-xs text-off-black/40 mt-1 leading-tight">Manual research needed</p>
-                        )}
-                      </td>
-                      <td className="px-3 pr-6 py-5 text-sm text-off-black/60 hidden md:table-cell">
-                        {order.raceName} {order.raceYear}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-
-            {filteredOrders.length === 0 && (
-              <div className="text-center py-16 text-off-black/40 text-sm">
-                {searchQuery ? 'No matching orders found' : 'No orders to fulfill'}
-              </div>
-            )}
-          </div>
-        </section>
-        )}
-
-        {/* Completed Orders Section */}
-        {!isLoading && (
-        <section className="pb-20">
-          <button
-            onClick={() => setShowCompleted(!showCompleted)}
-            className="flex items-center gap-3 mb-6 group"
-          >
-            {showCompleted ? (
-              <ChevronDown className="w-5 h-5 text-off-black/40" />
-            ) : (
-              <ChevronRight className="w-5 h-5 text-off-black/40" />
-            )}
-            <span className="text-base">✅</span>
-            <h2 className="text-lg font-semibold text-off-black uppercase tracking-tight group-hover:opacity-70 transition-opacity">
-              Completed Orders
-            </h2>
-            <span className="px-2.5 py-1 bg-off-black/10 text-off-black/60 text-sm font-medium rounded">
-              {completedOrders.length}
-            </span>
-          </button>
-
-          {showCompleted && (
-            <div className="bg-white border border-border-gray rounded-lg overflow-hidden shadow-sm">
+            {/* Scrollable Table Container */}
+            <div className="flex-1 overflow-y-auto min-h-0">
               <table className="w-full">
-                <thead className="bg-subtle-gray border-b border-border-gray">
+                <thead className="bg-subtle-gray border-b border-border-gray sticky top-0 z-10">
                   <tr>
                     <th className="text-center pl-6 pr-2 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider w-12">Src</th>
                     <th className="text-left px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider">Order #</th>
@@ -564,42 +630,160 @@ Thank you!`
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-gray">
-                  {completedOrders.map((order, index) => (
-                    <tr
-                      key={order.id}
-                      onClick={() => setSelectedOrder(order)}
-                      className={`hover:bg-subtle-gray cursor-pointer transition-colors ${index % 2 === 1 ? 'bg-subtle-gray/30' : ''}`}
-                    >
-                      <td className="pl-6 pr-2 py-5 text-center">
-                        <span className="text-lg" title={order.source === 'shopify' ? 'Shopify' : 'Etsy'}>
-                          {order.source === 'shopify' ? '🛒' : '🧶'}
-                        </span>
-                      </td>
-                      <td className="px-3 py-5">
-                        <span className="text-sm font-medium text-off-black">{order.displayOrderNumber}</span>
-                      </td>
-                      <td className="px-3 py-5 text-center">
-                        <span className="text-lg">✅</span>
-                      </td>
-                      <td className="px-3 py-5 text-sm text-off-black">
-                        {order.runnerName}
-                      </td>
-                      <td className="px-3 pr-6 py-5 text-sm text-off-black/60 hidden md:table-cell">
-                        {order.raceName} {order.raceYear}
-                      </td>
-                    </tr>
-                  ))}
+                  {filteredOrders.map((order, index) => {
+                    const statusDisplay = getStatusDisplay(order)
+                    return (
+                      <tr
+                        key={order.id}
+                        onClick={() => setSelectedOrder(order)}
+                        className={`hover:bg-subtle-gray cursor-pointer transition-colors ${index % 2 === 1 ? 'bg-subtle-gray/30' : ''}`}
+                      >
+                        <td className="pl-6 pr-2 py-5 text-center">
+                          <img
+                            src={order.source === 'shopify' ? '/shopify-icon.png' : '/etsy-icon.png'}
+                            alt={order.source === 'shopify' ? 'Shopify' : 'Etsy'}
+                            title={order.source === 'shopify' ? 'Shopify' : 'Etsy'}
+                            className="w-5 h-5 inline-block"
+                          />
+                        </td>
+                        <td className="px-3 py-5">
+                          <span className="text-sm font-medium text-off-black">{order.displayOrderNumber}</span>
+                        </td>
+                        <td className="px-3 py-5 text-center">
+                          <span className="text-lg" title={statusDisplay.label}>
+                            {statusDisplay.icon}
+                          </span>
+                        </td>
+                        <td className="px-3 py-5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm text-off-black">{order.effectiveRunnerName || order.runnerName || 'Unknown Runner'}</span>
+                            {order.hasOverrides && (
+                              <span className="px-1 py-0.5 bg-blue-100 text-blue-600 text-[9px] rounded">edited</span>
+                            )}
+                          </div>
+                          {order.status === 'flagged' && order.flagReason && (
+                            <p className="text-xs text-warning-amber mt-1 leading-tight">{order.flagReason}</p>
+                          )}
+                          {order.status === 'missing_year' && !order.yearOverride && (
+                            <p className="text-xs text-warning-amber mt-1 leading-tight">Year Missing</p>
+                          )}
+                          {order.status === 'ready' && order.bibNumber && (
+                            <p className="text-xs text-green-600 mt-1 leading-tight">Bib: {order.bibNumber} • {order.officialTime}</p>
+                          )}
+                          {order.status === 'pending' && order.hasScraperAvailable && (order.effectiveRaceYear || order.raceYear) && (
+                            <p className="text-xs text-blue-600 mt-1 leading-tight">Ready to research</p>
+                          )}
+                          {order.status === 'pending' && !order.hasScraperAvailable && (
+                            <p className="text-xs text-off-black/40 mt-1 leading-tight">Manual research needed</p>
+                          )}
+                        </td>
+                        <td className="px-3 pr-6 py-5 text-sm text-off-black/60 hidden md:table-cell">
+                          {order.effectiveRaceName || order.raceName} {order.effectiveRaceYear || order.raceYear}
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
 
-              {completedOrders.length === 0 && (
+              {filteredOrders.length === 0 && (
                 <div className="text-center py-16 text-off-black/40 text-sm">
-                  No completed orders yet
+                  {searchQuery ? 'No matching orders found' : 'No orders to fulfill'}
                 </div>
               )}
             </div>
-          )}
+          </div>
         </section>
+        )}
+
+        {/* Completed Orders Toggle */}
+        {!isLoading && completedOrders.length > 0 && (
+        <div className="flex-shrink-0 py-3 border-t border-border-gray/50">
+          <button
+            onClick={() => setShowCompleted(!showCompleted)}
+            className="flex items-center gap-2 text-sm text-off-black/50 hover:text-off-black/70 transition-colors"
+          >
+            {showCompleted ? (
+              <ChevronDown className="w-4 h-4" />
+            ) : (
+              <ChevronRight className="w-4 h-4" />
+            )}
+            <span>Completed Orders ({completedOrders.length})</span>
+          </button>
+        </div>
+        )}
+
+        {/* Completed Orders Section (Modal-style) */}
+        {showCompleted && (
+          <div
+            className="fixed inset-0 bg-off-black/60 flex items-center justify-center p-4 z-40"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowCompleted(false)
+              }
+            }}
+          >
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden shadow-xl flex flex-col" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between p-4 border-b border-border-gray">
+                <h2 className="text-lg font-semibold text-off-black">Completed Orders</h2>
+                <button
+                  onClick={() => setShowCompleted(false)}
+                  className="text-off-black/40 hover:text-off-black text-2xl leading-none transition-colors"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="overflow-y-auto flex-1">
+                <table className="w-full">
+                  <thead className="bg-subtle-gray border-b border-border-gray sticky top-0">
+                    <tr>
+                      <th className="text-center pl-6 pr-2 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider w-12">Src</th>
+                      <th className="text-left px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider">Order #</th>
+                      <th className="text-center px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider w-20">Status</th>
+                      <th className="text-left px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider">Runner</th>
+                      <th className="text-left px-3 pr-6 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider hidden md:table-cell">Race</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-gray">
+                    {completedOrders.map((order, index) => (
+                      <tr
+                        key={order.id}
+                        onClick={() => setSelectedOrder(order)}
+                        className={`hover:bg-subtle-gray cursor-pointer transition-colors ${index % 2 === 1 ? 'bg-subtle-gray/30' : ''}`}
+                      >
+                        <td className="pl-6 pr-2 py-5 text-center">
+                          <img
+                            src={order.source === 'shopify' ? '/shopify-icon.png' : '/etsy-icon.png'}
+                            alt={order.source === 'shopify' ? 'Shopify' : 'Etsy'}
+                            title={order.source === 'shopify' ? 'Shopify' : 'Etsy'}
+                            className="w-5 h-5 inline-block"
+                          />
+                        </td>
+                        <td className="px-3 py-5">
+                          <span className="text-sm font-medium text-off-black">{order.displayOrderNumber}</span>
+                        </td>
+                        <td className="px-3 py-5 text-center">
+                          <span className="text-lg">✅</span>
+                        </td>
+                        <td className="px-3 py-5 text-sm text-off-black">
+                          {order.runnerName}
+                        </td>
+                        <td className="px-3 pr-6 py-5 text-sm text-off-black/60 hidden md:table-cell">
+                          {order.raceName} {order.raceYear}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {completedOrders.length === 0 && (
+                  <div className="text-center py-16 text-off-black/40 text-sm">
+                    No completed orders yet
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Loading State */}
@@ -611,8 +795,16 @@ Thank you!`
 
         {/* Order Details Modal */}
         {selectedOrder && (
-          <div className="fixed inset-0 bg-off-black/60 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-md max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-xl">
+          <div
+            className="fixed inset-0 bg-off-black/60 flex items-center justify-center p-4 z-50"
+            onClick={(e) => {
+              // Close modal when clicking on backdrop (not modal content)
+              if (e.target === e.currentTarget && !isEditing) {
+                closeModal()
+              }
+            }}
+          >
+            <div className="bg-white rounded-md max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
               <div className="p-6">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
@@ -627,9 +819,14 @@ Thank you!`
                     <h3 className="text-heading-md text-off-black">
                       Order {selectedOrder.displayOrderNumber}
                     </h3>
+                    {selectedOrder.hasOverrides && (
+                      <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded">
+                        edited
+                      </span>
+                    )}
                   </div>
                   <button
-                    onClick={() => setSelectedOrder(null)}
+                    onClick={closeModal}
                     className="text-off-black/40 hover:text-off-black text-2xl leading-none transition-colors"
                   >
                     ×
@@ -645,16 +842,127 @@ Thank you!`
                     </div>
                   </div>
 
-                  {/* Race Info */}
+                  {/* Editable Order Info */}
                   <div>
-                    <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Race Info</h4>
-                    <div className="bg-subtle-gray border border-border-gray rounded-md p-4 space-y-3">
-                      <StaticField label="Race" value={selectedOrder.raceName} />
-                      {selectedOrder.raceYear ? (
-                        <StaticField label="Year" value={String(selectedOrder.raceYear)} />
-                      ) : (
-                        <StaticField label="Year" value="Missing" flag={true} />
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight">Order Details</h4>
+                      {!isEditing && selectedOrder.status !== 'completed' && (
+                        <button
+                          onClick={() => startEditing(selectedOrder)}
+                          className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 transition-colors"
+                        >
+                          <Pencil className="w-3 h-3" />
+                          Edit
+                        </button>
                       )}
+                      {isEditing && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => saveOverrides(selectedOrder.orderNumber, selectedOrder)}
+                            disabled={isSaving}
+                            className="flex items-center gap-1 text-xs text-green-600 hover:text-green-700 transition-colors disabled:opacity-50"
+                          >
+                            {isSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                            Save
+                          </button>
+                          <button
+                            onClick={cancelEditing}
+                            className="flex items-center gap-1 text-xs text-off-black/50 hover:text-off-black/70 transition-colors"
+                          >
+                            <X className="w-3 h-3" />
+                            Cancel
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    <div className="bg-subtle-gray border border-border-gray rounded-md p-4 space-y-3">
+                      {/* Runner Name - Editable */}
+                      {isEditing ? (
+                        <div className="flex justify-between items-center">
+                          <span className="text-body-sm text-off-black/60">Runner</span>
+                          <input
+                            type="text"
+                            value={editValues.runnerNameOverride}
+                            onChange={(e) => setEditValues({ ...editValues, runnerNameOverride: e.target.value })}
+                            className="text-body-sm font-medium text-off-black bg-white border border-border-gray rounded px-2 py-1 w-48 text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex justify-between items-center">
+                          <span className="text-body-sm text-off-black/60">Runner</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-body-sm font-medium text-off-black">
+                              {selectedOrder.effectiveRunnerName || selectedOrder.runnerName}
+                            </span>
+                            {selectedOrder.runnerNameOverride && (
+                              <span className="px-1.5 py-0.5 bg-blue-100 text-blue-600 text-[10px] rounded">edited</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Race Name - Editable */}
+                      {isEditing ? (
+                        <div className="flex justify-between items-center">
+                          <span className="text-body-sm text-off-black/60">Race</span>
+                          <input
+                            type="text"
+                            value={editValues.raceNameOverride}
+                            onChange={(e) => setEditValues({ ...editValues, raceNameOverride: e.target.value })}
+                            className="text-body-sm font-medium text-off-black bg-white border border-border-gray rounded px-2 py-1 w-48 text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex justify-between items-center">
+                          <span className="text-body-sm text-off-black/60">Race</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-body-sm font-medium text-off-black">
+                              {selectedOrder.effectiveRaceName || selectedOrder.raceName}
+                            </span>
+                            {selectedOrder.raceNameOverride && (
+                              <span className="px-1.5 py-0.5 bg-blue-100 text-blue-600 text-[10px] rounded">edited</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Year - Editable */}
+                      {isEditing ? (
+                        <div className="flex justify-between items-center">
+                          <span className="text-body-sm text-off-black/60">Year</span>
+                          <input
+                            type="number"
+                            value={editValues.yearOverride}
+                            onChange={(e) => setEditValues({ ...editValues, yearOverride: e.target.value })}
+                            className="text-body-sm font-medium text-off-black bg-white border border-border-gray rounded px-2 py-1 w-24 text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            min="2000"
+                            max="2030"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex justify-between items-center">
+                          <span className="text-body-sm text-off-black/60">Year</span>
+                          <div className="flex items-center gap-2">
+                            {(selectedOrder.effectiveRaceYear || selectedOrder.raceYear) ? (
+                              <span className="text-body-sm font-medium text-off-black">
+                                {selectedOrder.effectiveRaceYear || selectedOrder.raceYear}
+                              </span>
+                            ) : (
+                              <span className="text-body-sm text-warning-amber font-medium">Missing</span>
+                            )}
+                            {selectedOrder.yearOverride && (
+                              <span className="px-1.5 py-0.5 bg-blue-100 text-blue-600 text-[10px] rounded">edited</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Race Info (non-editable research data) */}
+                  <div>
+                    <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Race Data</h4>
+                    <div className="bg-subtle-gray border border-border-gray rounded-md p-4 space-y-3">
                       {selectedOrder.eventType ? (
                         <StaticField label="Event" value={selectedOrder.eventType} />
                       ) : selectedOrder.hasScraperAvailable ? (
@@ -682,12 +990,12 @@ Thank you!`
                     </div>
                   </div>
 
-                  {/* Runner Info */}
+                  {/* Runner Research Results */}
                   <div>
-                    <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Runner Info</h4>
+                    <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Research Results</h4>
                     <div className="bg-subtle-gray border border-border-gray rounded-md p-4 space-y-3">
-                      {selectedOrder.runnerName ? (
-                        <CopyableField label="Name" value={selectedOrder.runnerName} />
+                      {(selectedOrder.effectiveRunnerName || selectedOrder.runnerName) ? (
+                        <CopyableField label="Name" value={selectedOrder.effectiveRunnerName || selectedOrder.runnerName} />
                       ) : (
                         <PendingField label="Name" />
                       )}
@@ -767,7 +1075,7 @@ Thank you!`
                       <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Manual Research Required</h4>
                       <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
                         <p className="text-body-sm text-gray-600">
-                          Auto-research is not yet available for {selectedOrder.raceName}.
+                          Auto-research is not yet available for {selectedOrder.effectiveRaceName || selectedOrder.raceName}.
                           Please manually look up the runner's bib number, time, and pace.
                         </p>
                       </div>
@@ -778,9 +1086,10 @@ Thank you!`
                   <div className="flex gap-3 pt-3">
                     {/* Research button - show if scraper available and not already researched */}
                     {selectedOrder.hasScraperAvailable &&
-                     selectedOrder.raceYear &&
+                     (selectedOrder.effectiveRaceYear || selectedOrder.raceYear) &&
                      selectedOrder.researchStatus !== 'found' &&
-                     selectedOrder.status !== 'completed' && (
+                     selectedOrder.status !== 'completed' &&
+                     !isEditing && (
                       <button
                         onClick={() => researchOrder(selectedOrder.orderNumber)}
                         disabled={isResearching}
@@ -795,7 +1104,8 @@ Thank you!`
                       </button>
                     )}
                     {(selectedOrder.status === 'ready' || selectedOrder.researchStatus === 'found') &&
-                     selectedOrder.status !== 'completed' && (
+                     selectedOrder.status !== 'completed' &&
+                     !isEditing && (
                       <button
                         onClick={() => markAsCompleted(selectedOrder.orderNumber)}
                         className="flex-1 px-5 py-3 bg-off-black text-white rounded-md hover:opacity-90 transition-opacity font-medium"
@@ -803,7 +1113,7 @@ Thank you!`
                         Mark as Completed
                       </button>
                     )}
-                    {selectedOrder.status === 'flagged' && (
+                    {selectedOrder.status === 'flagged' && !isEditing && (
                       <>
                         <button className="flex-1 px-5 py-3 bg-off-black text-white rounded-md hover:opacity-90 transition-opacity font-medium">
                           Resolve Flag
@@ -817,12 +1127,14 @@ Thank you!`
                         </button>
                       </>
                     )}
-                    <button
-                      onClick={() => setSelectedOrder(null)}
-                      className="px-5 py-3 bg-white border border-border-gray text-off-black rounded-md hover:bg-subtle-gray transition-colors"
-                    >
-                      Close
-                    </button>
+                    {!isEditing && (
+                      <button
+                        onClick={closeModal}
+                        className="px-5 py-3 bg-white border border-border-gray text-off-black rounded-md hover:bg-subtle-gray transition-colors"
+                      >
+                        Close
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

@@ -19,6 +19,7 @@ export class ResearchService {
   /**
    * Main entry point - research an order
    * Handles both race-level and runner-level data fetching with caching
+   * Uses override values if present, otherwise falls back to original data
    * @param {string} orderNumber
    * @returns {Promise<Object>} Combined race and runner research results
    */
@@ -31,26 +32,38 @@ export class ResearchService {
       throw new Error(`Order not found: ${orderNumber}`)
     }
 
-    if (!hasScraperForRace(order.raceName)) {
-      throw new Error(`No scraper available for race: ${order.raceName}`)
+    // Use effective values (override if present, else original)
+    const effectiveRaceName = order.raceNameOverride ?? order.raceName
+    const effectiveRaceYear = order.yearOverride ?? order.raceYear
+    const effectiveRunnerName = order.runnerNameOverride ?? order.runnerName
+
+    if (!hasScraperForRace(effectiveRaceName)) {
+      throw new Error(`No scraper available for race: ${effectiveRaceName}`)
     }
 
-    if (!order.runnerName) {
+    if (!effectiveRunnerName) {
       throw new Error('Order is missing runner name')
     }
 
-    if (!order.raceYear) {
+    if (!effectiveRaceYear) {
       throw new Error('Order is missing race year')
     }
 
     console.log(`[ResearchService] Starting research for order ${orderNumber}`)
-    console.log(`[ResearchService] Race: ${order.raceName} ${order.raceYear}, Runner: ${order.runnerName}`)
+    console.log(`[ResearchService] Race: ${effectiveRaceName} ${effectiveRaceYear}, Runner: ${effectiveRunnerName}`)
+    if (order.yearOverride || order.raceNameOverride || order.runnerNameOverride) {
+      console.log(`[ResearchService] Using overrides - Year: ${order.yearOverride}, Race: ${order.raceNameOverride}, Runner: ${order.runnerNameOverride}`)
+    }
 
-    // TIER 1: Get or fetch race-level data
-    const race = await this.getOrFetchRaceData(order.raceName, order.raceYear)
+    // TIER 1: Get or fetch race-level data (use effective values)
+    const race = await this.getOrFetchRaceData(effectiveRaceName, effectiveRaceYear)
 
-    // TIER 2: Get or fetch runner-level data
-    const runnerResearch = await this.getOrFetchRunnerData(order, race)
+    // TIER 2: Get or fetch runner-level data (pass effective values)
+    const runnerResearch = await this.getOrFetchRunnerData(order, race, {
+      effectiveRaceName,
+      effectiveRaceYear,
+      effectiveRunnerName
+    })
 
     return {
       race,
@@ -180,9 +193,15 @@ export class ResearchService {
    * TIER 2: Get runner data from cache or fetch from scraper
    * @param {Object} order - Order with runnerName, raceName, raceYear
    * @param {Object} race - Race record
+   * @param {Object} effectiveValues - Override values to use for search
    * @returns {Promise<Object>} RunnerResearch record
    */
-  async getOrFetchRunnerData(order, race) {
+  async getOrFetchRunnerData(order, race, effectiveValues = {}) {
+    // Use effective values if provided, otherwise fall back to order values
+    const raceName = effectiveValues.effectiveRaceName ?? order.raceName
+    const raceYear = effectiveValues.effectiveRaceYear ?? order.raceYear
+    const runnerName = effectiveValues.effectiveRunnerName ?? order.runnerName
+
     // Check cache first
     let existingResearch = await prisma.runnerResearch.findFirst({
       where: {
@@ -197,16 +216,16 @@ export class ResearchService {
       return existingResearch
     }
 
-    // Fetch from scraper
-    console.log(`[ResearchService] Searching for runner: ${order.runnerName}`)
-    const scraper = getScraperForRace(order.raceName, order.raceYear)
-    const results = await scraper.searchRunner(order.runnerName)
+    // Fetch from scraper using effective values
+    console.log(`[ResearchService] Searching for runner: ${runnerName}`)
+    const scraper = getScraperForRace(raceName, raceYear)
+    const results = await scraper.searchRunner(runnerName)
 
-    // Prepare research data
+    // Prepare research data (store the effective name used for search)
     const researchData = {
       orderNumber: order.orderNumber,
       raceId: race.id,
-      runnerName: order.runnerName,
+      runnerName: runnerName, // Store the name actually used for search
       bibNumber: results.bibNumber,
       officialTime: results.officialTime,
       officialPace: results.officialPace,

@@ -52,10 +52,35 @@ export class BaseScraper {
   }
 
   /**
+   * Format time for display - removes leading zeros
+   * "04:14:45" -> "4:14:45"
+   * "00:45:30" -> "0:45:30" (keeps single digit hour)
+   * @param {string} time - Time in hh:mm:ss or h:mm:ss format
+   * @returns {string} Formatted time
+   */
+  formatTime(time) {
+    if (!time) return null
+    // Remove leading zero from hours (04:14:45 -> 4:14:45)
+    return time.replace(/^0(\d):/, '$1:')
+  }
+
+  /**
+   * Format pace for display - removes leading zero
+   * "09:43" -> "9:43"
+   * @param {string} pace - Pace in m:ss format
+   * @returns {string} Formatted pace (numbers only, no unit)
+   */
+  formatPace(pace) {
+    if (!pace) return null
+    // Remove leading zero if present (09:43 -> 9:43)
+    return pace.replace(/^0/, '')
+  }
+
+  /**
    * Calculate pace per mile from finish time and distance
    * @param {string} time - Finish time in h:mm:ss format
    * @param {number} distanceMiles - Distance in miles (26.2 for marathon, 13.1 for half)
-   * @returns {string} Pace in m:ss format
+   * @returns {string} Pace in m:ss format (without " / mi" suffix - use formatPace for display)
    */
   calculatePace(time, distanceMiles = 26.2) {
     if (!time) return null
@@ -72,8 +97,14 @@ export class BaseScraper {
     }
 
     const paceSeconds = totalSeconds / distanceMiles
-    const paceMinutes = Math.floor(paceSeconds / 60)
-    const paceRemainderSeconds = Math.round(paceSeconds % 60)
+    let paceMinutes = Math.floor(paceSeconds / 60)
+    let paceRemainderSeconds = Math.round(paceSeconds % 60)
+
+    // Handle edge case where rounding gives 60 seconds
+    if (paceRemainderSeconds === 60) {
+      paceMinutes += 1
+      paceRemainderSeconds = 0
+    }
 
     return `${paceMinutes}:${String(paceRemainderSeconds).padStart(2, '0')}`
   }

@@ -26,6 +26,36 @@ const ARTELO_API_KEY = process.env.ARTELO_API_KEY
 const ACTIONABLE_STATUSES = ['PendingFulfillmentAction', 'AwaitingPayment']
 
 /**
+ * Determine if an order is from Shopify or Etsy
+ * Logic:
+ * - channelName = "Online Store" → Shopify
+ * - channelName contains "etsy" → Etsy
+ * - channelName missing + order ID 13+ digits → Shopify
+ * - channelName missing + order ID shorter → Etsy
+ */
+function determineOrderSource(order) {
+  const channelName = order.channelName?.toLowerCase() || ''
+  const orderId = order.orderId || ''
+
+  // Explicit channel indicators
+  if (channelName === 'online store') {
+    return 'shopify'
+  }
+  if (channelName.includes('etsy')) {
+    return 'etsy'
+  }
+
+  // Fallback to order ID length
+  // Shopify order IDs are 13+ digits, Etsy are typically 10 digits
+  if (orderId.length >= 13 && /^\d+$/.test(orderId)) {
+    return 'shopify'
+  }
+
+  // Default to Etsy for shorter/different format IDs
+  return 'etsy'
+}
+
+/**
  * Parse race name from Shopify product title
  */
 function parseRaceName(productTitle) {
@@ -204,7 +234,8 @@ export async function processOrders(options = {}) {
           where: { orderNumber: order.orderId }
         })
 
-        const isShopify = !order.channelName?.toLowerCase().includes('etsy')
+        const orderSource = determineOrderSource(order)
+        const isShopify = orderSource === 'shopify'
 
         // If order exists but is missing Shopify data, update it
         if (existing) {
@@ -278,7 +309,7 @@ export async function processOrders(options = {}) {
           await prisma.order.create({
             data: {
               orderNumber: order.orderId,
-              source: isShopify ? 'shopify' : 'etsy',
+              source: orderSource,
               arteloOrderData: order,
               shopifyOrderData,
               raceName,
@@ -296,7 +327,7 @@ export async function processOrders(options = {}) {
           orderResult.raceName = raceName
           orderResult.runnerName = runnerName
 
-          log(`[processOrders] ✅ Imported: ${order.orderId} - ${raceName} - ${runnerName}`)
+          log(`[processOrders] ✅ Imported: ${order.orderId} (${orderSource}) - ${raceName} - ${runnerName}`)
         }
 
         // 3. Run research if enabled and we have a scraper for this race

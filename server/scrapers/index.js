@@ -3,6 +3,8 @@
  * Routes race name to the appropriate scraper class
  */
 import NYCMarathonScraper from './races/nycMarathon.js'
+import ChicagoMarathonScraper from './races/chicagoMarathon.js'
+import PhiladelphiaMarathonScraper from './races/philadelphiaMarathon.js'
 
 /**
  * Map of race names to scraper classes
@@ -16,10 +18,18 @@ const SCRAPER_MAP = {
   'TCS New York City Marathon': NYCMarathonScraper,
   'NYRR NYC Marathon': NYCMarathonScraper,
 
+  // Chicago Marathon - various name formats
+  'Chicago Marathon': ChicagoMarathonScraper,
+  'Bank of America Chicago Marathon': ChicagoMarathonScraper,
+  'BOA Chicago Marathon': ChicagoMarathonScraper,
+
+  // Philadelphia Marathon - various name formats
+  'Philadelphia Marathon': PhiladelphiaMarathonScraper,
+  'Philadelphia Marathon (Full)': PhiladelphiaMarathonScraper,
+  'Philly Marathon': PhiladelphiaMarathonScraper,
+
   // Add more races here as we implement them:
-  // 'Chicago Marathon': ChicagoMarathonScraper,
   // 'Boston Marathon': BostonMarathonScraper,
-  // 'Philadelphia Marathon': PhillyMarathonScraper,
 }
 
 /**
@@ -42,12 +52,29 @@ export function getScraperForRace(raceName, year) {
         ScraperClass = value
         break
       }
-      // Check if the race name contains key words
-      if (normalizedName.includes('new york') || normalizedName.includes('nyc')) {
-        if (normalizedName.includes('marathon')) {
-          ScraperClass = NYCMarathonScraper
-          break
-        }
+    }
+
+    // Check if the race name contains key words for NYC
+    if (!ScraperClass && (normalizedName.includes('new york') || normalizedName.includes('nyc'))) {
+      if (normalizedName.includes('marathon')) {
+        ScraperClass = NYCMarathonScraper
+      }
+    }
+
+    // Check if the race name contains key words for Chicago
+    if (!ScraperClass && normalizedName.includes('chicago')) {
+      if (normalizedName.includes('marathon')) {
+        ScraperClass = ChicagoMarathonScraper
+      }
+    }
+
+    // Check if the race name contains key words for Philadelphia
+    if (
+      !ScraperClass &&
+      (normalizedName.includes('philadelphia') || normalizedName.includes('philly'))
+    ) {
+      if (normalizedName.includes('marathon')) {
+        ScraperClass = PhiladelphiaMarathonScraper
       }
     }
   }
@@ -81,6 +108,8 @@ export function getSupportedRaces() {
   // Return unique race names (remove duplicates from aliases)
   const uniqueRaces = new Set()
   uniqueRaces.add('NYC Marathon')
+  uniqueRaces.add('Chicago Marathon')
+  uniqueRaces.add('Philadelphia Marathon')
   // Add more as we implement them
   return Array.from(uniqueRaces)
 }

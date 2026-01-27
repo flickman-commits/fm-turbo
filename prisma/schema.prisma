@@ -27,6 +27,11 @@ model Order {
   researchedAt     DateTime?
   createdAt        DateTime  @default(now())
 
+  // Manual override fields (for customer corrections)
+  yearOverride       Int?      // Override for raceYear
+  raceNameOverride   String?   // Override for raceName
+  runnerNameOverride String?   // Override for runnerName
+
   // Relations
   runnerResearch   RunnerResearch[]
 

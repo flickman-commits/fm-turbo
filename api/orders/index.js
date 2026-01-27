@@ -26,6 +26,26 @@ function formatTemp(temp) {
   return `${temp}°`
 }
 
+/**
+ * Format time - removes leading zero from hours (04:14:45 -> 4:14:45)
+ */
+function formatTime(time) {
+  if (!time) return null
+  return time.replace(/^0(\d):/, '$1:')
+}
+
+/**
+ * Format pace - removes leading zero and any suffix (09:43 / mi -> 9:43)
+ */
+function formatPace(pace) {
+  if (!pace) return null
+  // Remove " / mi" suffix if present
+  let cleaned = pace.replace(/\s*\/\s*mi$/i, '')
+  // Remove leading zero if present (09:43 -> 9:43)
+  cleaned = cleaned.replace(/^0/, '')
+  return cleaned
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
 
@@ -41,22 +61,40 @@ export default async function handler(req, res) {
         runnerResearch: {
           include: {
             race: true  // Include race data (date, weather, etc.)
-          }
+          },
+          orderBy: { createdAt: 'desc' }  // Get most recent first
         }
       }
     })
 
     // Transform orders to include flattened research data
     const transformedOrders = orders.map(order => {
-      const research = order.runnerResearch?.[0]  // Get first research result
+      // Get the best research record: prefer 'found', then most recent
+      const foundResearch = order.runnerResearch?.find(r => r.researchStatus === 'found')
+      const research = foundResearch || order.runnerResearch?.[0]
       const race = research?.race
+
+      // Compute effective values (override if present, else original)
+      const effectiveRaceYear = order.yearOverride ?? order.raceYear
+      const effectiveRaceName = order.raceNameOverride ?? order.raceName
+      const effectiveRunnerName = order.runnerNameOverride ?? order.runnerName
+
+      // Check if any overrides are present
+      const hasOverrides = order.yearOverride !== null ||
+                          order.raceNameOverride !== null ||
+                          order.runnerNameOverride !== null
 
       return {
         ...order,
-        // Runner research data (Tier 2)
+        // Effective values (what to display and use for research)
+        effectiveRaceYear,
+        effectiveRaceName,
+        effectiveRunnerName,
+        hasOverrides,
+        // Runner research data (Tier 2) - formatted for display
         bibNumber: research?.bibNumber || null,
-        officialTime: research?.officialTime || null,
-        officialPace: research?.officialPace || null,
+        officialTime: formatTime(research?.officialTime),
+        officialPace: formatPace(research?.officialPace),
         eventType: research?.eventType || null,
         researchStatus: research?.researchStatus || null,
         researchNotes: research?.researchNotes || null,
@@ -66,8 +104,8 @@ export default async function handler(req, res) {
         weatherTemp: formatTemp(race?.weatherTemp),
         weatherCondition: race?.weatherCondition ?
           race.weatherCondition.charAt(0).toUpperCase() + race.weatherCondition.slice(1) : null,
-        // Scraper availability
-        hasScraperAvailable: hasScraperForRace(order.raceName),
+        // Scraper availability - use effective race name
+        hasScraperAvailable: hasScraperForRace(effectiveRaceName),
         // Clean up - don't send nested objects to frontend
         runnerResearch: undefined
       }
