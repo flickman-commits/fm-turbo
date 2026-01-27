@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import { Search, ChevronDown, ChevronRight, Upload, Copy, Loader2, FlaskConical, Pencil, Check, X } from 'lucide-react'
+import { Search, Upload, Copy, Loader2, FlaskConical, Pencil, Check, X } from 'lucide-react'
 
 // API calls now go to /api/* serverless functions (same origin)
 
@@ -531,7 +531,7 @@ Thank you!`
     <div className="h-screen overflow-hidden bg-[#f3f3f3] flex flex-col">
       <div className="max-w-5xl mx-auto px-6 md:px-8 lg:px-12 w-full flex flex-col h-full">
         {/* Header - Left-aligned with compact vertical space */}
-        <div className="pt-6 md:pt-8 lg:pt-10 pb-4 md:pb-6 flex items-start justify-between gap-6 flex-shrink-0">
+        <div className="pt-6 md:pt-8 lg:pt-10 pb-4 md:pb-6 flex items-end justify-between gap-6 flex-shrink-0">
           {/* Left side: logo, greeting, and summary */}
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
@@ -698,19 +698,19 @@ Thank you!`
 
         {/* Completed Orders Toggle */}
         {!isLoading && completedOrders.length > 0 && (
-        <div className="flex-shrink-0 py-3 border-t border-border-gray/50">
-          <button
-            onClick={() => setShowCompleted(!showCompleted)}
-            className="flex items-center gap-2 text-sm text-off-black/50 hover:text-off-black/70 transition-colors"
-          >
-            {showCompleted ? (
-              <ChevronDown className="w-4 h-4" />
-            ) : (
-              <ChevronRight className="w-4 h-4" />
-            )}
-            <span>Completed Orders ({completedOrders.length})</span>
-          </button>
-        </div>
+          <div className="flex-shrink-0 py-4 mt-2 mb-8 border-t border-border-gray/50">
+            <div className="flex justify-center">
+              <button
+                onClick={() => setShowCompleted(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-border-gray rounded-full shadow-sm text-sm text-off-black/70 hover:bg-subtle-gray transition-colors"
+              >
+                <span>{showCompleted ? 'Close Completed Orders' : 'View Completed Orders'}</span>
+                <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-off-black/5 text-off-black/60">
+                  {completedOrders.length}
+                </span>
+              </button>
+            </div>
+          </div>
         )}
 
         {/* Completed Orders Section (Modal-style) */}
