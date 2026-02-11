@@ -589,13 +589,13 @@ Thank you!`
           </div>
         </div>
 
-        {/* Orders to Fulfill Section */}
+        {/* Orders to Personalize Section */}
         {!isLoading && (
         <section className="flex-1 flex flex-col min-h-0 pb-4">
           {/* Section Header */}
           <div className="flex items-center justify-between mb-4 flex-shrink-0">
             <div className="flex items-center gap-3">
-              <h2 className="text-lg font-semibold text-off-black uppercase tracking-tight">Orders to Fulfill</h2>
+              <h2 className="text-lg font-semibold text-off-black uppercase tracking-tight">Orders to Personalize</h2>
               <span className="px-2.5 py-1 bg-off-black/10 text-off-black/60 text-sm font-medium rounded">
                 {ordersToFulfill.length}
               </span>

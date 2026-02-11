@@ -297,15 +297,41 @@ export async function processOrders(options = {}) {
     const data = await response.json()
     const allOrders = Array.isArray(data) ? data : (data.orders || [])
 
-    // Filter to actionable orders only
+    // Separate actionable orders from completed ones
     const actionableOrders = allOrders.filter(order =>
       ACTIONABLE_STATUSES.includes(order.status)
     )
+    const completedOrders = allOrders.filter(order =>
+      !ACTIONABLE_STATUSES.includes(order.status)
+    )
 
     results.total = actionableOrders.length
-    log(`[processOrders] Found ${actionableOrders.length} actionable orders`)
+    log(`[processOrders] Found ${actionableOrders.length} actionable orders, ${completedOrders.length} completed/fulfilled`)
 
-    // 2. Process each order
+    // 2a. First, check completed orders to mark any as fulfilled in our DB
+    for (const order of completedOrders) {
+      try {
+        const existing = await prisma.order.findUnique({
+          where: { orderNumber: order.orderId }
+        })
+
+        if (existing && existing.status !== 'completed') {
+          log(`[processOrders] Marking order ${order.orderId} as completed (fulfilled in Artelo)`)
+          await prisma.order.update({
+            where: { orderNumber: order.orderId },
+            data: {
+              status: 'completed',
+              researchedAt: new Date()
+            }
+          })
+          results.updated++
+        }
+      } catch (error) {
+        log(`[processOrders] Error updating completed order ${order.orderId}: ${error.message}`)
+      }
+    }
+
+    // 2b. Process actionable orders (new or needing updates)
     for (const order of actionableOrders) {
       const orderResult = {
         orderNumber: order.orderId,
