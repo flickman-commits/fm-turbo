@@ -23,6 +23,7 @@ model Order {
   productSize      String
   frameType        String
   notes            String?   // Notes from Shopify (year corrections, etc.)
+  hadNoTime        Boolean   @default(false) // Flag: customer entered "no time" in runner name
   status           String    @default("pending") // "pending", "missing_year", "ready", "flagged", "completed"
   researchedAt     DateTime?
   createdAt        DateTime  @default(now())

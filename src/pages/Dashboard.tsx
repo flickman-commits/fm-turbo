@@ -16,6 +16,7 @@ interface Order {
   runnerName: string
   productSize: string
   notes?: string
+  hadNoTime?: boolean         // Flag: customer entered "no time"
   status: 'pending' | 'ready' | 'flagged' | 'completed' | 'missing_year'
   flagReason?: string
   completedAt?: string
@@ -470,7 +471,7 @@ export default function Dashboard() {
     fetchOrders()
   }, [fetchOrders])
 
-  // Orders to fulfill: pending + flagged + ready + missing_year, sorted by most recent first
+  // Orders to personalize: pending + flagged + ready + missing_year, sorted by most recent first
   const ordersToFulfill = useMemo(() => {
     const fulfillOrders = orders.filter(o =>
       o.status === 'flagged' || o.status === 'ready' || o.status === 'pending' || o.status === 'missing_year'
@@ -546,7 +547,7 @@ Thank you!`
                 {getGreeting()}, Elí
               </h1>
               <p className="text-sm md:text-base text-off-black/60">
-                {ordersToFulfill.length} orders to fulfill
+                {ordersToFulfill.length} orders to personalize
                 {researchableCount > 0 && ` • ${researchableCount} can be auto-researched`}
                 {' • '}Last updated {formatLastUpdated(lastUpdated)}
               </p>
@@ -688,7 +689,7 @@ Thank you!`
 
               {filteredOrders.length === 0 && (
                 <div className="text-center py-16 text-off-black/40 text-sm">
-                  {searchQuery ? 'No matching orders found' : 'No orders to fulfill'}
+                  {searchQuery ? 'No matching orders found' : 'No orders to personalize'}
                 </div>
               )}
             </div>
@@ -995,7 +996,16 @@ Thank you!`
                     <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Research Results</h4>
                     <div className="bg-subtle-gray border border-border-gray rounded-md p-4 space-y-3">
                       {(selectedOrder.effectiveRunnerName || selectedOrder.runnerName) ? (
-                        <CopyableField label="Name" value={selectedOrder.effectiveRunnerName || selectedOrder.runnerName} />
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1">
+                            <CopyableField label="Name" value={selectedOrder.effectiveRunnerName || selectedOrder.runnerName} />
+                          </div>
+                          {selectedOrder.hadNoTime && (
+                            <span className="text-xs px-2 py-1 bg-warning-yellow/10 text-warning-yellow border border-warning-yellow/20 rounded" title='Customer entered "no time"'>
+                              ⚠️ No Time
+                            </span>
+                          )}
+                        </div>
                       ) : (
                         <PendingField label="Name" />
                       )}
