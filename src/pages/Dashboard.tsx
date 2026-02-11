@@ -528,6 +528,64 @@ Thank you!`
     return { icon: '⏳', label: 'Pending' }
   }
 
+  // Generate race shorthand for filename
+  const getRaceShorthand = (raceName: string): string => {
+    if (!raceName) return 'Race'
+
+    // Common race name mappings
+    const shorthandMap: { [key: string]: string } = {
+      'New York City Marathon': 'NYC',
+      'Boston Marathon': 'Boston',
+      'Chicago Marathon': 'Chicago',
+      'London Marathon': 'London',
+      'Berlin Marathon': 'Berlin',
+      'Marine Corps Marathon': 'MCM',
+      'Marine Corps': 'MCM',
+      'TCS New York City Marathon': 'NYC',
+      'Bank of America Chicago Marathon': 'Chicago',
+    }
+
+    // Check for exact match
+    if (shorthandMap[raceName]) {
+      return shorthandMap[raceName]
+    }
+
+    // Generate acronym from race name
+    // Remove common words and take initials
+    const words = raceName
+      .replace(/Marathon|Half Marathon|10K|5K|Race|Ultra|Trail/gi, '')
+      .trim()
+      .split(/\s+/)
+      .filter(word => word.length > 0)
+
+    if (words.length === 0) {
+      // If no words left, just use first 3 letters of original name
+      return raceName.slice(0, 3).toUpperCase()
+    }
+
+    // Take first letter of each word (up to 4 letters for acronym)
+    return words
+      .slice(0, 4)
+      .map(word => word[0].toUpperCase())
+      .join('')
+  }
+
+  // Generate filename for order
+  const generateFilename = (order: Order): string => {
+    const displayOrderNumber = order.displayOrderNumber || order.orderNumber
+    const raceName = order.effectiveRaceName || order.raceName
+    const runnerName = order.effectiveRunnerName || order.runnerName
+
+    // Get race shorthand
+    const raceShort = getRaceShorthand(raceName)
+
+    // Get last name from runner name
+    const nameParts = runnerName.trim().split(/\s+/)
+    const lastName = nameParts[nameParts.length - 1]
+
+    return `${displayOrderNumber}_${raceShort}_${lastName}.pdf`
+  }
+
   return (
     <div className="h-screen overflow-hidden bg-[#f3f3f3] flex flex-col">
       <div className="max-w-5xl mx-auto px-6 md:px-8 lg:px-12 w-full flex flex-col h-full">
@@ -838,8 +896,9 @@ Thank you!`
                   {/* Product Info */}
                   <div>
                     <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Product Info</h4>
-                    <div className="bg-subtle-gray border border-border-gray rounded-md p-4">
+                    <div className="bg-subtle-gray border border-border-gray rounded-md p-4 space-y-3">
                       <StaticField label="Size" value={selectedOrder.productSize} />
+                      <CopyableField label="Filename" value={generateFilename(selectedOrder)} />
                     </div>
                   </div>
 
