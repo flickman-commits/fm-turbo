@@ -72,10 +72,35 @@ function parseRaceName(productTitle) {
 }
 
 /**
- * Parse runner name and year from Shopify personalization field
- * Format expected: "Runner Name 2024"
+ * Clean runner name by removing invalid entries like "no time"
+ * e.g., "Jennifer Samp no time" → "Jennifer Samp"
+ * e.g., "no time" → null
  */
-function parseRunnerNameAndYear(rawValue) {
+function cleanRunnerName(runnerName) {
+  if (!runnerName) return null
+
+  let cleaned = runnerName.trim()
+
+  // Remove "no time" (case-insensitive)
+  cleaned = cleaned.replace(/\bno\s+time\b/gi, '')
+
+  // Clean up multiple spaces and trim
+  cleaned = cleaned.replace(/\s+/g, ' ').trim()
+
+  // If nothing left after cleaning, return null
+  if (!cleaned || cleaned.length === 0) {
+    return null
+  }
+
+  return cleaned
+}
+
+/**
+ * DEPRECATED: Old format parsing (kept for reference)
+ * Parse runner name and year from combined string
+ * OLD Format: "Runner Name 2024"
+ */
+function parseRunnerNameAndYear_DEPRECATED(rawValue) {
   if (!rawValue) return { runnerName: null, raceYear: null, needsAttention: true }
   const trimmed = rawValue.trim()
   const yearMatch = trimmed.match(/\s+(20\d{2})$/)
@@ -90,6 +115,65 @@ function parseRunnerNameAndYear(rawValue) {
 }
 
 /**
+ * Extract personalization data from Shopify line items
+ * NEW FORMAT (as of 2025): Separate properties for each field
+ */
+function extractShopifyPersonalization(lineItems) {
+  const result = {
+    raceName: null,
+    runnerName: null,
+    raceYear: null,
+    needsAttention: false
+  }
+
+  if (!lineItems || lineItems.length === 0) {
+    result.needsAttention = true
+    return result
+  }
+
+  const item = lineItems[0]
+
+  // Parse race name from product title
+  result.raceName = parseRaceName(item.title)
+
+  // Extract from properties
+  if (item.properties && Array.isArray(item.properties)) {
+    for (const prop of item.properties) {
+      const name = (prop.name || '').trim()
+      const value = (prop.value || '').trim()
+
+      // Standardized property name: "Runner Name" (works for both normal and custom orders)
+      // Matches: "Runner Name (First & Last)", "Runner Name", "runner name", "runner_name"
+      if (name === 'Runner Name (First & Last)' ||
+          name === 'Runner Name' ||
+          name === 'runner name' ||
+          name === 'runner_name') {
+        // Clean the runner name (remove "no time" if present)
+        result.runnerName = cleanRunnerName(value)
+      }
+      // Race year
+      else if (name === 'Race Year' || name === 'race year' || name === 'race_year') {
+        const yearInt = parseInt(value, 10)
+        result.raceYear = isNaN(yearInt) ? null : yearInt
+      }
+      // Race name (override product title if provided)
+      else if (name === 'Race Name' || name === 'race name' || name === 'race_name') {
+        if (value) {
+          result.raceName = value
+        }
+      }
+    }
+  }
+
+  // Flag if missing critical data
+  if (!result.runnerName || !result.raceYear) {
+    result.needsAttention = true
+  }
+
+  return result
+}
+
+/**
  * Fetch Shopify order data including personalization
  */
 async function fetchShopifyOrderData(shopifyOrderId) {
@@ -101,22 +185,17 @@ async function fetchShopifyOrderData(shopifyOrderId) {
       return null
     }
 
-    const item = order.line_items[0]
-    const runnerProp = item.properties?.find(p =>
-      p.name.toLowerCase().includes('runner')
-    )
-
-    const raceName = parseRaceName(item.title)
-    const parsed = parseRunnerNameAndYear(runnerProp?.value)
+    // Extract personalization using new format
+    const extracted = extractShopifyPersonalization(order.line_items)
 
     // Fetch timeline comments (internal notes)
     const comments = await fetchShopifyComments(shopifyOrderId)
 
     return {
-      raceName,
-      runnerName: parsed.runnerName,
-      raceYear: parsed.raceYear,
-      needsAttention: parsed.needsAttention,
+      raceName: extracted.raceName,
+      runnerName: extracted.runnerName,
+      raceYear: extracted.raceYear,
+      needsAttention: extracted.needsAttention,
       notes: comments,
       shopifyOrderData: order
     }

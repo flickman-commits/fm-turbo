@@ -77,7 +77,9 @@ export default async function handler(req, res) {
       needsAttention: parsed.needsAttention,
       raw: {
         productTitle: parsed.rawProductTitle,
-        runnerName: parsed.rawRunnerName
+        raceName: parsed.rawRaceName,
+        runnerName: parsed.rawRunnerName,
+        raceYear: parsed.rawRaceYear
       }
     })
 
@@ -94,8 +96,11 @@ export default async function handler(req, res) {
 
 /**
  * Extract and parse Shopify line item data
+ * NEW FORMAT (as of 2025):
  * - Product title → race name (strip "Personalized Race Print")
- * - "Runner Name" property → runner name + optional year
+ * - "Runner Name (First & Last)" property → runner name
+ * - "Race Year" property → year (separate field now!)
+ * - "Race Name" property → can override product title race name
  */
 function extractShopifyData(lineItems) {
   const result = {
@@ -104,7 +109,9 @@ function extractShopifyData(lineItems) {
     raceYear: null,
     needsAttention: false,
     rawProductTitle: null,
-    rawRunnerName: null
+    rawRunnerName: null,
+    rawRaceYear: null,
+    rawRaceName: null
   }
 
   if (!lineItems || !Array.isArray(lineItems) || lineItems.length === 0) {
@@ -116,29 +123,45 @@ function extractShopifyData(lineItems) {
   result.rawProductTitle = firstItem.title || null
   result.raceName = parseRaceName(result.rawProductTitle)
 
-  // Find "Runner Name" in line item properties
+  // Extract properties from line items
   for (const item of lineItems) {
     if (!item.properties || !Array.isArray(item.properties)) {
       continue
     }
 
     for (const prop of item.properties) {
-      const name = (prop.name || '').toLowerCase().trim()
-      if (name === 'runner name' || name === 'runner_name') {
-        result.rawRunnerName = (prop.value || '').trim()
-        break
+      const name = (prop.name || '').trim()
+      const value = (prop.value || '').trim()
+
+      // Standardized property name: "Runner Name" (works for both normal and custom orders)
+      // Matches: "Runner Name (First & Last)", "runner name", "runner_name", "Runner Name"
+      if (name === 'Runner Name (First & Last)' ||
+          name === 'Runner Name' ||
+          name === 'runner name' ||
+          name === 'runner_name') {
+        result.rawRunnerName = value
+        // Clean the runner name (remove "no time" if present)
+        result.runnerName = cleanRunnerName(value)
+      }
+      else if (name === 'Race Year' || name === 'race year' || name === 'race_year') {
+        result.rawRaceYear = value
+        // Parse year as integer
+        const yearInt = parseInt(value, 10)
+        result.raceYear = isNaN(yearInt) ? null : yearInt
+      }
+      else if (name === 'Race Name' || name === 'race name' || name === 'race_name') {
+        result.rawRaceName = value
+        // Override product title race name if provided
+        if (value) {
+          result.raceName = value
+        }
       }
     }
-
-    if (result.rawRunnerName) break
   }
 
-  // Parse runner name and year from the raw value
-  if (result.rawRunnerName) {
-    const parsed = parseRunnerNameAndYear(result.rawRunnerName)
-    result.runnerName = parsed.runnerName
-    result.raceYear = parsed.raceYear
-    result.needsAttention = parsed.needsAttention
+  // Flag if missing critical data
+  if (!result.runnerName || !result.raceYear) {
+    result.needsAttention = true
   }
 
   return result
@@ -170,11 +193,37 @@ function parseRaceName(productTitle) {
 }
 
 /**
- * Parse runner name and year from the "Runner Name" property
- * e.g., "Jennifer Samp 2023" → { runnerName: "Jennifer Samp", raceYear: 2023 }
- * e.g., "Mallory Girvin" → { runnerName: "Mallory Girvin", raceYear: null, needsAttention: true }
+ * Clean runner name by removing invalid entries like "no time"
+ * e.g., "Jennifer Samp no time" → "Jennifer Samp"
+ * e.g., "no time" → null
  */
-function parseRunnerNameAndYear(rawValue) {
+function cleanRunnerName(runnerName) {
+  if (!runnerName) return null
+
+  let cleaned = runnerName.trim()
+
+  // Remove "no time" (case-insensitive)
+  cleaned = cleaned.replace(/\bno\s+time\b/gi, '')
+
+  // Clean up multiple spaces and trim
+  cleaned = cleaned.replace(/\s+/g, ' ').trim()
+
+  // If nothing left after cleaning, return null
+  if (!cleaned || cleaned.length === 0) {
+    return null
+  }
+
+  return cleaned
+}
+
+/**
+ * DEPRECATED: No longer needed with new Shopify format
+ * Keeping for reference in case old orders need reprocessing
+ *
+ * OLD FORMAT: Parse runner name and year from combined string
+ * e.g., "Jennifer Samp 2023" → { runnerName: "Jennifer Samp", raceYear: 2023 }
+ */
+function parseRunnerNameAndYear_DEPRECATED(rawValue) {
   const result = {
     runnerName: null,
     raceYear: null,
@@ -187,15 +236,12 @@ function parseRunnerNameAndYear(rawValue) {
   }
 
   const trimmed = rawValue.trim()
-
-  // Look for a 4-digit year at the end (2000-2099)
   const yearMatch = trimmed.match(/\s+(20\d{2})$/)
 
   if (yearMatch) {
     result.raceYear = parseInt(yearMatch[1], 10)
     result.runnerName = trimmed.slice(0, -yearMatch[0].length).trim()
   } else {
-    // No year found - flag for attention
     result.runnerName = trimmed
     result.needsAttention = true
   }
