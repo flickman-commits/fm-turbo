@@ -535,14 +535,19 @@ Thank you!`
     // Common race name mappings
     const shorthandMap: { [key: string]: string } = {
       'New York City Marathon': 'NYC',
+      'TCS New York City Marathon': 'NYC',
       'Boston Marathon': 'Boston',
       'Chicago Marathon': 'Chicago',
+      'Bank of America Chicago Marathon': 'Chicago',
       'London Marathon': 'London',
       'Berlin Marathon': 'Berlin',
       'Marine Corps Marathon': 'MCM',
       'Marine Corps': 'MCM',
-      'TCS New York City Marathon': 'NYC',
-      'Bank of America Chicago Marathon': 'Chicago',
+      'California International Marathon': 'CIM',
+      'Houston Marathon': 'Houston',
+      'Louisiana Marathon': 'Louisiana',
+      'Philadelphia Marathon': 'Philly',
+      'Detroit Marathon': 'Detroit',
     }
 
     // Check for exact match
