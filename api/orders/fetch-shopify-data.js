@@ -73,6 +73,7 @@ export default async function handler(req, res) {
       raceName: parsed.raceName,
       runnerName: parsed.runnerName,
       raceYear: parsed.raceYear,
+      hadNoTime: parsed.hadNoTime,  // Flag indicating "no time" was present
       notes,
       needsAttention: parsed.needsAttention,
       raw: {
@@ -108,6 +109,7 @@ function extractShopifyData(lineItems) {
     runnerName: null,
     raceYear: null,
     needsAttention: false,
+    hadNoTime: false,  // Flag to indicate "no time" was present
     rawProductTitle: null,
     rawRunnerName: null,
     rawRaceYear: null,
@@ -141,7 +143,9 @@ function extractShopifyData(lineItems) {
           name === 'runner_name') {
         result.rawRunnerName = value
         // Clean the runner name (remove "no time" if present)
-        result.runnerName = cleanRunnerName(value)
+        const cleaned = cleanRunnerName(value)
+        result.runnerName = cleaned.cleaned
+        result.hadNoTime = cleaned.hadNoTime
       }
       else if (name === 'Race Year' || name === 'race year' || name === 'race_year') {
         result.rawRaceYear = value
@@ -194,13 +198,18 @@ function parseRaceName(productTitle) {
 
 /**
  * Clean runner name by removing invalid entries like "no time"
- * e.g., "Jennifer Samp no time" → "Jennifer Samp"
- * e.g., "no time" → null
+ * Returns { cleaned, hadNoTime }
+ * e.g., "Jennifer Samp no time" → { cleaned: "Jennifer Samp", hadNoTime: true }
+ * e.g., "no time" → { cleaned: null, hadNoTime: true }
+ * e.g., "Jennifer Samp" → { cleaned: "Jennifer Samp", hadNoTime: false }
  */
 function cleanRunnerName(runnerName) {
-  if (!runnerName) return null
+  if (!runnerName) return { cleaned: null, hadNoTime: false }
 
   let cleaned = runnerName.trim()
+
+  // Check if "no time" is present (case-insensitive)
+  const hadNoTime = /\bno\s+time\b/i.test(cleaned)
 
   // Remove "no time" (case-insensitive)
   cleaned = cleaned.replace(/\bno\s+time\b/gi, '')
@@ -210,10 +219,10 @@ function cleanRunnerName(runnerName) {
 
   // If nothing left after cleaning, return null
   if (!cleaned || cleaned.length === 0) {
-    return null
+    return { cleaned: null, hadNoTime }
   }
 
-  return cleaned
+  return { cleaned, hadNoTime }
 }
 
 /**

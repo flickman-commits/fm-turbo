@@ -73,13 +73,18 @@ function parseRaceName(productTitle) {
 
 /**
  * Clean runner name by removing invalid entries like "no time"
- * e.g., "Jennifer Samp no time" → "Jennifer Samp"
- * e.g., "no time" → null
+ * Returns { cleaned, hadNoTime }
+ * e.g., "Jennifer Samp no time" → { cleaned: "Jennifer Samp", hadNoTime: true }
+ * e.g., "no time" → { cleaned: null, hadNoTime: true }
+ * e.g., "Jennifer Samp" → { cleaned: "Jennifer Samp", hadNoTime: false }
  */
 function cleanRunnerName(runnerName) {
-  if (!runnerName) return null
+  if (!runnerName) return { cleaned: null, hadNoTime: false }
 
   let cleaned = runnerName.trim()
+
+  // Check if "no time" is present (case-insensitive)
+  const hadNoTime = /\bno\s+time\b/i.test(cleaned)
 
   // Remove "no time" (case-insensitive)
   cleaned = cleaned.replace(/\bno\s+time\b/gi, '')
@@ -89,10 +94,10 @@ function cleanRunnerName(runnerName) {
 
   // If nothing left after cleaning, return null
   if (!cleaned || cleaned.length === 0) {
-    return null
+    return { cleaned: null, hadNoTime }
   }
 
-  return cleaned
+  return { cleaned, hadNoTime }
 }
 
 /**
@@ -123,6 +128,7 @@ function extractShopifyPersonalization(lineItems) {
     raceName: null,
     runnerName: null,
     raceYear: null,
+    hadNoTime: false,  // Flag to indicate "no time" was present
     needsAttention: false
   }
 
@@ -149,7 +155,9 @@ function extractShopifyPersonalization(lineItems) {
           name === 'runner name' ||
           name === 'runner_name') {
         // Clean the runner name (remove "no time" if present)
-        result.runnerName = cleanRunnerName(value)
+        const cleaned = cleanRunnerName(value)
+        result.runnerName = cleaned.cleaned
+        result.hadNoTime = cleaned.hadNoTime
       }
       // Race year
       else if (name === 'Race Year' || name === 'race year' || name === 'race_year') {
@@ -316,37 +324,55 @@ export async function processOrders(options = {}) {
         const orderSource = determineOrderSource(order)
         const isShopify = orderSource === 'shopify'
 
-        // If order exists but is missing Shopify data, update it
+        // If order exists, check for updates
         if (existing) {
+          let needsUpdate = false
+          const updateData = {}
+
+          // Check if order has been fulfilled (status changed from actionable to non-actionable)
+          const wasActionable = existing.status !== 'completed'
+          const isNowFulfilled = !ACTIONABLE_STATUSES.includes(order.status)
+
+          if (wasActionable && isNowFulfilled) {
+            updateData.status = 'completed'
+            updateData.researchedAt = new Date()
+            needsUpdate = true
+            log(`[processOrders] Marking order ${order.orderId} as completed (fulfilled in Artelo)`)
+          }
+
+          // If missing Shopify data, fetch and update
           if (isShopify && !existing.shopifyOrderData) {
             log(`[processOrders] Updating order ${order.orderId} with Shopify data...`)
             const shopifyData = await fetchShopifyOrderData(order.orderId)
 
             if (shopifyData) {
-              const updateData = {
-                raceName: shopifyData.raceName || existing.raceName,
-                runnerName: shopifyData.runnerName || existing.runnerName,
-                raceYear: shopifyData.raceYear || existing.raceYear,
-                shopifyOrderData: shopifyData.shopifyOrderData,
-                notes: shopifyData.notes || existing.notes
-              }
+              updateData.raceName = shopifyData.raceName || existing.raceName
+              updateData.runnerName = shopifyData.runnerName || existing.runnerName
+              updateData.raceYear = shopifyData.raceYear || existing.raceYear
+              updateData.hadNoTime = shopifyData.hadNoTime || false
+              updateData.shopifyOrderData = shopifyData.shopifyOrderData
+              updateData.notes = shopifyData.notes || existing.notes
 
               if (shopifyData.needsAttention && existing.status === 'pending') {
                 updateData.status = 'missing_year'
                 results.needsAttention++
               }
 
-              await prisma.order.update({
-                where: { orderNumber: order.orderId },
-                data: updateData
-              })
-
-              results.updated++
+              needsUpdate = true
               results.enriched++
-              orderResult.action = 'updated'
-              orderResult.raceName = updateData.raceName
-              orderResult.runnerName = updateData.runnerName
             }
+          }
+
+          if (needsUpdate) {
+            await prisma.order.update({
+              where: { orderNumber: order.orderId },
+              data: updateData
+            })
+
+            results.updated++
+            orderResult.action = 'updated'
+            orderResult.raceName = updateData.raceName || existing.raceName
+            orderResult.runnerName = updateData.runnerName || existing.runnerName
           } else {
             results.skipped++
             orderResult.action = 'skipped'
@@ -365,6 +391,7 @@ export async function processOrders(options = {}) {
           let status = 'pending'
           let shopifyOrderData = null
           let notes = null
+          let hadNoTime = false
 
           if (isShopify) {
             log(`[processOrders] Fetching Shopify data for new order ${order.orderId}...`)
@@ -374,6 +401,7 @@ export async function processOrders(options = {}) {
               raceName = shopifyData.raceName || raceName
               runnerName = shopifyData.runnerName || runnerName
               raceYear = shopifyData.raceYear || raceYear
+              hadNoTime = shopifyData.hadNoTime || false
               shopifyOrderData = shopifyData.shopifyOrderData
               notes = shopifyData.notes
 
@@ -394,6 +422,7 @@ export async function processOrders(options = {}) {
               raceName,
               raceYear,
               runnerName,
+              hadNoTime,  // Include "no time" flag
               productSize,
               frameType: firstItem?.product?.frameColor || 'Unknown',
               notes,
