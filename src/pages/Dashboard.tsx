@@ -534,15 +534,38 @@ Thank you!`
 
     // Common race name mappings
     const shorthandMap: { [key: string]: string } = {
-      'New York City Marathon': 'NYC',
-      'Boston Marathon': 'Boston',
-      'Chicago Marathon': 'Chicago',
-      'London Marathon': 'London',
+      'Surf City Marathon': 'Surf City',
+      'Mesa Marathon': 'Mesa',
       'Berlin Marathon': 'Berlin',
+      'Denver Colfax Marathon': 'Colfax',
+      'Miami Marathon': 'Miami',
+      'Buffalo Marathon': 'Buffalo',
+      'Twin Cities Marathon': 'Twin Cities',
+      'Louisiana Marathon': 'Louisiana',
+      'Army Ten Miler': 'ATM',
+      'Detroit Marathon': 'Detroit',
+      'Columbus Marathon': 'Columbus',
+      'Pittsburgh Marathon': 'Pittsburgh',
+      'Grandma\'s Marathon': 'Grandma\'s',
+      'Houston Marathon': 'Houston',
+      'Dallas Marathon': 'Dallas',
+      'California International Marathon': 'CIM',
+      'Palm Beaches Marathon': 'Palm Beaches',
+      'New York City Marathon': 'NYC',
+      'Baltimore Marathon': 'Baltimore',
+      'Philadelphia Marathon': 'Philly',
+      'San Antonio Marathon': 'San Antonio',
+      'Kiawah Island Marathon': 'Kiawah',
+      'Honolulu Marathon': 'Honolulu',
       'Marine Corps Marathon': 'MCM',
-      'Marine Corps': 'MCM',
+      'Chicago Marathon': 'Chicago',
+      'Air Force Marathon': 'Air Force',
+      'San Francisco Marathon': 'SF',
+      'Jackson Hole Marathon': 'Jackson Hole',
+      // Alternate name formats
       'TCS New York City Marathon': 'NYC',
       'Bank of America Chicago Marathon': 'Chicago',
+      'Marine Corps': 'MCM',
     }
 
     // Check for exact match
