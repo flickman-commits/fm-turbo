@@ -12,15 +12,23 @@ export class LouisianaMarathonScraper extends BaseScraper {
     this.baseUrl = 'https://runsignup.com'
     this.raceId = 100074
 
-    // Map years to result set IDs for FULL MARATHON only
-    // First ID in each year is typically the full marathon
-    this.resultSetMap = {
+    // Map years to result set IDs for FULL MARATHON
+    this.marathonResultSetMap = {
       2026: 623007, // Full Marathon 2026
       2025: 523599, // Full Marathon 2025
       2024: 433945, // Full Marathon 2024
       2023: 362821, // Full Marathon 2023
       2022: 296957, // Full Marathon 2022
       2021: 243077  // Full Marathon 2021
+    }
+
+    // Map years to result set IDs for HALF MARATHON
+    this.halfMarathonResultSetMap = {
+      2025: 523600, // Half Marathon Overall 2025
+      2024: 433900, // Half Marathon Overall 2024
+      2023: 362823, // Half Marathon Overall 2023
+      2022: 296958, // Half Marathon Overall 2022
+      2021: 244901  // Half Marathon Overall 2021
     }
   }
 
@@ -66,6 +74,7 @@ export class LouisianaMarathonScraper extends BaseScraper {
 
   /**
    * Search for a runner by name using RunSignUp results page
+   * Searches both Marathon and Half Marathon events
    * @param {string} runnerName - Full name to search for
    * @returns {Promise<Object>} Standardized result object
    */
@@ -74,12 +83,34 @@ export class LouisianaMarathonScraper extends BaseScraper {
     console.log(`[Louisiana ${this.year}] Searching for: "${runnerName}"`)
     console.log(`${'='.repeat(50)}`)
 
-    const resultSetId = this.resultSetMap[this.year]
+    // Try searching Marathon first, then Half Marathon
+    console.log(`[Louisiana ${this.year}] Searching Full Marathon results...`)
+    let result = await this.searchEventType(runnerName, 'Marathon', this.marathonResultSetMap)
+
+    if (result.found) {
+      return result
+    }
+
+    console.log(`[Louisiana ${this.year}] Not found in Marathon, searching Half Marathon results...`)
+    result = await this.searchEventType(runnerName, 'Half Marathon', this.halfMarathonResultSetMap)
+
+    return result
+  }
+
+  /**
+   * Search for a runner in a specific event type
+   * @param {string} runnerName - Full name to search for
+   * @param {string} eventType - "Marathon" or "Half Marathon"
+   * @param {Object} resultSetMap - Map of years to result set IDs
+   * @returns {Promise<Object>} Standardized result object
+   */
+  async searchEventType(runnerName, eventType, resultSetMap) {
+    const resultSetId = resultSetMap[this.year]
     if (!resultSetId) {
-      console.log(`[Louisiana ${this.year}] No result set ID found for year ${this.year}`)
+      console.log(`[Louisiana ${this.year}] No ${eventType} result set ID found for year ${this.year}`)
       return {
         ...this.notFoundResult(),
-        researchNotes: `Results not available for ${this.year}`
+        researchNotes: `${eventType} results not available for ${this.year}`
       }
     }
 
@@ -197,7 +228,7 @@ export class LouisianaMarathonScraper extends BaseScraper {
       console.log(`  Place: ${match.placeOverall}`)
 
       await browser.close()
-      return this.extractRunnerData(match)
+      return this.extractRunnerData(match, eventType)
 
     } catch (error) {
       console.error(`[Louisiana ${this.year}] Error searching for ${runnerName}:`, error.message)
@@ -216,8 +247,10 @@ export class LouisianaMarathonScraper extends BaseScraper {
 
   /**
    * Extract standardized data from RunSignUp result object
+   * @param {Object} result - Result data from page
+   * @param {string} eventType - "Marathon" or "Half Marathon"
    */
-  extractRunnerData(result) {
+  extractRunnerData(result, eventType = 'Marathon') {
     const time = this.formatTime(result.chipTime)
     const bib = result.bib || null
     const pace = this.formatPace(result.pace)
@@ -227,7 +260,7 @@ export class LouisianaMarathonScraper extends BaseScraper {
       bibNumber: bib ? String(bib) : null,
       officialTime: time,
       officialPace: pace,
-      eventType: 'Marathon',
+      eventType: eventType,
       yearFound: this.year,
       researchNotes: null,
       rawData: {

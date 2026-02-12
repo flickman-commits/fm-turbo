@@ -24,43 +24,61 @@ Both scrapers use Puppeteer for web scraping since the RunSignUp API authenticat
 
 ### Key Features:
 - ✅ Web scraping using Puppeteer (headless browser)
+- ✅ **Searches BOTH Marathon and Half Marathon events automatically**
 - ✅ Client-side search filtering (types in search box, waits for results)
 - ✅ Extracts bib number, finish time, pace, place, demographic data
+- ✅ Correctly identifies which event type (Marathon vs Half Marathon) the runner participated in
 - ✅ Calculates race dates automatically (Kiawah: 2nd Sat of Dec, Louisiana: 3rd Sun of Jan)
 - ✅ Supports multiple name variations
-- ✅ Maps years to result set IDs for each race
+- ✅ Maps years to result set IDs for each race and event type
 - ✅ Includes detailed runner data (age, gender, city, state, rankings)
 
 ## How They Work
 
 ### Search Process (Both Scrapers)
-Both scrapers use the same web scraping approach:
+Both scrapers use a dual-event search approach:
 
-1. **Launch headless browser** with Puppeteer
-2. **Navigate to results page** with specific result set ID for the year
-3. **Type runner name** into search box (`input#search-box`)
-4. **Wait for client-side filtering** (1.5 seconds)
-5. **Extract visible results** from the filtered table
-6. **Match by name** using `namesMatch()` helper function
-7. **Return standardized result** or handle ambiguous/not found cases
+1. **Search Marathon first**: Launch headless browser and search full marathon results
+2. **If not found, search Half Marathon**: Automatically searches half marathon results
+3. **Navigation**: Navigate to results page with specific result set ID for the year and event type
+4. **Type runner name** into search box (`input#resultsSearch`)
+5. **Wait for client-side filtering** (1.5 seconds)
+6. **Extract visible results** from the filtered table
+7. **Match by name** using `namesMatch()` helper function
+8. **Return standardized result** with correct event type, or handle ambiguous/not found cases
 
 ### Result Set IDs
 
-#### Kiawah Island Marathon (Race ID: 139050)
+#### Kiawah Island Marathon (Race ID: 68851)
+
+**Full Marathon:**
 ```javascript
 {
-  2026: 617138,
   2025: 615623,
-  2024: 616051,
-  2023: 566988,
-  2022: 528329
+  2024: 516051,
+  2023: 429213,
+  2022: 360433,
+  2021: 294549
+}
+```
+
+**Half Marathon:**
+```javascript
+{
+  2025: 615624,
+  2024: 516050,
+  2023: 434417,
+  2022: 360431,
+  2021: 294548
 }
 ```
 
 #### Louisiana Marathon (Race ID: 100074)
+
+**Full Marathon:**
 ```javascript
 {
-  2026: 623007, // Full Marathon only
+  2026: 623007,
   2025: 523599,
   2024: 433945,
   2023: 362821,
@@ -69,7 +87,18 @@ Both scrapers use the same web scraping approach:
 }
 ```
 
-**Note**: Louisiana Marathon has multiple result sets per year (full, half, quarter, 5K). We use only the full marathon result set.
+**Half Marathon:**
+```javascript
+{
+  2025: 523600,
+  2024: 433900,
+  2023: 362823,
+  2022: 296958,
+  2021: 244901
+}
+```
+
+**Note**: Both scrapers automatically search both full marathon and half marathon result sets. Louisiana also offers quarter marathon and 5K events, but these are not currently searched.
 
 ## Race Name Matching
 

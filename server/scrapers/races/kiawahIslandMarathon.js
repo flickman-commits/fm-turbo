@@ -12,14 +12,22 @@ export class KiawahIslandMarathonScraper extends BaseScraper {
     this.baseUrl = 'https://runsignup.com'
     this.raceId = 68851 // Kiawah Island Marathon race ID
 
-    // Map years to result set IDs for FULL MARATHON only
-    // These can be found in the race results page HTML
-    this.resultSetMap = {
+    // Map years to result set IDs for FULL MARATHON
+    this.marathonResultSetMap = {
       2025: 615623, // Marathon Overall - Kiawah Island Marathon, High Performance Corral Full
       2024: 516051, // Kiawah Island Marathon, High Performance Corral Full
       2023: 429213, // Kiawah Island Marathon Overall Results
       2022: 360433, // Kiawah Island Marathon Overall Results
       2021: 294549  // Marathon Overall - Kiawah Island Marathon, High Performance Corral Full
+    }
+
+    // Map years to result set IDs for HALF MARATHON
+    this.halfMarathonResultSetMap = {
+      2025: 615624, // Half-Marathon Overall
+      2024: 516050, // Half-Marathon Overall
+      2023: 434417, // Half-Marathon Overall
+      2022: 360431, // Half-Marathon Overall
+      2021: 294548  // Half-Marathon Overall
     }
   }
 
@@ -65,6 +73,7 @@ export class KiawahIslandMarathonScraper extends BaseScraper {
 
   /**
    * Search for a runner by name using RunSignUp results page
+   * Searches both Marathon and Half Marathon events
    * @param {string} runnerName - Full name to search for
    * @returns {Promise<Object>} Standardized result object
    */
@@ -73,12 +82,34 @@ export class KiawahIslandMarathonScraper extends BaseScraper {
     console.log(`[Kiawah ${this.year}] Searching for: "${runnerName}"`)
     console.log(`${'='.repeat(50)}`)
 
-    const resultSetId = this.resultSetMap[this.year]
+    // Try searching Marathon first, then Half Marathon
+    console.log(`[Kiawah ${this.year}] Searching Full Marathon results...`)
+    let result = await this.searchEventType(runnerName, 'Marathon', this.marathonResultSetMap)
+
+    if (result.found) {
+      return result
+    }
+
+    console.log(`[Kiawah ${this.year}] Not found in Marathon, searching Half Marathon results...`)
+    result = await this.searchEventType(runnerName, 'Half Marathon', this.halfMarathonResultSetMap)
+
+    return result
+  }
+
+  /**
+   * Search for a runner in a specific event type
+   * @param {string} runnerName - Full name to search for
+   * @param {string} eventType - "Marathon" or "Half Marathon"
+   * @param {Object} resultSetMap - Map of years to result set IDs
+   * @returns {Promise<Object>} Standardized result object
+   */
+  async searchEventType(runnerName, eventType, resultSetMap) {
+    const resultSetId = resultSetMap[this.year]
     if (!resultSetId) {
-      console.log(`[Kiawah ${this.year}] No result set ID found for year ${this.year}`)
+      console.log(`[Kiawah ${this.year}] No ${eventType} result set ID found for year ${this.year}`)
       return {
         ...this.notFoundResult(),
-        researchNotes: `Results not available for ${this.year}`
+        researchNotes: `${eventType} results not available for ${this.year}`
       }
     }
 
@@ -196,7 +227,7 @@ export class KiawahIslandMarathonScraper extends BaseScraper {
       console.log(`  Place: ${match.placeOverall}`)
 
       await browser.close()
-      return this.extractRunnerData(match)
+      return this.extractRunnerData(match, eventType)
 
     } catch (error) {
       console.error(`[Kiawah ${this.year}] Error searching for ${runnerName}:`, error.message)
@@ -215,8 +246,10 @@ export class KiawahIslandMarathonScraper extends BaseScraper {
 
   /**
    * Extract standardized data from RunSignUp result object
+   * @param {Object} result - Result data from page
+   * @param {string} eventType - "Marathon" or "Half Marathon"
    */
-  extractRunnerData(result) {
+  extractRunnerData(result, eventType = 'Marathon') {
     const time = this.formatTime(result.chipTime)
     const bib = result.bib || null
     const pace = this.formatPace(result.pace)
@@ -226,7 +259,7 @@ export class KiawahIslandMarathonScraper extends BaseScraper {
       bibNumber: bib ? String(bib) : null,
       officialTime: time,
       officialPace: pace,
-      eventType: 'Marathon',
+      eventType: eventType,
       yearFound: this.year,
       researchNotes: null,
       rawData: {
