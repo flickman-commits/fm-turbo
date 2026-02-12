@@ -11,8 +11,10 @@
  */
 import { PrismaClient } from '@prisma/client'
 import { getScraperForRace, hasScraperForRace } from '../scrapers/index.js'
+import WeatherService from './WeatherService.js'
 
 const prisma = new PrismaClient()
+const weatherService = new WeatherService()
 
 export class ResearchService {
 
@@ -174,19 +176,13 @@ export class ResearchService {
 
   /**
    * Get historical weather for a date and location
-   * TODO: Integrate with weather API (Open-Meteo, Visual Crossing, etc.)
+   * Uses Open-Meteo API via WeatherService
    * @param {Date} date
    * @param {string} location
    * @returns {Promise<Object>} { temp, condition }
    */
   async getHistoricalWeather(date, location) {
-    // Placeholder - implement with real weather API
-    // For now, return null values so we know weather needs manual entry
-    console.log(`[ResearchService] Weather API not yet implemented`)
-    return {
-      temp: null,
-      condition: null
-    }
+    return await weatherService.getHistoricalWeather(date, location)
   }
 
   /**
