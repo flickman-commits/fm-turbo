@@ -138,6 +138,32 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// Debug endpoint to fetch and inspect raw Shopify order data
+app.get('/api/debug/shopify/:orderId', async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const shopifyOrder = await fetchShopifyOrder(orderId);
+
+    if (!shopifyOrder) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const lineItemsData = shopifyOrder.line_items.map(item => ({
+      title: item.title,
+      sku: item.sku,
+      properties: item.properties
+    }));
+
+    res.json({
+      orderName: shopifyOrder.name,
+      createdAt: shopifyOrder.created_at,
+      lineItems: lineItemsData
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Artelo statuses that need design work
 const ACTIONABLE_STATUSES = ['PendingFulfillmentAction', 'AwaitingPayment'];
 
