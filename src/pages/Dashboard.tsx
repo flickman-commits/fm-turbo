@@ -475,7 +475,7 @@ export default function Dashboard() {
     fetchOrders()
   }, [fetchOrders])
 
-  // Orders to personalize: pending + flagged + ready + missing_year, sorted by most recent first
+  // Designed to personalize: pending + flagged + ready + missing_year, sorted by most recent first
   const ordersToFulfill = useMemo(() => {
     const fulfillOrders = orders.filter(o =>
       o.status === 'flagged' || o.status === 'ready' || o.status === 'pending' || o.status === 'missing_year'
@@ -639,9 +639,7 @@ Thank you!`
                 {getGreeting()}, Elí
               </h1>
               <p className="text-sm md:text-base text-off-black/60">
-                {ordersToFulfill.length} orders to personalize
-                {researchableCount > 0 && ` • ${researchableCount} can be auto-researched`}
-                {' • '}Last updated {formatLastUpdated(lastUpdated)}
+                Last updated {formatLastUpdated(lastUpdated)}
               </p>
             </div>
           </div>
@@ -651,7 +649,7 @@ Thank you!`
             <button
               onClick={importOrders}
               disabled={isImporting}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-off-black text-white rounded-md hover:opacity-90 transition-opacity font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 px-3 md:px-6 py-2.5 bg-off-black text-white rounded-md hover:opacity-90 transition-opacity font-medium text-xs md:text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isImporting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -660,12 +658,12 @@ Thank you!`
               )}
               {isImporting ? 'Importing…' : 'Import New Orders'}
             </button>
-            <div className="flex flex-col items-end gap-1">
+            <div className="hidden md:flex flex-col items-end gap-1">
               <a
                 href="https://www.artelo.io/app/orders?tab=ACTION_REQUIRED"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs md:text-sm text-off-black/40 hover:text-off-black/70 transition-colors"
+                className="text-sm text-off-black/40 hover:text-off-black/70 transition-colors"
               >
                 Go to Artelo Orders &rarr;
               </a>
@@ -673,7 +671,7 @@ Thank you!`
                 href="https://admin.shopify.com/store/flickman-3247/orders"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs md:text-sm text-off-black/40 hover:text-off-black/70 transition-colors"
+                className="text-sm text-off-black/40 hover:text-off-black/70 transition-colors"
               >
                 Go to Shopify Orders &rarr;
               </a>
@@ -687,7 +685,7 @@ Thank you!`
           {/* Section Header */}
           <div className="flex items-center justify-between mb-4 flex-shrink-0">
             <div className="flex items-center gap-3">
-              <h2 className="text-lg font-semibold text-off-black uppercase tracking-tight">Orders to Personalize</h2>
+              <h2 className="text-lg font-semibold text-off-black uppercase tracking-tight">Designed to Personalize</h2>
               <span className="px-2.5 py-1 bg-off-black/10 text-off-black/60 text-sm font-medium rounded">
                 {ordersToFulfill.length}
               </span>
@@ -744,7 +742,7 @@ Thank you!`
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-off-black">{order.displayOrderNumber}</span>
                             {itemCount > 1 && (
-                              <span className="px-1.5 py-0.5 bg-off-black/5 text-off-black/60 text-[10px] font-medium rounded">
+                              <span className="px-1.5 py-0.5 bg-off-black/5 text-off-black/60 text-[10px] font-medium rounded whitespace-nowrap">
                                 Item {order.lineItemIndex + 1} of {itemCount}
                               </span>
                             )}
