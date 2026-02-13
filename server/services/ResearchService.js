@@ -11,8 +11,10 @@
  */
 import { PrismaClient } from '@prisma/client'
 import { getScraperForRace, hasScraperForRace } from '../scrapers/index.js'
+import WeatherService from './WeatherService.js'
 
 const prisma = new PrismaClient()
+const weatherService = new WeatherService()
 
 export class ResearchService {
 
@@ -20,11 +22,11 @@ export class ResearchService {
    * Main entry point - research an order
    * Handles both race-level and runner-level data fetching with caching
    * Uses override values if present, otherwise falls back to original data
-   * @param {string} orderNumber
+   * @param {string} orderNumber - The orderNumber (parentOrderNumber-lineItemIndex format)
    * @returns {Promise<Object>} Combined race and runner research results
    */
   async researchOrder(orderNumber) {
-    const order = await prisma.order.findUnique({
+    const order = await prisma.order.findFirst({
       where: { orderNumber }
     })
 
@@ -123,6 +125,12 @@ export class ResearchService {
       console.log(`[ResearchService] Created race record: ${race.id}`)
     }
 
+    // Automatically fetch weather if not already cached
+    if (!race.weatherFetchedAt && race.raceDate && race.location) {
+      console.log(`[ResearchService] Auto-fetching weather for race ${race.id}`)
+      race = await this.fetchWeatherForRace(race.id)
+    }
+
     return race
   }
 
@@ -174,19 +182,13 @@ export class ResearchService {
 
   /**
    * Get historical weather for a date and location
-   * TODO: Integrate with weather API (Open-Meteo, Visual Crossing, etc.)
+   * Uses Open-Meteo API via WeatherService
    * @param {Date} date
    * @param {string} location
    * @returns {Promise<Object>} { temp, condition }
    */
   async getHistoricalWeather(date, location) {
-    // Placeholder - implement with real weather API
-    // For now, return null values so we know weather needs manual entry
-    console.log(`[ResearchService] Weather API not yet implemented`)
-    return {
-      temp: null,
-      condition: null
-    }
+    return await weatherService.getHistoricalWeather(date, location)
   }
 
   /**
@@ -205,7 +207,7 @@ export class ResearchService {
     // Check cache first
     let existingResearch = await prisma.runnerResearch.findFirst({
       where: {
-        orderNumber: order.orderNumber,
+        orderId: order.id,
         raceId: race.id
       }
     })
@@ -223,7 +225,7 @@ export class ResearchService {
 
     // Prepare research data (store the effective name used for search)
     const researchData = {
-      orderNumber: order.orderNumber,
+      orderId: order.id,
       raceId: race.id,
       runnerName: runnerName, // Store the name actually used for search
       bibNumber: results.bibNumber,
@@ -254,7 +256,7 @@ export class ResearchService {
     // Update order status if found
     if (results.found) {
       await prisma.order.update({
-        where: { orderNumber: order.orderNumber },
+        where: { id: order.id },
         data: {
           status: 'ready',
           researchedAt: new Date()
@@ -282,7 +284,7 @@ export class ResearchService {
 
     for (const orderNumber of orderNumbers) {
       try {
-        const order = await prisma.order.findUnique({
+        const order = await prisma.order.findFirst({
           where: { orderNumber }
         })
 
@@ -336,9 +338,9 @@ export class ResearchService {
   /**
    * Check if runner data is cached
    */
-  async hasRunnerData(orderNumber, raceId) {
+  async hasRunnerData(orderId, raceId) {
     const research = await prisma.runnerResearch.findFirst({
-      where: { orderNumber, raceId, researchStatus: 'found' }
+      where: { orderId, raceId, researchStatus: 'found' }
     })
     return !!research
   }

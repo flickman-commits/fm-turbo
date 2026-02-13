@@ -12,21 +12,23 @@ datasource db {
 }
 
 model Order {
-  id               String    @id @default(cuid())
-  orderNumber      String    @unique
-  source           String    // "shopify" or "etsy"
-  arteloOrderData  Json      // Full order object from Artelo
-  shopifyOrderData Json?     // Personalization data if Shopify
-  raceName         String
-  raceYear         Int
-  runnerName       String
-  productSize      String
-  frameType        String
-  notes            String?   // Notes from Shopify (year corrections, etc.)
-  hadNoTime        Boolean   @default(false) // Flag: customer entered "no time" in runner name
-  status           String    @default("pending") // "pending", "missing_year", "ready", "flagged", "completed"
-  researchedAt     DateTime?
-  createdAt        DateTime  @default(now())
+  id                 String    @id @default(cuid())
+  orderNumber        String    // Order number for this specific item (parentOrderNumber-lineItemIndex)
+  parentOrderNumber  String    // Original Shopify/Etsy order number
+  lineItemIndex      Int       @default(0) // Which line item this is (0, 1, 2, etc.)
+  source             String    // "shopify" or "etsy"
+  arteloOrderData    Json      // Full order object from Artelo
+  shopifyOrderData   Json?     // Personalization data if Shopify
+  raceName           String
+  raceYear           Int
+  runnerName         String
+  productSize        String
+  frameType          String
+  notes              String?   // Notes from Shopify (year corrections, etc.)
+  hadNoTime          Boolean   @default(false) // Flag: customer entered "no time" in runner name
+  status             String    @default("pending") // "pending", "missing_year", "ready", "flagged", "completed"
+  researchedAt       DateTime?
+  createdAt          DateTime  @default(now())
 
   // Manual override fields (for customer corrections)
   yearOverride       Int?      // Override for raceYear
@@ -36,7 +38,9 @@ model Order {
   // Relations
   runnerResearch   RunnerResearch[]
 
+  @@unique([parentOrderNumber, lineItemIndex]) // Each line item is unique within an order
   @@index([orderNumber])
+  @@index([parentOrderNumber]) // For grouping items from same order
   @@index([status])
   @@index([raceName, raceYear])
 }
@@ -65,7 +69,7 @@ model Race {
 
 model RunnerResearch {
   id             Int      @id @default(autoincrement())
-  orderNumber    String
+  orderId        String   // Changed to orderId to link to Order.id instead
   raceId         Int
   runnerName     String
   bibNumber      String?
@@ -78,10 +82,10 @@ model RunnerResearch {
   createdAt      DateTime @default(now())
 
   // Relations
-  order          Order    @relation(fields: [orderNumber], references: [orderNumber])
+  order          Order    @relation(fields: [orderId], references: [id])
   race           Race     @relation(fields: [raceId], references: [id])
 
-  @@index([orderNumber])
+  @@index([orderId])
   @@index([raceId])
   @@index([researchStatus])
 }

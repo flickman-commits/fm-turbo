@@ -5,6 +5,10 @@
 import NYCMarathonScraper from './races/nycMarathon.js'
 import ChicagoMarathonScraper from './races/chicagoMarathon.js'
 import PhiladelphiaMarathonScraper from './races/philadelphiaMarathon.js'
+import MarineCorpsMarathonScraper from './races/marineCorpsMarathon.js'
+import CIMMarathonScraper from './races/cimMarathon.js'
+import KiawahIslandMarathonScraper from './races/kiawahIslandMarathon.js'
+import LouisianaMarathonScraper from './races/louisianaMarathon.js'
 
 /**
  * Map of race names to scraper classes
@@ -27,6 +31,25 @@ const SCRAPER_MAP = {
   'Philadelphia Marathon': PhiladelphiaMarathonScraper,
   'Philadelphia Marathon (Full)': PhiladelphiaMarathonScraper,
   'Philly Marathon': PhiladelphiaMarathonScraper,
+
+  // Marine Corps Marathon - various name formats
+  'Marine Corps Marathon': MarineCorpsMarathonScraper,
+  'MCM Marathon': MarineCorpsMarathonScraper,
+  'MCM': MarineCorpsMarathonScraper,
+
+  // California International Marathon - various name formats
+  'California International Marathon': CIMMarathonScraper,
+  'CIM Marathon': CIMMarathonScraper,
+  'CIM': CIMMarathonScraper,
+
+  // Kiawah Island Marathon - various name formats
+  'Kiawah Island Marathon': KiawahIslandMarathonScraper,
+  'Kiawah Marathon': KiawahIslandMarathonScraper,
+  'Kiawah': KiawahIslandMarathonScraper,
+
+  // Louisiana Marathon - various name formats
+  'Louisiana Marathon': LouisianaMarathonScraper,
+  'The Louisiana Marathon': LouisianaMarathonScraper,
 
   // Add more races here as we implement them:
   // 'Boston Marathon': BostonMarathonScraper,
@@ -77,6 +100,46 @@ export function getScraperForRace(raceName, year) {
         ScraperClass = PhiladelphiaMarathonScraper
       }
     }
+
+    // Check if the race name contains key words for Marine Corps Marathon
+    if (
+      !ScraperClass &&
+      (normalizedName.includes('marine corps') || normalizedName.includes('mcm'))
+    ) {
+      if (normalizedName.includes('marathon')) {
+        ScraperClass = MarineCorpsMarathonScraper
+      }
+    }
+
+    // Check if the race name contains key words for CIM
+    if (
+      !ScraperClass &&
+      (normalizedName.includes('california international') || normalizedName.includes('cim'))
+    ) {
+      if (normalizedName.includes('marathon') || normalizedName === 'cim') {
+        ScraperClass = CIMMarathonScraper
+      }
+    }
+
+    // Check if the race name contains key words for Kiawah Island
+    if (
+      !ScraperClass &&
+      normalizedName.includes('kiawah')
+    ) {
+      if (normalizedName.includes('marathon') || normalizedName === 'kiawah') {
+        ScraperClass = KiawahIslandMarathonScraper
+      }
+    }
+
+    // Check if the race name contains key words for Louisiana
+    if (
+      !ScraperClass &&
+      normalizedName.includes('louisiana')
+    ) {
+      if (normalizedName.includes('marathon')) {
+        ScraperClass = LouisianaMarathonScraper
+      }
+    }
   }
 
   if (!ScraperClass) {
@@ -110,6 +173,10 @@ export function getSupportedRaces() {
   uniqueRaces.add('NYC Marathon')
   uniqueRaces.add('Chicago Marathon')
   uniqueRaces.add('Philadelphia Marathon')
+  uniqueRaces.add('Marine Corps Marathon')
+  uniqueRaces.add('California International Marathon')
+  uniqueRaces.add('Kiawah Island Marathon')
+  uniqueRaces.add('Louisiana Marathon')
   // Add more as we implement them
   return Array.from(uniqueRaces)
 }

@@ -5,7 +5,9 @@ import { Search, Upload, Copy, Loader2, FlaskConical, Pencil, Check, X } from 'l
 
 interface Order {
   id: string
-  orderNumber: string        // Internal ID for reconciliation (Shopify order.id)
+  orderNumber: string        // Unique ID for this line item (parentOrderNumber-lineItemIndex)
+  parentOrderNumber: string  // Original Shopify/Etsy order number
+  lineItemIndex: number      // Which line item this is (0, 1, 2, etc.)
   displayOrderNumber: string // Friendly display number (Shopify order.name like "2585")
   source: 'shopify' | 'etsy'
   raceName: string
@@ -177,7 +179,9 @@ export default function Dashboard() {
         return {
           id: order.id as string,
           orderNumber: order.orderNumber as string,
-          displayOrderNumber: displayNum || (order.orderNumber as string),
+          parentOrderNumber: order.parentOrderNumber as string,
+          lineItemIndex: order.lineItemIndex as number,
+          displayOrderNumber: displayNum || (order.parentOrderNumber as string),
           source: order.source as 'shopify' | 'etsy',
           raceName: order.raceName as string,
           raceYear: order.raceYear as number | null,
@@ -490,10 +494,17 @@ export default function Dashboard() {
     const query = searchQuery.toLowerCase()
     return ordersToFulfill.filter(o =>
       o.orderNumber.toLowerCase().includes(query) ||
+      o.displayOrderNumber.toLowerCase().includes(query) ||
+      o.parentOrderNumber.toLowerCase().includes(query) ||
       o.raceName.toLowerCase().includes(query) ||
       o.runnerName.toLowerCase().includes(query)
     )
   }, [ordersToFulfill, searchQuery])
+
+  // Helper to check if an order has multiple items
+  const getOrderItemCount = useCallback((parentOrderNumber: string) => {
+    return orders.filter(o => o.parentOrderNumber === parentOrderNumber).length
+  }, [orders])
 
   // Count orders that can be researched (use effective year which includes overrides)
   const researchableCount = useMemo(() => {
@@ -534,20 +545,38 @@ Thank you!`
 
     // Common race name mappings
     const shorthandMap: { [key: string]: string } = {
-      'New York City Marathon': 'NYC',
-      'TCS New York City Marathon': 'NYC',
-      'Boston Marathon': 'Boston',
-      'Chicago Marathon': 'Chicago',
-      'Bank of America Chicago Marathon': 'Chicago',
-      'London Marathon': 'London',
+      'Surf City Marathon': 'Surf City',
+      'Mesa Marathon': 'Mesa',
       'Berlin Marathon': 'Berlin',
-      'Marine Corps Marathon': 'MCM',
-      'Marine Corps': 'MCM',
-      'California International Marathon': 'CIM',
-      'Houston Marathon': 'Houston',
+      'Denver Colfax Marathon': 'Colfax',
+      'Miami Marathon': 'Miami',
+      'Buffalo Marathon': 'Buffalo',
+      'Twin Cities Marathon': 'Twin Cities',
       'Louisiana Marathon': 'Louisiana',
-      'Philadelphia Marathon': 'Philly',
+      'Army Ten Miler': 'ATM',
       'Detroit Marathon': 'Detroit',
+      'Columbus Marathon': 'Columbus',
+      'Pittsburgh Marathon': 'Pittsburgh',
+      'Grandma\'s Marathon': 'Grandma\'s',
+      'Houston Marathon': 'Houston',
+      'Dallas Marathon': 'Dallas',
+      'California International Marathon': 'CIM',
+      'Palm Beaches Marathon': 'Palm Beaches',
+      'New York City Marathon': 'NYC',
+      'Baltimore Marathon': 'Baltimore',
+      'Philadelphia Marathon': 'Philly',
+      'San Antonio Marathon': 'San Antonio',
+      'Kiawah Island Marathon': 'Kiawah',
+      'Honolulu Marathon': 'Honolulu',
+      'Marine Corps Marathon': 'MCM',
+      'Chicago Marathon': 'Chicago',
+      'Air Force Marathon': 'Air Force',
+      'San Francisco Marathon': 'SF',
+      'Jackson Hole Marathon': 'Jackson Hole',
+      // Alternate name formats
+      'TCS New York City Marathon': 'NYC',
+      'Bank of America Chicago Marathon': 'Chicago',
+      'Marine Corps': 'MCM',
     }
 
     // Check for exact match
@@ -696,6 +725,7 @@ Thank you!`
                 <tbody className="divide-y divide-border-gray">
                   {filteredOrders.map((order, index) => {
                     const statusDisplay = getStatusDisplay(order)
+                    const itemCount = getOrderItemCount(order.parentOrderNumber)
                     return (
                       <tr
                         key={order.id}
@@ -711,7 +741,14 @@ Thank you!`
                           />
                         </td>
                         <td className="px-3 py-5">
-                          <span className="text-sm font-medium text-off-black">{order.displayOrderNumber}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-off-black">{order.displayOrderNumber}</span>
+                            {itemCount > 1 && (
+                              <span className="px-1.5 py-0.5 bg-off-black/5 text-off-black/60 text-[10px] font-medium rounded">
+                                Item {order.lineItemIndex + 1} of {itemCount}
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-3 py-5 text-center">
                           <span className="text-lg" title={statusDisplay.label}>
