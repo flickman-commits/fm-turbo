@@ -480,14 +480,22 @@ export default function Dashboard() {
     const fulfillOrders = orders.filter(o =>
       o.status === 'flagged' || o.status === 'ready' || o.status === 'pending' || o.status === 'missing_year'
     )
-    // Sort by createdAt descending (most recent first)
+    // Sort by order number descending (highest/most recent order first)
     return fulfillOrders.sort((a, b) => {
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      const aNum = parseInt(a.displayOrderNumber.replace(/\D/g, ''), 10) || 0
+      const bNum = parseInt(b.displayOrderNumber.replace(/\D/g, ''), 10) || 0
+      return bNum - aNum
     })
   }, [orders])
 
-  const completedOrders = useMemo(() =>
-    orders.filter(o => o.status === 'completed'), [orders])
+  const completedOrders = useMemo(() => {
+    const completed = orders.filter(o => o.status === 'completed')
+    return completed.sort((a, b) => {
+      const aNum = parseInt(a.displayOrderNumber.replace(/\D/g, ''), 10) || 0
+      const bNum = parseInt(b.displayOrderNumber.replace(/\D/g, ''), 10) || 0
+      return bNum - aNum
+    })
+  }, [orders])
 
   const filteredOrders = useMemo(() => {
     if (!searchQuery) return ordersToFulfill
