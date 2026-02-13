@@ -22,11 +22,11 @@ export class ResearchService {
    * Main entry point - research an order
    * Handles both race-level and runner-level data fetching with caching
    * Uses override values if present, otherwise falls back to original data
-   * @param {string} orderNumber
+   * @param {string} orderNumber - The orderNumber (parentOrderNumber-lineItemIndex format)
    * @returns {Promise<Object>} Combined race and runner research results
    */
   async researchOrder(orderNumber) {
-    const order = await prisma.order.findUnique({
+    const order = await prisma.order.findFirst({
       where: { orderNumber }
     })
 
@@ -207,7 +207,7 @@ export class ResearchService {
     // Check cache first
     let existingResearch = await prisma.runnerResearch.findFirst({
       where: {
-        orderNumber: order.orderNumber,
+        orderId: order.id,
         raceId: race.id
       }
     })
@@ -225,7 +225,7 @@ export class ResearchService {
 
     // Prepare research data (store the effective name used for search)
     const researchData = {
-      orderNumber: order.orderNumber,
+      orderId: order.id,
       raceId: race.id,
       runnerName: runnerName, // Store the name actually used for search
       bibNumber: results.bibNumber,
@@ -256,7 +256,7 @@ export class ResearchService {
     // Update order status if found
     if (results.found) {
       await prisma.order.update({
-        where: { orderNumber: order.orderNumber },
+        where: { id: order.id },
         data: {
           status: 'ready',
           researchedAt: new Date()
@@ -284,7 +284,7 @@ export class ResearchService {
 
     for (const orderNumber of orderNumbers) {
       try {
-        const order = await prisma.order.findUnique({
+        const order = await prisma.order.findFirst({
           where: { orderNumber }
         })
 
@@ -338,9 +338,9 @@ export class ResearchService {
   /**
    * Check if runner data is cached
    */
-  async hasRunnerData(orderNumber, raceId) {
+  async hasRunnerData(orderId, raceId) {
     const research = await prisma.runnerResearch.findFirst({
-      where: { orderNumber, raceId, researchStatus: 'found' }
+      where: { orderId, raceId, researchStatus: 'found' }
     })
     return !!research
   }

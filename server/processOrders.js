@@ -120,10 +120,10 @@ function parseRunnerNameAndYear_DEPRECATED(rawValue) {
 }
 
 /**
- * Extract personalization data from Shopify line items
+ * Extract personalization data from a single Shopify line item
  * NEW FORMAT (as of 2025): Separate properties for each field
  */
-function extractShopifyPersonalization(lineItems) {
+function extractShopifyPersonalization(lineItem) {
   const result = {
     raceName: null,
     runnerName: null,
@@ -132,19 +132,17 @@ function extractShopifyPersonalization(lineItems) {
     needsAttention: false
   }
 
-  if (!lineItems || lineItems.length === 0) {
+  if (!lineItem) {
     result.needsAttention = true
     return result
   }
 
-  const item = lineItems[0]
-
   // Parse race name from product title
-  result.raceName = parseRaceName(item.title)
+  result.raceName = parseRaceName(lineItem.title)
 
   // Extract from properties
-  if (item.properties && Array.isArray(item.properties)) {
-    for (const prop of item.properties) {
+  if (lineItem.properties && Array.isArray(lineItem.properties)) {
+    for (const prop of lineItem.properties) {
       const name = (prop.name || '').trim()
       const value = (prop.value || '').trim()
 
@@ -183,6 +181,7 @@ function extractShopifyPersonalization(lineItems) {
 
 /**
  * Fetch Shopify order data including personalization
+ * Returns the full order object with line_items array
  */
 async function fetchShopifyOrderData(shopifyOrderId) {
   try {
@@ -193,19 +192,12 @@ async function fetchShopifyOrderData(shopifyOrderId) {
       return null
     }
 
-    // Extract personalization using new format
-    const extracted = extractShopifyPersonalization(order.line_items)
-
-    // Fetch timeline comments (internal notes)
+    // Fetch timeline comments (internal notes) - shared across all line items
     const comments = await fetchShopifyComments(shopifyOrderId)
 
     return {
-      raceName: extracted.raceName,
-      runnerName: extracted.runnerName,
-      raceYear: extracted.raceYear,
-      needsAttention: extracted.needsAttention,
-      notes: comments,
-      shopifyOrderData: order
+      shopifyOrderData: order,
+      notes: comments
     }
   } catch (error) {
     console.error(`[processOrders] Failed to fetch Shopify data for order ${shopifyOrderId}:`, error.message)
@@ -311,20 +303,24 @@ export async function processOrders(options = {}) {
     // 2a. First, check completed orders to mark any as fulfilled in our DB
     for (const order of completedOrders) {
       try {
-        const existing = await prisma.order.findUnique({
-          where: { orderNumber: order.orderId }
+        // Find all line items for this parent order
+        const existingItems = await prisma.order.findMany({
+          where: { parentOrderNumber: order.orderId }
         })
 
-        if (existing && existing.status !== 'completed') {
-          log(`[processOrders] Marking order ${order.orderId} as completed (fulfilled in Artelo)`)
-          await prisma.order.update({
-            where: { orderNumber: order.orderId },
-            data: {
-              status: 'completed',
-              researchedAt: new Date()
-            }
-          })
-          results.updated++
+        // Mark all line items as completed
+        for (const existing of existingItems) {
+          if (existing.status !== 'completed') {
+            log(`[processOrders] Marking order ${existing.orderNumber} as completed (fulfilled in Artelo)`)
+            await prisma.order.update({
+              where: { id: existing.id },
+              data: {
+                status: 'completed',
+                researchedAt: new Date()
+              }
+            })
+            results.updated++
+          }
         }
       } catch (error) {
         log(`[processOrders] Error updating completed order ${order.orderId}: ${error.message}`)
@@ -333,163 +329,204 @@ export async function processOrders(options = {}) {
 
     // 2b. Process actionable orders (new or needing updates)
     for (const order of actionableOrders) {
-      const orderResult = {
-        orderNumber: order.orderId,
-        action: null,
-        raceName: null,
-        runnerName: null,
-        researchStatus: null
-      }
-
       try {
-        // Check if exists
-        const existing = await prisma.order.findUnique({
-          where: { orderNumber: order.orderId }
-        })
-
         const orderSource = determineOrderSource(order)
         const isShopify = orderSource === 'shopify'
 
-        // If order exists, check for updates
-        if (existing) {
-          let needsUpdate = false
-          const updateData = {}
+        // Determine number of line items
+        const numItems = order.orderItems?.length || 1
 
-          // Check if order has been fulfilled (status changed from actionable to non-actionable)
-          const wasActionable = existing.status !== 'completed'
-          const isNowFulfilled = !ACTIONABLE_STATUSES.includes(order.status)
+        // Fetch Shopify data once for the entire order (if Shopify)
+        let shopifyData = null
+        if (isShopify) {
+          shopifyData = await fetchShopifyOrderData(order.orderId)
+        }
 
-          if (wasActionable && isNowFulfilled) {
-            updateData.status = 'completed'
-            updateData.researchedAt = new Date()
-            needsUpdate = true
-            log(`[processOrders] Marking order ${order.orderId} as completed (fulfilled in Artelo)`)
+        // Process each line item separately
+        for (let lineItemIndex = 0; lineItemIndex < numItems; lineItemIndex++) {
+          const orderResult = {
+            orderNumber: `${order.orderId}-${lineItemIndex}`,
+            action: null,
+            raceName: null,
+            runnerName: null,
+            researchStatus: null
           }
 
-          // If missing Shopify data, fetch and update
-          if (isShopify && !existing.shopifyOrderData) {
-            log(`[processOrders] Updating order ${order.orderId} with Shopify data...`)
-            const shopifyData = await fetchShopifyOrderData(order.orderId)
-
-            if (shopifyData) {
-              updateData.raceName = shopifyData.raceName || existing.raceName
-              updateData.runnerName = shopifyData.runnerName || existing.runnerName
-              updateData.raceYear = shopifyData.raceYear || existing.raceYear
-              updateData.hadNoTime = shopifyData.hadNoTime || false
-              updateData.shopifyOrderData = shopifyData.shopifyOrderData
-              updateData.notes = shopifyData.notes || existing.notes
-
-              if (shopifyData.needsAttention && existing.status === 'pending') {
-                updateData.status = 'missing_year'
-                results.needsAttention++
+          try {
+            // Check if this line item exists
+            const existing = await prisma.order.findUnique({
+              where: {
+                parentOrderNumber_lineItemIndex: {
+                  parentOrderNumber: order.orderId,
+                  lineItemIndex: lineItemIndex
+                }
               }
-
-              needsUpdate = true
-              results.enriched++
-            }
-          }
-
-          if (needsUpdate) {
-            await prisma.order.update({
-              where: { orderNumber: order.orderId },
-              data: updateData
             })
 
-            results.updated++
-            orderResult.action = 'updated'
-            orderResult.raceName = updateData.raceName || existing.raceName
-            orderResult.runnerName = updateData.runnerName || existing.runnerName
-          } else {
-            results.skipped++
-            orderResult.action = 'skipped'
-            orderResult.raceName = existing.raceName
-            orderResult.runnerName = existing.runnerName
-          }
-        } else {
-          // Create new order
-          const firstItem = order.orderItems?.[0]
-          const rawSize = firstItem?.product?.size || 'Unknown'
-          const productSize = rawSize.startsWith('x') ? rawSize.slice(1) : rawSize
+            // Get line item data from Artelo
+            const arteloItem = order.orderItems?.[lineItemIndex]
+            const rawSize = arteloItem?.product?.size || 'Unknown'
+            const productSize = rawSize.startsWith('x') ? rawSize.slice(1) : rawSize
+            const frameType = arteloItem?.product?.frameColor || 'Unknown'
 
-          let raceName = 'Unknown Race'
-          let raceYear = new Date().getFullYear()
-          let runnerName = order.customerAddress?.name || 'Unknown Runner'
-          let status = 'pending'
-          let shopifyOrderData = null
-          let notes = null
-          let hadNoTime = false
+            // If order exists, check for updates
+            if (existing) {
+              let needsUpdate = false
+              const updateData = {}
 
-          if (isShopify) {
-            log(`[processOrders] Fetching Shopify data for new order ${order.orderId}...`)
-            const shopifyData = await fetchShopifyOrderData(order.orderId)
+              // Check if order has been fulfilled (status changed from actionable to non-actionable)
+              const wasActionable = existing.status !== 'completed'
+              const isNowFulfilled = !ACTIONABLE_STATUSES.includes(order.status)
 
-            if (shopifyData) {
-              raceName = shopifyData.raceName || raceName
-              runnerName = shopifyData.runnerName || runnerName
-              raceYear = shopifyData.raceYear || raceYear
-              hadNoTime = shopifyData.hadNoTime || false
-              shopifyOrderData = shopifyData.shopifyOrderData
-              notes = shopifyData.notes
-
-              if (shopifyData.needsAttention) {
-                status = 'missing_year'
-                results.needsAttention++
+              if (wasActionable && isNowFulfilled) {
+                updateData.status = 'completed'
+                updateData.researchedAt = new Date()
+                needsUpdate = true
+                log(`[processOrders] Marking order ${existing.orderNumber} as completed (fulfilled in Artelo)`)
               }
-              results.enriched++
-            }
-          }
 
-          await prisma.order.create({
-            data: {
-              orderNumber: order.orderId,
-              source: orderSource,
-              arteloOrderData: order,
-              shopifyOrderData,
-              raceName,
-              raceYear,
-              runnerName,
-              hadNoTime,  // Include "no time" flag
-              productSize,
-              frameType: firstItem?.product?.frameColor || 'Unknown',
-              notes,
-              status
-            }
-          })
+              // If missing Shopify data, fetch and update
+              if (isShopify && !existing.shopifyOrderData && shopifyData) {
+                log(`[processOrders] Updating order ${existing.orderNumber} with Shopify data...`)
 
-          results.imported++
-          orderResult.action = 'imported'
-          orderResult.raceName = raceName
-          orderResult.runnerName = runnerName
+                // Extract personalization for this specific line item
+                const lineItem = shopifyData.shopifyOrderData?.line_items?.[lineItemIndex]
+                if (lineItem) {
+                  const extracted = extractShopifyPersonalization(lineItem)
 
-          log(`[processOrders] ✅ Imported: ${order.orderId} (${orderSource}) - ${raceName} - ${runnerName}`)
-        }
+                  updateData.raceName = extracted.raceName || existing.raceName
+                  updateData.runnerName = extracted.runnerName || existing.runnerName
+                  updateData.raceYear = extracted.raceYear || existing.raceYear
+                  updateData.hadNoTime = extracted.hadNoTime || false
+                  updateData.shopifyOrderData = shopifyData.shopifyOrderData
+                  updateData.notes = shopifyData.notes || existing.notes
 
-        // 3. Run research if enabled and we have a scraper for this race
-        if (runResearch && orderResult.action !== 'skipped') {
-          const dbOrder = await prisma.order.findUnique({
-            where: { orderNumber: order.orderId }
-          })
+                  if (extracted.needsAttention && existing.status === 'pending') {
+                    updateData.status = 'missing_year'
+                    results.needsAttention++
+                  }
 
-          if (dbOrder && hasScraperForRace(dbOrder.raceName)) {
-            log(`[processOrders] Running research for ${order.orderId}...`)
-            try {
-              const research = await researchService.researchOrder(order.orderId)
-              if (research.runnerResearch.researchStatus === 'found') {
-                results.researched++
-                orderResult.researchStatus = 'found'
-                log(`[processOrders] ✅ Research found: ${research.runnerResearch.bibNumber}`)
+                  needsUpdate = true
+                  results.enriched++
+                }
+              }
+
+              if (needsUpdate) {
+                await prisma.order.update({
+                  where: { id: existing.id },
+                  data: updateData
+                })
+
+                results.updated++
+                orderResult.action = 'updated'
+                orderResult.raceName = updateData.raceName || existing.raceName
+                orderResult.runnerName = updateData.runnerName || existing.runnerName
               } else {
-                orderResult.researchStatus = research.runnerResearch.researchStatus
+                results.skipped++
+                orderResult.action = 'skipped'
+                orderResult.raceName = existing.raceName
+                orderResult.runnerName = existing.runnerName
               }
-            } catch (researchError) {
-              results.researchFailed++
-              orderResult.researchStatus = 'error'
-              log(`[processOrders] ❌ Research failed: ${researchError.message}`)
+            } else {
+              // Create new order for this line item
+              let raceName = 'Unknown Race'
+              let raceYear = new Date().getFullYear()
+              let runnerName = order.customerAddress?.name || 'Unknown Runner'
+              let status = 'pending'
+              let lineItemShopifyData = null
+              let notes = null
+              let hadNoTime = false
+
+              if (isShopify && shopifyData) {
+                log(`[processOrders] Processing Shopify line item ${lineItemIndex} for order ${order.orderId}...`)
+
+                // Extract personalization for this specific line item
+                const lineItem = shopifyData.shopifyOrderData?.line_items?.[lineItemIndex]
+                if (lineItem) {
+                  const extracted = extractShopifyPersonalization(lineItem)
+
+                  raceName = extracted.raceName || raceName
+                  runnerName = extracted.runnerName || runnerName
+                  raceYear = extracted.raceYear || raceYear
+                  hadNoTime = extracted.hadNoTime || false
+                  lineItemShopifyData = shopifyData.shopifyOrderData
+                  notes = shopifyData.notes
+
+                  if (extracted.needsAttention) {
+                    status = 'missing_year'
+                    results.needsAttention++
+                  }
+                  results.enriched++
+                }
+              }
+
+              await prisma.order.create({
+                data: {
+                  orderNumber: `${order.orderId}-${lineItemIndex}`,
+                  parentOrderNumber: order.orderId,
+                  lineItemIndex: lineItemIndex,
+                  source: orderSource,
+                  arteloOrderData: order,
+                  shopifyOrderData: lineItemShopifyData,
+                  raceName,
+                  raceYear,
+                  runnerName,
+                  hadNoTime,
+                  productSize,
+                  frameType,
+                  notes,
+                  status
+                }
+              })
+
+              results.imported++
+              orderResult.action = 'imported'
+              orderResult.raceName = raceName
+              orderResult.runnerName = runnerName
+
+              log(`[processOrders] ✅ Imported: ${order.orderId}-${lineItemIndex} (${orderSource}) - ${raceName} - ${runnerName}`)
             }
+
+            // 3. Run research if enabled and we have a scraper for this race
+            if (runResearch && orderResult.action !== 'skipped') {
+              const dbOrder = await prisma.order.findUnique({
+                where: {
+                  parentOrderNumber_lineItemIndex: {
+                    parentOrderNumber: order.orderId,
+                    lineItemIndex: lineItemIndex
+                  }
+                }
+              })
+
+              if (dbOrder && hasScraperForRace(dbOrder.raceName)) {
+                log(`[processOrders] Running research for ${dbOrder.orderNumber}...`)
+                try {
+                  const research = await researchService.researchOrder(dbOrder.orderNumber)
+                  if (research.runnerResearch.researchStatus === 'found') {
+                    results.researched++
+                    orderResult.researchStatus = 'found'
+                    log(`[processOrders] ✅ Research found: ${research.runnerResearch.bibNumber}`)
+                  } else {
+                    orderResult.researchStatus = research.runnerResearch.researchStatus
+                  }
+                } catch (researchError) {
+                  results.researchFailed++
+                  orderResult.researchStatus = 'error'
+                  log(`[processOrders] ❌ Research failed: ${researchError.message}`)
+                }
+              }
+            }
+
+            results.orders.push(orderResult)
+
+          } catch (lineItemError) {
+            results.errors.push({
+              orderNumber: `${order.orderId}-${lineItemIndex}`,
+              error: lineItemError.message
+            })
+            log(`[processOrders] ❌ Error processing line item ${order.orderId}-${lineItemIndex}: ${lineItemError.message}`)
           }
         }
-
-        results.orders.push(orderResult)
 
       } catch (orderError) {
         results.errors.push({

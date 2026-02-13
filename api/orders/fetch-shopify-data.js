@@ -46,24 +46,34 @@ export default async function handler(req, res) {
     // Fetch timeline comments (internal notes)
     const notes = await fetchShopifyComments(shopifyOrderId)
 
-    // Update our database if we have this order (keyed by Artelo orderId = Shopify order.id)
-    const existing = await prisma.order.findUnique({
-      where: { orderNumber: String(shopifyOrderId) }
+    // Update all line items for this order (keyed by Artelo orderId = Shopify order.id)
+    const existingOrders = await prisma.order.findMany({
+      where: { parentOrderNumber: String(shopifyOrderId) }
     })
 
-    if (existing) {
-      await prisma.order.update({
-        where: { orderNumber: String(shopifyOrderId) },
-        data: {
-          raceName: parsed.raceName || existing.raceName,
-          runnerName: parsed.runnerName || existing.runnerName,
-          raceYear: parsed.raceYear || existing.raceYear,
-          notes: notes || existing.notes,
-          shopifyOrderData: shopifyOrder,
-          // Flag order if missing year
-          status: parsed.needsAttention ? 'missing_year' : existing.status
-        }
-      })
+    // Update each line item with its specific personalization
+    for (const existing of existingOrders) {
+      const lineItemIndex = existing.lineItemIndex
+      const lineItem = shopifyOrder.line_items?.[lineItemIndex]
+
+      if (lineItem) {
+        // Extract personalization for this specific line item
+        const lineItemData = extractShopifyData([lineItem])
+
+        await prisma.order.update({
+          where: { id: existing.id },
+          data: {
+            raceName: lineItemData.raceName || existing.raceName,
+            runnerName: lineItemData.runnerName || existing.runnerName,
+            raceYear: lineItemData.raceYear || existing.raceYear,
+            hadNoTime: lineItemData.hadNoTime || false,
+            notes: notes || existing.notes,
+            shopifyOrderData: shopifyOrder,
+            // Flag order if missing year
+            status: lineItemData.needsAttention ? 'missing_year' : existing.status
+          }
+        })
+      }
     }
 
     return res.status(200).json({
