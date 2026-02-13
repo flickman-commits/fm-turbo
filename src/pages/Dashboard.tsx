@@ -475,7 +475,7 @@ export default function Dashboard() {
     fetchOrders()
   }, [fetchOrders])
 
-  // Designed to personalize: pending + flagged + ready + missing_year, sorted by most recent first
+  // Designs to be personalized: pending + flagged + ready + missing_year, sorted by most recent first
   const ordersToFulfill = useMemo(() => {
     const fulfillOrders = orders.filter(o =>
       o.status === 'flagged' || o.status === 'ready' || o.status === 'pending' || o.status === 'missing_year'
@@ -685,7 +685,7 @@ Thank you!`
           {/* Section Header */}
           <div className="flex items-center justify-between mb-4 flex-shrink-0">
             <div className="flex items-center gap-3">
-              <h2 className="text-lg font-semibold text-off-black uppercase tracking-tight">Designed to Personalize</h2>
+              <h2 className="text-lg font-semibold text-off-black uppercase tracking-tight">Designs to be Personalized</h2>
               <span className="px-2.5 py-1 bg-off-black/10 text-off-black/60 text-sm font-medium rounded">
                 {ordersToFulfill.length}
               </span>
