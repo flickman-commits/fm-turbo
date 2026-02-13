@@ -514,16 +514,6 @@ export default function Dashboard() {
     return orders.filter(o => o.parentOrderNumber === parentOrderNumber).length
   }, [orders])
 
-  // Count orders that can be researched (use effective year which includes overrides)
-  const researchableCount = useMemo(() => {
-    return ordersToFulfill.filter(o =>
-      o.hasScraperAvailable &&
-      (o.effectiveRaceYear || o.raceYear) &&
-      o.status !== 'ready' &&
-      o.researchStatus !== 'found'
-    ).length
-  }, [ordersToFulfill])
-
   const handleCopyEmail = (order: Order) => {
     const emailText = `Hi,
 
