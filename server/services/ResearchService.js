@@ -125,6 +125,12 @@ export class ResearchService {
       console.log(`[ResearchService] Created race record: ${race.id}`)
     }
 
+    // Automatically fetch weather if not already cached
+    if (!race.weatherFetchedAt && race.raceDate && race.location) {
+      console.log(`[ResearchService] Auto-fetching weather for race ${race.id}`)
+      race = await this.fetchWeatherForRace(race.id)
+    }
+
     return race
   }
 
