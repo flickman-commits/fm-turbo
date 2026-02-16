@@ -475,14 +475,16 @@ export default function Dashboard() {
     fetchOrders()
   }, [fetchOrders])
 
-  // Designs to be personalized: pending + flagged + ready + missing_year, sorted by most recent first
+  // Designs to be personalized: pending + flagged + ready + missing_year, sorted by order number descending
   const ordersToFulfill = useMemo(() => {
     const fulfillOrders = orders.filter(o =>
       o.status === 'flagged' || o.status === 'ready' || o.status === 'pending' || o.status === 'missing_year'
     )
-    // Sort by createdAt descending (most recent first)
+    // Sort by displayOrderNumber descending (highest order number first)
     return fulfillOrders.sort((a, b) => {
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      const numA = parseInt(a.displayOrderNumber) || parseInt(a.orderNumber) || 0
+      const numB = parseInt(b.displayOrderNumber) || parseInt(b.orderNumber) || 0
+      return numB - numA
     })
   }, [orders])
 
