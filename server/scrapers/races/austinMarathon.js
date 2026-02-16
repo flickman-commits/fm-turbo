@@ -3,7 +3,7 @@
  * Uses myChipTime results system at mychiptime.com
  */
 import { BaseScraper } from '../BaseScraper.js'
-import { searchRunner as searchAustinRunner } from '../../../src/lib/austinMarathon.ts'
+import puppeteer from 'puppeteer'
 
 export class AustinMarathonScraper extends BaseScraper {
   constructor(year) {
@@ -66,12 +66,21 @@ export class AustinMarathonScraper extends BaseScraper {
     console.log(`[Austin Marathon ${this.year}] Searching for: "${runnerName}"`)
     console.log(`${'='.repeat(50)}`)
 
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    })
+
     try {
       // Check if we have event IDs for this year
       if (!this.eventIds[this.year]) {
         console.log(`[Austin Marathon] No event IDs configured for year ${this.year}`)
+        await browser.close()
         return this.notFoundResult(`No results available for ${this.year} yet`)
       }
+
+      const eventId = this.eventIds[this.year][eventType]
+      const url = `${this.baseUrl}?id=${eventId}`
 
       // Parse the name into first and last
       const nameParts = runnerName.trim().split(/\s+/)
@@ -86,23 +95,73 @@ export class AustinMarathonScraper extends BaseScraper {
       }
 
       console.log(`[Austin Marathon] Searching for: ${firstName} ${lastName}`)
+      console.log(`[Austin Marathon] URL: ${url}`)
 
-      // Use our Austin Marathon search function
-      const result = await searchAustinRunner(firstName, lastName, eventType)
+      const page = await browser.newPage()
+      await page.goto(url, { waitUntil: 'networkidle2' })
 
-      if (!result) {
+      // Fill in the search form
+      await page.type('input[name="firstname"]', firstName)
+      await page.type('input[name="lastname"]', lastName)
+
+      // Click search button and wait for results
+      await Promise.all([
+        page.waitForNavigation({ waitUntil: 'networkidle2' }),
+        page.click('input[type="submit"][value="Search"]')
+      ])
+
+      // Extract results from the page
+      const results = await page.evaluate(() => {
+        const resultsTable = document.querySelector('table.table-striped')
+
+        if (!resultsTable) {
+          return null
+        }
+
+        const rows = Array.from(resultsTable.querySelectorAll('tbody tr'))
+
+        if (rows.length === 0) {
+          return null
+        }
+
+        // Get all matching results
+        return rows.map(row => {
+          const cells = row.querySelectorAll('td')
+
+          if (cells.length < 9) {
+            return null
+          }
+
+          return {
+            overallPlace: cells[0]?.textContent?.trim() || '',
+            gunTime: cells[1]?.textContent?.trim() || '',
+            chipTime: cells[2]?.textContent?.trim() || '',
+            bib: cells[3]?.textContent?.trim() || '',
+            firstName: cells[4]?.textContent?.trim() || '',
+            lastName: cells[5]?.textContent?.trim() || '',
+            city: cells[6]?.textContent?.trim() || '',
+            state: cells[7]?.textContent?.trim() || '',
+            division: cells[8]?.textContent?.trim() || '',
+            classPosition: cells[9]?.textContent?.trim() || ''
+          }
+        }).filter(result => result !== null)
+      })
+
+      await browser.close()
+
+      if (!results || results.length === 0) {
         console.log(`[Austin Marathon] No results found for: ${runnerName}`)
         return this.notFoundResult()
       }
 
       // Handle multiple results (array)
-      if (Array.isArray(result)) {
-        console.log(`[Austin Marathon] Found ${result.length} results - ambiguous match`)
+      if (results.length > 1) {
+        console.log(`[Austin Marathon] Found ${results.length} results - ambiguous match`)
         return {
           found: false,
           ambiguous: true,
-          researchNotes: `Found ${result.length} runners with name "${runnerName}". Please specify more details.`,
-          possibleMatches: result.map(r => ({
+          researchNotes: `Found ${results.length} runners with name "${runnerName}". Please specify more details.`,
+          possibleMatches: results.map(r => ({
             name: `${r.firstName} ${r.lastName}`,
             bib: r.bib,
             time: r.chipTime,
@@ -113,6 +172,7 @@ export class AustinMarathonScraper extends BaseScraper {
       }
 
       // Single result found
+      const result = results[0]
       console.log(`[Austin Marathon] Found result:`)
       console.log(`  Bib: ${result.bib}`)
       console.log(`  Chip Time: ${result.chipTime}`)
@@ -140,6 +200,7 @@ export class AustinMarathonScraper extends BaseScraper {
 
     } catch (error) {
       console.error(`[Austin Marathon] Error searching for runner:`, error)
+      await browser.close()
       return this.notFoundResult(error.message)
     }
   }
