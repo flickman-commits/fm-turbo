@@ -3,7 +3,7 @@
  * Uses myChipTime results system at mychiptime.com
  */
 import { BaseScraper } from '../BaseScraper.js'
-import puppeteer from 'puppeteer'
+import { launchBrowser } from '../browserLauncher.js'
 
 export class AustinMarathonScraper extends BaseScraper {
   constructor(year) {
@@ -66,10 +66,7 @@ export class AustinMarathonScraper extends BaseScraper {
     console.log(`[Austin Marathon ${this.year}] Searching for: "${runnerName}"`)
     console.log(`${'='.repeat(50)}`)
 
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    })
+    const browser = await launchBrowser()
 
     try {
       // Check if we have event IDs for this year

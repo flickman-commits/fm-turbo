@@ -4,7 +4,7 @@
  * Results URL: https://runsignup.com/Race/Results/100074
  */
 import { BaseScraper } from '../BaseScraper.js'
-import puppeteer from 'puppeteer'
+import { launchBrowser } from '../browserLauncher.js'
 
 export class LouisianaMarathonScraper extends BaseScraper {
   constructor(year) {
@@ -119,10 +119,7 @@ export class LouisianaMarathonScraper extends BaseScraper {
     try {
       // Launch browser
       console.log(`[Louisiana ${this.year}] Launching browser...`)
-      browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-      })
+      browser = await launchBrowser()
 
       const page = await browser.newPage()
 
