@@ -3,8 +3,7 @@
  * Uses myChipTime results system at mychiptime.com
  */
 import { BaseScraper } from '../BaseScraper.js'
-import puppeteer from 'puppeteer-core'
-import chromium from '@sparticuz/chromium'
+import puppeteer from 'puppeteer'
 
 export class AustinMarathonScraper extends BaseScraper {
   constructor(year) {
@@ -67,12 +66,9 @@ export class AustinMarathonScraper extends BaseScraper {
     console.log(`[Austin Marathon ${this.year}] Searching for: "${runnerName}"`)
     console.log(`${'='.repeat(50)}`)
 
-    const isLocal = process.env.NODE_ENV !== 'production'
     const browser = await puppeteer.launch({
-      args: isLocal ? ['--no-sandbox', '--disable-setuid-sandbox'] : chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath: isLocal ? undefined : await chromium.executablePath(),
-      headless: isLocal ? true : chromium.headless,
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
     })
 
     try {
