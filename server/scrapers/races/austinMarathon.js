@@ -1,14 +1,15 @@
 /**
  * Austin Marathon Results Scraper
  * Uses myChipTime results system at mychiptime.com
+ * Calls searchResultGen.php directly via fetch (no Puppeteer needed)
  */
 import { BaseScraper } from '../BaseScraper.js'
-import { launchBrowser } from '../browserLauncher.js'
+import * as cheerio from 'cheerio'
 
 export class AustinMarathonScraper extends BaseScraper {
   constructor(year) {
     super('Austin Marathon', year)
-    this.baseUrl = 'https://www.mychiptime.com/searchevent.php'
+    this.searchUrl = 'https://www.mychiptime.com/searchResultGen.php'
     // Event IDs for Austin Marathon
     this.eventIds = {
       2026: { marathon: '17035', halfMarathon: '17034' }
@@ -23,7 +24,8 @@ export class AustinMarathonScraper extends BaseScraper {
   async getRaceInfo() {
     console.log(`[Austin Marathon ${this.year}] Fetching race info...`)
 
-    // Austin Marathon is typically mid-February
+    // Austin Marathon 2026 is February 15, 2026
+    // Typically the third Sunday of February
     const raceDate = this.calculateAustinMarathonDate(this.year)
 
     console.log(
@@ -34,21 +36,17 @@ export class AustinMarathonScraper extends BaseScraper {
       raceDate,
       location: 'Austin, TX',
       eventTypes: ['Marathon', 'Half Marathon', '5K'],
-      resultsUrl: this.baseUrl,
+      resultsUrl: `https://www.mychiptime.com/searchevent.php?id=${this.eventIds[this.year]?.marathon || '17035'}`,
       resultsSiteType: 'mychiptime',
     }
   }
 
   /**
-   * Austin Marathon is typically mid-February
-   * This is an approximation - actual date varies
+   * Austin Marathon is typically the third Sunday of February
    */
   calculateAustinMarathonDate(year) {
-    // Austin Marathon 2026 is on February 15, 2026
-    // Typically it's the third Sunday in February
-    const feb1 = new Date(year, 1, 1) // Month is 0-indexed, so 1 = February
+    const feb1 = new Date(year, 1, 1)
     const dayOfWeek = feb1.getDay()
-    // First Sunday
     const daysUntilFirstSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek
     // Third Sunday = first Sunday + 14
     const thirdSunday = new Date(year, 1, 1 + daysUntilFirstSunday + 14)
@@ -56,7 +54,7 @@ export class AustinMarathonScraper extends BaseScraper {
   }
 
   /**
-   * Search for a runner in Austin Marathon results
+   * Search for a runner in Austin Marathon results using direct API call
    * @param {string} runnerName - Full name to search for
    * @param {string} eventType - 'marathon' or 'halfMarathon' (optional)
    * @returns {Promise<Object>} Standardized result object
@@ -66,18 +64,14 @@ export class AustinMarathonScraper extends BaseScraper {
     console.log(`[Austin Marathon ${this.year}] Searching for: "${runnerName}"`)
     console.log(`${'='.repeat(50)}`)
 
-    const browser = await launchBrowser()
-
     try {
       // Check if we have event IDs for this year
       if (!this.eventIds[this.year]) {
         console.log(`[Austin Marathon] No event IDs configured for year ${this.year}`)
-        await browser.close()
         return this.notFoundResult(`No results available for ${this.year} yet`)
       }
 
       const eventId = this.eventIds[this.year][eventType]
-      const url = `${this.baseUrl}?id=${eventId}`
 
       // Parse the name into first and last
       const nameParts = runnerName.trim().split(/\s+/)
@@ -91,67 +85,44 @@ export class AustinMarathonScraper extends BaseScraper {
         lastName = nameParts.slice(1).join(' ')
       }
 
-      console.log(`[Austin Marathon] Searching for: ${firstName} ${lastName}`)
-      console.log(`[Austin Marathon] URL: ${url}`)
+      console.log(`[Austin Marathon] Searching for: "${firstName}" "${lastName}" in event ${eventId}`)
 
-      const page = await browser.newPage()
-      await page.goto(url, { waitUntil: 'networkidle2' })
-
-      // Fill in the search form
-      await page.type('input[name="firstname"]', firstName)
-      await page.type('input[name="lastname"]', lastName)
-
-      // Click search button and wait for results
-      await Promise.all([
-        page.waitForNavigation({ waitUntil: 'networkidle2' }),
-        page.click('input[type="submit"][value="Search"]')
-      ])
-
-      // Extract results from the page
-      const results = await page.evaluate(() => {
-        const resultsTable = document.querySelector('table.table-striped')
-
-        if (!resultsTable) {
-          return null
-        }
-
-        const rows = Array.from(resultsTable.querySelectorAll('tbody tr'))
-
-        if (rows.length === 0) {
-          return null
-        }
-
-        // Get all matching results
-        return rows.map(row => {
-          const cells = row.querySelectorAll('td')
-
-          if (cells.length < 9) {
-            return null
-          }
-
-          return {
-            overallPlace: cells[0]?.textContent?.trim() || '',
-            gunTime: cells[1]?.textContent?.trim() || '',
-            chipTime: cells[2]?.textContent?.trim() || '',
-            bib: cells[3]?.textContent?.trim() || '',
-            firstName: cells[4]?.textContent?.trim() || '',
-            lastName: cells[5]?.textContent?.trim() || '',
-            city: cells[6]?.textContent?.trim() || '',
-            state: cells[7]?.textContent?.trim() || '',
-            division: cells[8]?.textContent?.trim() || '',
-            classPosition: cells[9]?.textContent?.trim() || ''
-          }
-        }).filter(result => result !== null)
+      // Call the search API directly - this is what the site's JS does internally
+      const params = new URLSearchParams({
+        eID: eventId,
+        fname: firstName,
+        lname: lastName,
       })
 
-      await browser.close()
+      const searchUrl = `${this.searchUrl}?${params.toString()}`
+      console.log(`[Austin Marathon] Search URL: ${searchUrl}`)
 
-      if (!results || results.length === 0) {
+      const response = await fetch(searchUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Referer': `https://www.mychiptime.com/searchevent.php?id=${eventId}`,
+        }
+      })
+
+      console.log(`[Austin Marathon] Response status: ${response.status}`)
+
+      if (!response.ok) {
+        console.error(`[Austin Marathon] HTTP error: ${response.status}`)
+        return this.notFoundResult(`HTTP error: ${response.status}`)
+      }
+
+      const html = await response.text()
+      const results = this.parseResultsHtml(html)
+
+      console.log(`[Austin Marathon] Found ${results.length} results`)
+
+      if (results.length === 0) {
         console.log(`[Austin Marathon] No results found for: ${runnerName}`)
         return this.notFoundResult()
       }
 
-      // Handle multiple results (array)
+      // Handle multiple results (ambiguous)
       if (results.length > 1) {
         console.log(`[Austin Marathon] Found ${results.length} results - ambiguous match`)
         return {
@@ -178,7 +149,6 @@ export class AustinMarathonScraper extends BaseScraper {
       console.log(`  Division: ${result.division}`)
       console.log(`  Location: ${result.city}, ${result.state}`)
 
-      // Calculate pace from chip time
       const pace = this.calculatePaceFromTime(result.chipTime)
 
       return {
@@ -197,9 +167,43 @@ export class AustinMarathonScraper extends BaseScraper {
 
     } catch (error) {
       console.error(`[Austin Marathon] Error searching for runner:`, error)
-      await browser.close()
       return this.notFoundResult(error.message)
     }
+  }
+
+  /**
+   * Parse the HTML results table from MyChipTime
+   * @param {string} html - HTML response from searchResultGen.php
+   * @returns {Array} Array of result objects
+   */
+  parseResultsHtml(html) {
+    const $ = cheerio.load(html)
+    const results = []
+
+    // MyChipTime results are in a table with class "table-striped" or similar
+    $('table tr').each((_, row) => {
+      const cells = $(row).find('td')
+      if (cells.length < 6) return // Skip header rows or empty rows
+
+      const overallPlace = $(cells[0]).text().trim()
+      // Skip if first cell doesn't look like a place number
+      if (!overallPlace || isNaN(parseInt(overallPlace))) return
+
+      results.push({
+        overallPlace: overallPlace,
+        gunTime: $(cells[1]).text().trim(),
+        chipTime: $(cells[2]).text().trim(),
+        bib: $(cells[3]).text().trim(),
+        firstName: $(cells[4]).text().trim(),
+        lastName: $(cells[5]).text().trim(),
+        city: cells.length > 6 ? $(cells[6]).text().trim() : '',
+        state: cells.length > 7 ? $(cells[7]).text().trim() : '',
+        division: cells.length > 8 ? $(cells[8]).text().trim() : '',
+        classPosition: cells.length > 9 ? $(cells[9]).text().trim() : '',
+      })
+    })
+
+    return results
   }
 
   /**
@@ -211,7 +215,6 @@ export class AustinMarathonScraper extends BaseScraper {
     if (!timeString) return null
 
     try {
-      // Parse time string (e.g., "3:42:15" or "4:14:45")
       const parts = timeString.split(':')
       if (parts.length !== 3) return null
 
@@ -219,13 +222,9 @@ export class AustinMarathonScraper extends BaseScraper {
       const minutes = parseInt(parts[1])
       const seconds = parseInt(parts[2])
 
-      // Calculate total minutes
       const totalMinutes = (hours * 60) + minutes + (seconds / 60)
-
-      // Marathon is 26.2 miles
       const paceMinutes = totalMinutes / 26.2
 
-      // Format as "m:ss /mi"
       const paceMin = Math.floor(paceMinutes)
       const paceSec = Math.round((paceMinutes - paceMin) * 60)
 

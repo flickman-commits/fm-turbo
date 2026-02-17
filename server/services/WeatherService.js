@@ -120,7 +120,7 @@ export class WeatherService {
         end_date: dateStr,
         daily: 'temperature_2m_max,weather_code,precipitation_sum',
         temperature_unit: 'fahrenheit',
-        timezone: 'America/New_York' // Use appropriate timezone
+        timezone: 'auto' // Infer timezone from lat/lon coordinates
       })
 
       const url = `${this.weatherBaseUrl}/archive?${params.toString()}`
