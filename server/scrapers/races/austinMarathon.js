@@ -195,8 +195,12 @@ export class AustinMarathonScraper extends BaseScraper {
       console.log(`  Division: ${result.division}`)
       console.log(`  Location: ${result.city}, ${result.state}`)
 
+      // Map internal eventType key to display name
+      const eventTypeDisplay = eventType === 'halfMarathon' ? 'Half Marathon' : 'Marathon'
+
       return {
         found: true,
+        eventType: eventTypeDisplay,
         bibNumber: result.bib,
         officialTime: result.chipTime,
         officialPace: result.pace, // Directly from results, e.g. "10:04/M"
