@@ -1,11 +1,13 @@
 /**
  * API endpoint to force-refresh weather for all cached races
- * Clears weatherFetchedAt so ResearchService will re-fetch using the updated method
+ * Clears weatherFetchedAt and re-fetches using WeatherService directly
+ * (Avoids importing ResearchService which pulls in Puppeteer scrapers)
  */
 import { PrismaClient } from '@prisma/client'
-import { researchService } from '../../server/services/ResearchService.js'
+import WeatherService from '../../server/services/WeatherService.js'
 
 const prisma = new PrismaClient()
+const weatherService = new WeatherService()
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -16,23 +18,22 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   try {
-    const { raceId } = req.body
+    const { raceId } = req.body || {}
 
     if (raceId) {
       // Refresh a single race
       console.log(`[refresh-weather] Refreshing weather for race ${raceId}`)
 
-      // Clear the cached weather so fetchWeatherForRace will re-fetch
+      const race = await prisma.race.findUnique({ where: { id: raceId } })
+      if (!race) return res.status(404).json({ error: `Race not found: ${raceId}` })
+
+      // Clear cached weather
       await prisma.race.update({
         where: { id: raceId },
-        data: {
-          weatherTemp: null,
-          weatherCondition: null,
-          weatherFetchedAt: null,
-        }
+        data: { weatherTemp: null, weatherCondition: null, weatherFetchedAt: null }
       })
 
-      const updated = await researchService.fetchWeatherForRace(raceId)
+      const updated = await fetchWeatherForRace(race)
 
       return res.status(200).json({
         success: true,
@@ -61,20 +62,18 @@ export default async function handler(req, res) {
     console.log(`[refresh-weather] Found ${races.length} races to refresh`)
 
     // Clear all cached weather
-    await prisma.race.updateMany({
-      where: { weatherFetchedAt: { not: null } },
-      data: {
-        weatherTemp: null,
-        weatherCondition: null,
-        weatherFetchedAt: null,
-      }
-    })
+    if (races.length > 0) {
+      await prisma.race.updateMany({
+        where: { id: { in: races.map(r => r.id) } },
+        data: { weatherTemp: null, weatherCondition: null, weatherFetchedAt: null }
+      })
+    }
 
     // Re-fetch each race
     const results = []
     for (const race of races) {
       try {
-        const updated = await researchService.fetchWeatherForRace(race.id)
+        const updated = await fetchWeatherForRace(race)
         results.push({
           id: updated.id,
           raceName: updated.raceName,
@@ -96,5 +95,31 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: error.message })
   } finally {
     await prisma.$disconnect()
+  }
+}
+
+/**
+ * Fetch and save weather for a race using WeatherService directly
+ */
+async function fetchWeatherForRace(race) {
+  if (!race.raceDate || !race.location) {
+    console.log(`[refresh-weather] Skipping ${race.raceName} - missing date or location`)
+    return race
+  }
+
+  try {
+    const weather = await weatherService.getHistoricalWeather(new Date(race.raceDate), race.location)
+
+    return await prisma.race.update({
+      where: { id: race.id },
+      data: {
+        weatherTemp: weather.temp,
+        weatherCondition: weather.condition,
+        weatherFetchedAt: new Date()
+      }
+    })
+  } catch (error) {
+    console.error(`[refresh-weather] Weather fetch failed for ${race.raceName}:`, error.message)
+    return race
   }
 }
