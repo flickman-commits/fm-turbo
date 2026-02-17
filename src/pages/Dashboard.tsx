@@ -545,6 +545,8 @@ Thank you!`
       'Buffalo Marathon': 'Buffalo',
       'Twin Cities Marathon': 'Twin Cities',
       'Louisiana Marathon': 'Louisiana',
+      'Austin Marathon': 'Austin',
+      'Ascension Seton Austin Marathon': 'Austin',
       'Army Ten Miler': 'ATM',
       'Detroit Marathon': 'Detroit',
       'Columbus Marathon': 'Columbus',
