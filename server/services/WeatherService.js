@@ -111,14 +111,14 @@ export class WeatherService {
       // Format date as YYYY-MM-DD
       const dateStr = date.toISOString().split('T')[0]
 
-      // Build API URL
-      // We request: temperature_2m_max, weather_code, precipitation_sum
+      // Fetch hourly data so we can get race-start conditions (~7am)
+      // Marathons start early morning, so max daily temp is not representative
       const params = new URLSearchParams({
         latitude: lat,
         longitude: lon,
         start_date: dateStr,
         end_date: dateStr,
-        daily: 'temperature_2m_max,weather_code,precipitation_sum',
+        hourly: 'temperature_2m,weather_code,precipitation',
         temperature_unit: 'fahrenheit',
         timezone: 'auto' // Infer timezone from lat/lon coordinates
       })
@@ -128,21 +128,25 @@ export class WeatherService {
       const response = await fetch(url)
       const data = await response.json()
 
-      if (!data.daily || !data.daily.temperature_2m_max || data.daily.temperature_2m_max.length === 0) {
+      if (!data.hourly || !data.hourly.temperature_2m || data.hourly.temperature_2m.length === 0) {
         console.log(`[WeatherService] No weather data available for ${dateStr}`)
         return { temp: null, condition: null }
       }
 
-      // Extract data for the specific date
-      const tempMax = data.daily.temperature_2m_max[0]
-      const weatherCode = data.daily.weather_code[0]
-      const precipitation = data.daily.precipitation_sum[0]
+      // Pick 7am (index 7) as representative race-start conditions
+      // Hourly array runs 00:00 through 23:00, so index 7 = 7:00am local time
+      const RACE_START_HOUR = 7
+      const temp7am = data.hourly.temperature_2m[RACE_START_HOUR]
+      const weatherCode7am = data.hourly.weather_code[RACE_START_HOUR]
+      const precipitation7am = data.hourly.precipitation[RACE_START_HOUR]
+
+      console.log(`[WeatherService] 7am conditions: ${temp7am}°F, code=${weatherCode7am}, precip=${precipitation7am}mm`)
 
       // Format temperature
-      const temp = tempMax ? `${Math.round(tempMax)}°F` : null
+      const temp = temp7am != null ? `${Math.round(temp7am)}°F` : null
 
       // Map weather code to simplified condition
-      const condition = this.mapWeatherCodeToCondition(weatherCode, precipitation)
+      const condition = this.mapWeatherCodeToCondition(weatherCode7am, precipitation7am)
 
       return { temp, condition }
 
