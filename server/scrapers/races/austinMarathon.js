@@ -19,30 +19,76 @@ export class AustinMarathonScraper extends BaseScraper {
 
   /**
    * Get race-level information for Austin Marathon
+   * Scrapes the actual race date from the MyChipTime event page
    * @returns {Promise<Object>} Race info object
    */
   async getRaceInfo() {
     console.log(`[Austin Marathon ${this.year}] Fetching race info...`)
 
-    // Austin Marathon 2026 is February 15, 2026
-    // Typically the third Sunday of February
-    const raceDate = this.calculateAustinMarathonDate(this.year)
+    const eventId = this.eventIds[this.year]?.marathon || '17035'
+    const eventUrl = `https://www.mychiptime.com/searchevent.php?id=${eventId}`
 
-    console.log(
-      `[Austin Marathon ${this.year}] Using calculated race date: ${raceDate.toDateString()}`
-    )
+    let raceDate = null
+
+    try {
+      const response = await fetch(eventUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        }
+      })
+
+      if (response.ok) {
+        const html = await response.text()
+        raceDate = this.extractRaceDateFromHtml(html)
+        if (raceDate) {
+          console.log(`[Austin Marathon ${this.year}] Scraped actual race date: ${raceDate.toDateString()}`)
+        }
+      }
+    } catch (error) {
+      console.log(`[Austin Marathon ${this.year}] Failed to scrape race date:`, error.message)
+    }
+
+    // Fallback: calculate third Sunday of February
+    if (!raceDate) {
+      raceDate = this.calculateAustinMarathonDate(this.year)
+      console.log(`[Austin Marathon ${this.year}] Using fallback calculated race date: ${raceDate.toDateString()}`)
+    }
 
     return {
       raceDate,
       location: 'Austin, TX',
       eventTypes: ['Marathon', 'Half Marathon', '5K'],
-      resultsUrl: `https://www.mychiptime.com/searchevent.php?id=${this.eventIds[this.year]?.marathon || '17035'}`,
+      resultsUrl: eventUrl,
       resultsSiteType: 'mychiptime',
     }
   }
 
   /**
-   * Austin Marathon is typically the third Sunday of February
+   * Extract the race date from the MyChipTime event page HTML
+   * The page shows the date as MM/DD/YYYY in the header
+   */
+  extractRaceDateFromHtml(html) {
+    const $ = cheerio.load(html)
+
+    // MyChipTime shows the date as "MM/DD/YYYY" near the event title
+    const pageText = $.text()
+
+    // Match MM/DD/YYYY format
+    const dateMatch = pageText.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/)
+    if (dateMatch) {
+      const [, month, day, year] = dateMatch
+      const parsed = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+      if (!isNaN(parsed.getTime())) {
+        return parsed
+      }
+    }
+
+    return null
+  }
+
+  /**
+   * Fallback: Austin Marathon is typically the third Sunday of February
    */
   calculateAustinMarathonDate(year) {
     const feb1 = new Date(year, 1, 1)
