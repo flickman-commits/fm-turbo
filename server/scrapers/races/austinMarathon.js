@@ -195,15 +195,14 @@ export class AustinMarathonScraper extends BaseScraper {
       console.log(`  Division: ${result.division}`)
       console.log(`  Location: ${result.city}, ${result.state}`)
 
-      const pace = this.calculatePaceFromTime(result.chipTime)
-
       return {
         found: true,
         bibNumber: result.bib,
         officialTime: result.chipTime,
-        officialPace: pace,
+        officialPace: result.pace, // Directly from results, e.g. "10:04/M"
         gunTime: result.gunTime,
         overallPlace: result.overallPlace,
+        genPlace: result.genPlace,
         division: result.division,
         classPosition: result.classPosition,
         city: result.city,
@@ -229,56 +228,30 @@ export class AustinMarathonScraper extends BaseScraper {
     // MyChipTime results are in a table with class "table-striped" or similar
     $('table tr').each((_, row) => {
       const cells = $(row).find('td')
-      if (cells.length < 6) return // Skip header rows or empty rows
+      if (cells.length < 14) return // Skip header rows or short rows
 
-      const overallPlace = $(cells[0]).text().trim()
-      // Skip if first cell doesn't look like a place number
-      if (!overallPlace || isNaN(parseInt(overallPlace))) return
+      // col[2] is bib number - skip if not numeric
+      const bib = $(cells[2]).text().trim()
+      if (!bib || isNaN(parseInt(bib))) return
 
       results.push({
-        overallPlace: overallPlace,
-        gunTime: $(cells[1]).text().trim(),
-        chipTime: $(cells[2]).text().trim(),
-        bib: $(cells[3]).text().trim(),
-        firstName: $(cells[4]).text().trim(),
-        lastName: $(cells[5]).text().trim(),
-        city: cells.length > 6 ? $(cells[6]).text().trim() : '',
-        state: cells.length > 7 ? $(cells[7]).text().trim() : '',
-        division: cells.length > 8 ? $(cells[8]).text().trim() : '',
-        classPosition: cells.length > 9 ? $(cells[9]).text().trim() : '',
+        gunTime:       $(cells[0]).text().trim(),
+        chipTime:      $(cells[1]).text().trim(),
+        bib:           $(cells[2]).text().trim(),
+        firstName:     $(cells[3]).text().trim(),
+        lastName:      $(cells[4]).text().trim(),
+        // cells[5] = Share, cells[6] = Race Photos (skip)
+        city:          $(cells[7]).text().trim(),
+        state:         $(cells[8]).text().trim(),
+        division:      $(cells[11]).text().trim(),
+        classPosition: $(cells[12]).text().trim(),
+        overallPlace:  $(cells[13]).text().trim(),
+        genPlace:      $(cells[16]).text().trim(),
+        pace:          $(cells[17]).text().trim(), // "10:04/M" - directly from results
       })
     })
 
     return results
-  }
-
-  /**
-   * Calculate pace from finish time (assumes marathon distance of 26.2 miles)
-   * @param {string} timeString - Time in format "h:mm:ss"
-   * @returns {string} Pace in format "m:ss /mi"
-   */
-  calculatePaceFromTime(timeString) {
-    if (!timeString) return null
-
-    try {
-      const parts = timeString.split(':')
-      if (parts.length !== 3) return null
-
-      const hours = parseInt(parts[0])
-      const minutes = parseInt(parts[1])
-      const seconds = parseInt(parts[2])
-
-      const totalMinutes = (hours * 60) + minutes + (seconds / 60)
-      const paceMinutes = totalMinutes / 26.2
-
-      const paceMin = Math.floor(paceMinutes)
-      const paceSec = Math.round((paceMinutes - paceMin) * 60)
-
-      return `${paceMin}:${String(paceSec).padStart(2, '0')} /mi`
-    } catch (error) {
-      console.error('[Austin Marathon] Error calculating pace:', error)
-      return null
-    }
   }
 
   /**
