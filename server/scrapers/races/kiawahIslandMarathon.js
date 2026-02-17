@@ -4,7 +4,7 @@
  * Results URL: https://runsignup.com/Race/Results/139050
  */
 import { BaseScraper } from '../BaseScraper.js'
-import puppeteer from 'puppeteer'
+import { launchBrowser } from '../browserLauncher.js'
 
 export class KiawahIslandMarathonScraper extends BaseScraper {
   constructor(year) {
@@ -118,10 +118,7 @@ export class KiawahIslandMarathonScraper extends BaseScraper {
     try {
       // Launch browser
       console.log(`[Kiawah ${this.year}] Launching browser...`)
-      browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-      })
+      browser = await launchBrowser()
 
       const page = await browser.newPage()
 
