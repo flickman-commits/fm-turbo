@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import { Search, Upload, Copy, Loader2, FlaskConical, Pencil, Check, X } from 'lucide-react'
+import { Search, Upload, Copy, Loader2, FlaskConical, Pencil, Check, X, CloudSun } from 'lucide-react'
 
 // API calls now go to /api/* serverless functions (same origin)
 
@@ -159,6 +159,7 @@ export default function Dashboard() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isImporting, setIsImporting] = useState(false)
+  const [isRefreshingWeather, setIsRefreshingWeather] = useState(false)
   const [isResearching, setIsResearching] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
@@ -260,6 +261,26 @@ export default function Dashboard() {
       setToast({ message, type: 'error' })
     } finally {
       setIsImporting(false)
+    }
+  }
+
+  const refreshWeather = async () => {
+    setIsRefreshingWeather(true)
+    try {
+      const response = await fetch('/api/orders/refresh-weather', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      })
+      if (!response.ok) throw new Error(`Failed to refresh weather (${response.status})`)
+      const data = await response.json()
+      setToast({ message: `Weather refreshed for ${data.refreshed} race(s)`, type: 'success' })
+      await fetchOrders()
+    } catch (error) {
+      console.error('Error refreshing weather:', error)
+      setToast({ message: error instanceof Error ? error.message : 'Failed to refresh weather', type: 'error' })
+    } finally {
+      setIsRefreshingWeather(false)
     }
   }
 
@@ -640,18 +661,33 @@ Thank you!`
 
           {/* Right side: primary actions, right-aligned */}
           <div className="flex flex-col items-end gap-2">
-            <button
-              onClick={importOrders}
-              disabled={isImporting}
-              className="inline-flex items-center gap-2 px-3 md:px-6 py-2.5 bg-off-black text-white rounded-md hover:opacity-90 transition-opacity font-medium text-xs md:text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isImporting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Upload className="w-4 h-4" />
-              )}
-              {isImporting ? 'Importing…' : 'Import New Orders'}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={refreshWeather}
+                disabled={isRefreshingWeather}
+                title="Re-fetch 7am weather for all cached races"
+                className="inline-flex items-center gap-2 px-3 md:px-4 py-2.5 bg-off-black/10 text-off-black rounded-md hover:bg-off-black/20 transition-colors font-medium text-xs md:text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isRefreshingWeather ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <CloudSun className="w-4 h-4" />
+                )}
+                {isRefreshingWeather ? 'Refreshing…' : 'Refresh Weather'}
+              </button>
+              <button
+                onClick={importOrders}
+                disabled={isImporting}
+                className="inline-flex items-center gap-2 px-3 md:px-6 py-2.5 bg-off-black text-white rounded-md hover:opacity-90 transition-opacity font-medium text-xs md:text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isImporting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Upload className="w-4 h-4" />
+                )}
+                {isImporting ? 'Importing…' : 'Import New Orders'}
+              </button>
+            </div>
             <div className="hidden md:flex flex-col items-end gap-1">
               <a
                 href="https://www.artelo.io/app/orders?tab=ACTION_REQUIRED"
