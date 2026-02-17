@@ -39,10 +39,12 @@ function formatTime(time) {
  */
 function formatPace(pace) {
   if (!pace) return null
-  // Remove " / mi" suffix if present
+  // Remove " / mi" suffix if present (e.g. "9:43 / mi" -> "9:43")
   let cleaned = pace.replace(/\s*\/\s*mi$/i, '')
+  // Remove "/M" suffix from MyChipTime (e.g. "10:04/M" -> "10:04")
+  cleaned = cleaned.replace(/\/M$/i, '')
   // Remove leading zero if present (09:43 -> 9:43)
-  cleaned = cleaned.replace(/^0/, '')
+  cleaned = cleaned.replace(/^0/, '').trim()
   return cleaned
 }
 
