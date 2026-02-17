@@ -17,8 +17,15 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
+  console.log('[refresh-weather] Handler invoked, method:', req.method)
+
   try {
-    const { raceId } = req.body || {}
+    // req.body may be undefined if Vercel didn't parse it
+    let body = {}
+    if (req.body) {
+      body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
+    }
+    const { raceId } = body
 
     if (raceId) {
       // Refresh a single race
