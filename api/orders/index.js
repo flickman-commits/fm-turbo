@@ -3,6 +3,12 @@ import { hasScraperForRace } from '../../server/scrapers/index.js'
 
 const prisma = new PrismaClient()
 
+// Fallback results URLs by race name + year, for races where the DB record
+// may have been cached before resultsUrl was introduced
+const RESULTS_URL_FALLBACK = {
+  'Austin Marathon_2026': 'https://www.mychiptime.com/searchevent.php?id=17035',
+}
+
 /**
  * Format date as MM.DD.YY (e.g., "12.02.18")
  */
@@ -103,7 +109,7 @@ export default async function handler(req, res) {
         // Race data (Tier 1) - formatted for direct copy to Illustrator
         raceDate: formatRaceDate(race?.raceDate),
         raceLocation: race?.location || null,
-        resultsUrl: race?.resultsUrl || null,
+        resultsUrl: race?.resultsUrl || RESULTS_URL_FALLBACK[`${effectiveRaceName}_${effectiveRaceYear}`] || null,
         weatherTemp: formatTemp(race?.weatherTemp),
         weatherCondition: race?.weatherCondition ?
           race.weatherCondition.charAt(0).toUpperCase() + race.weatherCondition.slice(1) : null,
