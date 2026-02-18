@@ -273,7 +273,7 @@ export async function processOrders(options = {}) {
       throw new Error('ARTELO_API_KEY not configured')
     }
 
-    const params = new URLSearchParams({ limit: '500', allOrders: 'true' })
+    const params = new URLSearchParams({ limit: '100', allOrders: 'true' })
     const response = await fetch(`${ARTELO_API_URL}?${params}`, {
       method: 'GET',
       headers: {
@@ -328,17 +328,22 @@ export async function processOrders(options = {}) {
     }
 
     // 2b. Mark any DB orders as completed if they no longer appear in Artelo at all
-    // (Artelo stops returning orders once they're fully fulfilled and aged out)
-    // Only do this if Artelo returned orders (to avoid falsely completing everything on an empty response)
+    // (Artelo stops returning orders once they're fully fulfilled and aged out of the 100-order window)
+    // Safety guard: only check orders older than 3 days, since brand-new orders may not appear
+    // in the 100-order window yet if there's a backlog of newer orders ahead of them.
     if (allOrders.length > 0) {
       const allArteloOrderIds = new Set(allOrders.map(o => o.orderId))
+      const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
       const pendingDbOrders = await prisma.order.findMany({
-        where: { status: { notIn: ['completed'] } },
+        where: {
+          status: { notIn: ['completed'] },
+          createdAt: { lt: threeDaysAgo }
+        },
         select: { id: true, orderNumber: true, parentOrderNumber: true }
       })
       for (const dbOrder of pendingDbOrders) {
         if (!allArteloOrderIds.has(dbOrder.parentOrderNumber)) {
-          log(`[processOrders] Order ${dbOrder.orderNumber} no longer in Artelo — marking completed`)
+          log(`[processOrders] Order ${dbOrder.orderNumber} not in Artelo and >3 days old — marking completed`)
           await prisma.order.update({
             where: { id: dbOrder.id },
             data: { status: 'completed', researchedAt: new Date() }
