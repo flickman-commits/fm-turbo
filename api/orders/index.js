@@ -49,6 +49,23 @@ function formatPace(pace) {
   return cleaned
 }
 
+const AUSTIN_EVENT_IDS = {
+  2026: { marathon: '17035', halfMarathon: '17034' }
+}
+
+function buildAustinFallbackUrl(runnerName, raceName, year, eventType) {
+  if (!runnerName || !/austin/i.test(raceName)) return null
+  const ids = AUSTIN_EVENT_IDS[year]
+  if (!ids) return null
+  const isHalf = eventType === 'Half Marathon'
+  const eventId = isHalf ? ids.halfMarathon : ids.marathon
+  const parts = runnerName.trim().split(/\s+/)
+  const fname = parts[0] || ''
+  const lname = parts.slice(1).join(' ') || ''
+  const params = new URLSearchParams({ eID: eventId, fname, lname })
+  return `https://www.mychiptime.com/searchResultGen.php?${params.toString()}`
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
 
@@ -104,7 +121,10 @@ export default async function handler(req, res) {
         // Race data (Tier 1) - formatted for direct copy to Illustrator
         raceDate: formatRaceDate(race?.raceDate),
         raceLocation: race?.location || null,
-        resultsUrl: research?.resultsUrl || null,
+        resultsUrl: research?.resultsUrl ||
+          (research?.researchStatus === 'found'
+            ? buildAustinFallbackUrl(research?.runnerName || effectiveRunnerName, effectiveRaceName, effectiveRaceYear, research?.eventType)
+            : null),
         weatherTemp: formatTemp(race?.weatherTemp),
         weatherCondition: race?.weatherCondition ?
           race.weatherCondition.charAt(0).toUpperCase() + race.weatherCondition.slice(1) : null,
