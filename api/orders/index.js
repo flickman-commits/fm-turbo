@@ -3,25 +3,32 @@ import { hasScraperForRace } from '../../server/scrapers/index.js'
 
 const prisma = new PrismaClient()
 
-// Fallback results URLs by race name + year, for races where the DB record
-// may have been cached before resultsUrl was introduced
-const RESULTS_URL_FALLBACK = {
-  'Austin Marathon_2026': 'https://www.mychiptime.com/searchevent.php?id=17035',
-  'Ascension Seton Austin Marathon_2026': 'https://www.mychiptime.com/searchevent.php?id=17035',
+// MyChipTime event IDs by race + year - used to build runner-specific search URLs
+const MYCHIPTIME_EVENT_IDS = {
+  'austin_2026_marathon': '17035',
+  'austin_2026_halfmarathon': '17034',
 }
 
-// Get results URL: prefer DB value, then fallback map, then name-only match for Austin
-function getResultsUrl(race, effectiveRaceName, effectiveRaceYear) {
+// Build a runner-specific results URL using the exact same search the scraper does.
+// Falls back to the generic event page if no runner name available.
+function getResultsUrl(race, effectiveRaceName, effectiveRaceYear, runnerName) {
   if (race?.resultsUrl) return race.resultsUrl
-  const key = `${effectiveRaceName}_${effectiveRaceYear}`
-  if (RESULTS_URL_FALLBACK[key]) return RESULTS_URL_FALLBACK[key]
-  // Name-only fallback: catch any Austin Marathon variant
+
   const nameLower = (effectiveRaceName || '').toLowerCase()
+
   if (nameLower.includes('austin') && nameLower.includes('marathon')) {
-    const austinEventIds = { 2026: '17035' }
-    const eventId = austinEventIds[effectiveRaceYear]
-    if (eventId) return `https://www.mychiptime.com/searchevent.php?id=${eventId}`
+    const eventId = MYCHIPTIME_EVENT_IDS[`austin_${effectiveRaceYear}_marathon`]
+    if (eventId) {
+      if (runnerName) {
+        const parts = runnerName.trim().split(/\s+/)
+        const fname = encodeURIComponent(parts[0] || '')
+        const lname = encodeURIComponent(parts.slice(1).join(' ') || '')
+        return `https://www.mychiptime.com/searchResultGen.php?eID=${eventId}&fname=${fname}&lname=${lname}`
+      }
+      return `https://www.mychiptime.com/searchevent.php?id=${eventId}`
+    }
   }
+
   return null
 }
 
@@ -125,7 +132,7 @@ export default async function handler(req, res) {
         // Race data (Tier 1) - formatted for direct copy to Illustrator
         raceDate: formatRaceDate(race?.raceDate),
         raceLocation: race?.location || null,
-        resultsUrl: getResultsUrl(race, effectiveRaceName, effectiveRaceYear),
+        resultsUrl: getResultsUrl(race, effectiveRaceName, effectiveRaceYear, research?.runnerName || effectiveRunnerName),
         weatherTemp: formatTemp(race?.weatherTemp),
         weatherCondition: race?.weatherCondition ?
           race.weatherCondition.charAt(0).toUpperCase() + race.weatherCondition.slice(1) : null,
