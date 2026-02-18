@@ -160,7 +160,6 @@ export default function Dashboard() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isImporting, setIsImporting] = useState(false)
-  const [isRefreshingWeather, setIsRefreshingWeather] = useState(false)
   const [isResearching, setIsResearching] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [settingsAction, setSettingsAction] = useState<string | null>(null)
@@ -267,25 +266,6 @@ export default function Dashboard() {
     }
   }
 
-  const refreshWeather = async () => {
-    setIsRefreshingWeather(true)
-    try {
-      const response = await fetch('/api/orders/refresh-weather', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({})
-      })
-      if (!response.ok) throw new Error(`Failed to refresh weather (${response.status})`)
-      const data = await response.json()
-      setToast({ message: `Weather refreshed for ${data.refreshed} race(s)`, type: 'success' })
-      await fetchOrders()
-    } catch (error) {
-      console.error('Error refreshing weather:', error)
-      setToast({ message: error instanceof Error ? error.message : 'Failed to refresh weather', type: 'error' })
-    } finally {
-      setIsRefreshingWeather(false)
-    }
-  }
 
   const runSettingsAction = async (action: 'refresh-weather' | 'clear-research' | 'clear-race-cache') => {
     setSettingsAction(action)
