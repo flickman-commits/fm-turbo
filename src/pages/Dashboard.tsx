@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import { Search, Upload, Copy, Loader2, FlaskConical, Pencil, Check, X, CloudSun } from 'lucide-react'
+import { Search, Upload, Copy, Loader2, FlaskConical, Pencil, Check, X, Settings } from 'lucide-react'
 
 // API calls now go to /api/* serverless functions (same origin)
 
@@ -162,6 +162,8 @@ export default function Dashboard() {
   const [isImporting, setIsImporting] = useState(false)
   const [isRefreshingWeather, setIsRefreshingWeather] = useState(false)
   const [isResearching, setIsResearching] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const [settingsAction, setSettingsAction] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
 
@@ -282,6 +284,31 @@ export default function Dashboard() {
       setToast({ message: error instanceof Error ? error.message : 'Failed to refresh weather', type: 'error' })
     } finally {
       setIsRefreshingWeather(false)
+    }
+  }
+
+  const runSettingsAction = async (action: 'refresh-weather' | 'clear-research' | 'clear-race-cache') => {
+    setSettingsAction(action)
+    try {
+      const response = await fetch(`/api/orders/${action}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      })
+      if (!response.ok) throw new Error(`Action failed (${response.status})`)
+      const data = await response.json()
+      const messages: Record<string, string> = {
+        'refresh-weather': `Weather refreshed for ${data.refreshed ?? 0} race(s)`,
+        'clear-research': `Cleared ${data.deleted ?? 0} research records — re-research to repopulate`,
+        'clear-race-cache': `Race info cache cleared for ${data.cleared ?? 0} race(s)`,
+      }
+      setToast({ message: messages[action], type: 'success' })
+      await fetchOrders()
+    } catch (error) {
+      setToast({ message: error instanceof Error ? error.message : 'Action failed', type: 'error' })
+    } finally {
+      setSettingsAction(null)
+      setShowSettings(false)
     }
   }
 
@@ -664,19 +691,6 @@ Thank you!`
           <div className="flex flex-col items-end gap-2">
             <div className="flex items-center gap-2">
               <button
-                onClick={refreshWeather}
-                disabled={isRefreshingWeather}
-                title="Re-fetch 7am weather for all cached races"
-                className="inline-flex items-center gap-2 px-3 md:px-4 py-2.5 bg-off-black/10 text-off-black rounded-md hover:bg-off-black/20 transition-colors font-medium text-xs md:text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isRefreshingWeather ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <CloudSun className="w-4 h-4" />
-                )}
-                {isRefreshingWeather ? 'Refreshing…' : 'Refresh Weather'}
-              </button>
-              <button
                 onClick={importOrders}
                 disabled={isImporting}
                 className="inline-flex items-center gap-2 px-3 md:px-6 py-2.5 bg-off-black text-white rounded-md hover:opacity-90 transition-opacity font-medium text-xs md:text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
@@ -826,18 +840,27 @@ Thank you!`
         </section>
         )}
 
-        {/* Completed Orders Toggle */}
-        {!isLoading && completedOrders.length > 0 && (
+        {/* Bottom bar: Completed Orders Toggle + Settings */}
+        {!isLoading && (
           <div className="flex-shrink-0 py-4 mt-2 mb-8 border-t border-border-gray/50">
-            <div className="flex justify-center">
+            <div className="flex items-center justify-center gap-3">
+              {completedOrders.length > 0 && (
+                <button
+                  onClick={() => setShowCompleted(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-border-gray rounded-full shadow-sm text-sm text-off-black/70 hover:bg-subtle-gray transition-colors"
+                >
+                  <span>{showCompleted ? 'Close Completed Orders' : 'View Completed Orders'}</span>
+                  <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-off-black/5 text-off-black/60">
+                    {completedOrders.length}
+                  </span>
+                </button>
+              )}
               <button
-                onClick={() => setShowCompleted(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-border-gray rounded-full shadow-sm text-sm text-off-black/70 hover:bg-subtle-gray transition-colors"
+                onClick={() => setShowSettings(true)}
+                title="Settings & cache management"
+                className="p-2 text-off-black/30 hover:text-off-black/60 transition-colors rounded-full hover:bg-off-black/5"
               >
-                <span>{showCompleted ? 'Close Completed Orders' : 'View Completed Orders'}</span>
-                <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-off-black/5 text-off-black/60">
-                  {completedOrders.length}
-                </span>
+                <Settings className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -911,6 +934,62 @@ Thank you!`
                     No completed orders yet
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Settings Modal */}
+        {showSettings && (
+          <div
+            className="fixed inset-0 bg-off-black/60 flex items-center justify-center p-4 z-50"
+            onClick={(e) => { if (e.target === e.currentTarget) setShowSettings(false) }}
+          >
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border-gray">
+                <h2 className="text-base font-semibold text-off-black">Cache & Data Settings</h2>
+                <button onClick={() => setShowSettings(false)} className="text-off-black/40 hover:text-off-black/70 text-xl leading-none">×</button>
+              </div>
+              <div className="p-6 space-y-3">
+                {[
+                  {
+                    action: 'refresh-weather' as const,
+                    label: 'Refresh Weather',
+                    description: 'Re-fetches 7am conditions from Open-Meteo for all races. Use if weather looks wrong.',
+                  },
+                  {
+                    action: 'clear-race-cache' as const,
+                    label: 'Re-fetch Race Info',
+                    description: 'Clears cached race dates, locations, and results URLs. They\'ll be re-fetched on next research run.',
+                  },
+                  {
+                    action: 'clear-research' as const,
+                    label: 'Clear Runner Research',
+                    description: 'Deletes all cached bib, time, and pace data. All orders go back to "Ready to research". Use after fixing a scraper bug.',
+                    danger: true,
+                  },
+                ].map(({ action, label, description, danger }) => (
+                  <div key={action} className={`rounded-lg border p-4 ${danger ? 'border-red-200 bg-red-50' : 'border-border-gray bg-subtle-gray'}`}>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-medium ${danger ? 'text-red-700' : 'text-off-black'}`}>{label}</p>
+                        <p className={`text-xs mt-0.5 ${danger ? 'text-red-500' : 'text-off-black/50'}`}>{description}</p>
+                      </div>
+                      <button
+                        onClick={() => runSettingsAction(action)}
+                        disabled={settingsAction !== null}
+                        className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                          danger
+                            ? 'bg-red-600 text-white hover:bg-red-700'
+                            : 'bg-off-black text-white hover:opacity-80'
+                        }`}
+                      >
+                        {settingsAction === action && <Loader2 className="w-3 h-3 animate-spin" />}
+                        {settingsAction === action ? 'Running…' : 'Run'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
