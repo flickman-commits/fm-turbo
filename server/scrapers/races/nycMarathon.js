@@ -181,7 +181,8 @@ export class NYCMarathonScraper extends BaseScraper {
       console.log(`  Time: ${runner.overallTime}`)
       console.log(`  Pace: ${runner.pace}`)
 
-      return this.extractRunnerData(runner)
+      const resultsUrl = `https://results.nyrr.org/event/${this.eventCode}/finishers`
+      return { ...this.extractRunnerData(runner), resultsUrl }
 
     } catch (error) {
       console.error(`[NYC Marathon] Error searching for ${runnerName}:`, error.message)

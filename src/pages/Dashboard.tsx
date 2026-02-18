@@ -203,6 +203,7 @@ export default function Dashboard() {
           eventType: order.eventType as string | undefined,
           researchStatus: order.researchStatus as 'found' | 'not_found' | 'ambiguous' | null,
           researchNotes: order.researchNotes as string | undefined,
+          resultsUrl: order.resultsUrl as string | undefined,
           // Weather
           weatherTemp: order.weatherTemp as string | undefined,
           weatherCondition: order.weatherCondition as string | undefined,
@@ -356,6 +357,7 @@ export default function Dashboard() {
             eventType: order.eventType as string | undefined,
             researchStatus: order.researchStatus as 'found' | 'not_found' | 'ambiguous' | null,
             researchNotes: order.researchNotes as string | undefined,
+            resultsUrl: order.resultsUrl as string | undefined,
             weatherTemp: order.weatherTemp as string | undefined,
             weatherCondition: order.weatherCondition as string | undefined,
             hasScraperAvailable: order.hasScraperAvailable as boolean | undefined,

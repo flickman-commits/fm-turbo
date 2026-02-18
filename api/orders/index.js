@@ -121,10 +121,7 @@ export default async function handler(req, res) {
         // Race data (Tier 1) - formatted for direct copy to Illustrator
         raceDate: formatRaceDate(race?.raceDate),
         raceLocation: race?.location || null,
-        resultsUrl: research?.resultsUrl ||
-          (research?.researchStatus === 'found'
-            ? buildAustinFallbackUrl(research?.runnerName || effectiveRunnerName, effectiveRaceName, effectiveRaceYear, research?.eventType)
-            : null),
+        resultsUrl: research?.resultsUrl || getResultsUrl(race, effectiveRaceName, effectiveRaceYear, research?.runnerName || effectiveRunnerName),
         weatherTemp: formatTemp(race?.weatherTemp),
         weatherCondition: race?.weatherCondition ?
           race.weatherCondition.charAt(0).toUpperCase() + race.weatherCondition.slice(1) : null,

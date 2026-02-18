@@ -118,10 +118,12 @@ export class CIMMarathonScraper extends BaseScraper {
 
       const detailResponse = await fetch(detailUrl)
 
+      const cimResultsUrl = `https://myrace.ai/races/${this.raceId}/results`
+
       if (!detailResponse.ok) {
         // If detail fetch fails, use search result data (less detailed but still useful)
         console.log(`[CIM ${this.year}] Detail fetch failed, using search result data`)
-        return this.extractSearchResultData(match)
+        return { ...this.extractSearchResultData(match), resultsUrl: cimResultsUrl }
       }
 
       const detailData = await detailResponse.json()
@@ -129,7 +131,7 @@ export class CIMMarathonScraper extends BaseScraper {
       if (!detailData.athlete) {
         // Fallback to search result data
         console.log(`[CIM ${this.year}] No detailed athlete data, using search result`)
-        return this.extractSearchResultData(match)
+        return { ...this.extractSearchResultData(match), resultsUrl: cimResultsUrl }
       }
 
       const athlete = detailData.athlete
@@ -141,7 +143,7 @@ export class CIMMarathonScraper extends BaseScraper {
       console.log(`  Pace: ${athlete.paceTime}`)
       console.log(`  Overall Rank: ${athlete.overallRank}/${athlete.totalAthletes}`)
 
-      return this.extractRunnerData(athlete)
+      return { ...this.extractRunnerData(athlete), resultsUrl: cimResultsUrl }
 
     } catch (error) {
       console.error(`[CIM ${this.year}] Error searching for ${runnerName}:`, error.message)

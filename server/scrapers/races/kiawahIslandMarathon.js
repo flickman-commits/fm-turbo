@@ -224,7 +224,7 @@ export class KiawahIslandMarathonScraper extends BaseScraper {
       console.log(`  Place: ${match.placeOverall}`)
 
       await browser.close()
-      return this.extractRunnerData(match, eventType)
+      return { ...this.extractRunnerData(match, eventType), resultsUrl }
 
     } catch (error) {
       console.error(`[Kiawah ${this.year}] Error searching for ${runnerName}:`, error.message)

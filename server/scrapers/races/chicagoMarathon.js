@@ -220,7 +220,7 @@ export class ChicagoMarathonScraper extends BaseScraper {
       console.log(`  Bib: ${runner.bib}`)
       console.log(`  Time: ${runner.finishTime}`)
 
-      return this.extractRunnerData(runner)
+      return { ...this.extractRunnerData(runner), resultsUrl: searchUrl }
 
     } catch (error) {
       console.error(`[Chicago Marathon] Error searching for ${runnerName}:`, error.message)

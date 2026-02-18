@@ -179,6 +179,7 @@ export class PhiladelphiaMarathonScraper extends BaseScraper {
       )
 
       let allResults = []
+      let matchedUrl = searchUrls[0]
 
       for (const url of searchUrls) {
         console.log(`[Philadelphia Marathon] Search URL: ${url}`)
@@ -207,7 +208,10 @@ export class PhiladelphiaMarathonScraper extends BaseScraper {
         allResults = allResults.concat(results)
 
         // If we found any results from this pattern, we can stop trying others
-        if (results.length > 0) break
+        if (results.length > 0) {
+          matchedUrl = url
+          break
+        }
       }
 
       console.log(`[Philadelphia Marathon] Total collected results: ${allResults.length}`)
@@ -262,7 +266,7 @@ export class PhiladelphiaMarathonScraper extends BaseScraper {
       console.log(`  Bib: ${runner.bib}`)
       console.log(`  Time: ${runner.finishTime}`)
 
-      return this.extractRunnerData(runner)
+      return { ...this.extractRunnerData(runner), resultsUrl: matchedUrl }
     } catch (error) {
       console.error(
         `[Philadelphia Marathon] Error searching for ${runnerName}:`,

@@ -4,12 +4,12 @@
  * and Vercel serverless (uses @sparticuz/chromium)
  */
 import puppeteer from 'puppeteer-core'
-import chromium from '@sparticuz/chromium'
 
 export async function launchBrowser() {
   const isVercel = !!process.env.VERCEL
 
   if (isVercel) {
+    const chromium = (await import('@sparticuz/chromium')).default
     return puppeteer.launch({
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,

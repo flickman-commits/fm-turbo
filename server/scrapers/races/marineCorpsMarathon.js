@@ -131,6 +131,7 @@ export class MarineCorpsMarathonScraper extends BaseScraper {
         eventType: 'Marathon',
         yearFound: this.year,
         researchNotes: null,
+        resultsUrl: `https://track.rtrt.me/e/${this.eventId}#/dashboard`,
         rawData: profile
       }
     } catch (error) {
