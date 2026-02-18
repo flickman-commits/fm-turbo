@@ -14,6 +14,7 @@ interface Order {
   raceYear: number | null
   raceDate?: string
   raceLocation?: string
+  resultsUrl?: string
   eventType?: string
   runnerName: string
   productSize: string
@@ -1122,7 +1123,19 @@ Thank you!`
 
                   {/* Runner Research Results */}
                   <div>
-                    <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Research Results</h4>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight">Research Results</h4>
+                      {selectedOrder.resultsUrl && (
+                        <a
+                          href={selectedOrder.resultsUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 transition-colors"
+                        >
+                          View Results ↗
+                        </a>
+                      )}
+                    </div>
                     <div className="bg-subtle-gray border border-border-gray rounded-md p-4 space-y-3">
                       {(selectedOrder.effectiveRunnerName || selectedOrder.runnerName) ? (
                         <div className="flex items-center gap-2">
