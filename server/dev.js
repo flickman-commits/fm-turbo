@@ -26,6 +26,8 @@ const routes = [
   { method: 'get',  path: '/api/orders/refresh-weather',     handler: '../api/orders/refresh-weather.js' },
   { method: 'post', path: '/api/orders/refresh-shopify-data', handler: '../api/orders/refresh-shopify-data.js' },
   { method: 'post', path: '/api/orders/fetch-shopify-data',  handler: '../api/orders/fetch-shopify-data.js' },
+  { method: 'get',  path: '/api/orders/test-scrapers',      handler: '../api/orders/test-scrapers.js' },
+  { method: 'post', path: '/api/orders/test-scrapers',      handler: '../api/orders/test-scrapers.js' },
 ]
 
 // Load all handlers and register routes

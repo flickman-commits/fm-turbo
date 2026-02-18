@@ -77,6 +77,29 @@ export class BaseScraper {
   }
 
   /**
+   * Round a time with milliseconds to the nearest second
+   * e.g. "4:37:44.935" -> "4:37:45", "4:37:44.123" -> "4:37:44"
+   * @param {string} time - Time string possibly ending in .milliseconds
+   * @returns {string} Time rounded to nearest second
+   */
+  roundTime(time) {
+    if (!time) return null
+    const msMatch = time.match(/^(.+)\.(\d+)$/)
+    if (!msMatch) return time
+    const ms = parseInt(msMatch[2].padEnd(3, '0').slice(0, 3))
+    let base = msMatch[1]
+    if (ms >= 500) {
+      const parts = base.split(':').map(Number)
+      parts[parts.length - 1] += 1
+      for (let i = parts.length - 1; i > 0; i--) {
+        if (parts[i] >= 60) { parts[i] -= 60; parts[i - 1] += 1 }
+      }
+      base = parts.map((p, i) => i === 0 ? String(p) : String(p).padStart(2, '0')).join(':')
+    }
+    return base
+  }
+
+  /**
    * Calculate pace per mile from finish time and distance
    * @param {string} time - Finish time in h:mm:ss format
    * @param {number} distanceMiles - Distance in miles (26.2 for marathon, 13.1 for half)

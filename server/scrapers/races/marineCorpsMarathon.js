@@ -109,19 +109,38 @@ export class MarineCorpsMarathonScraper extends BaseScraper {
 
       const profile = matches[0]
       const fullName = profile.name || `${profile.fname || ''} ${profile.lname || ''}`.trim()
+      const pid = profile.pid
       console.log(`\n[MCM] FOUND RUNNER:`)
       console.log(`  Name: ${fullName}`)
       console.log(`  Bib: ${profile.bib || 'N/A'}`)
+      console.log(`  PID: ${pid || 'N/A'}`)
 
-      // RTRT profiles list does not always include finish time directly.
-      // For now, we return bib & basic info; follow-up work can add a
-      // secondary call to a splits/leaderboard endpoint to get official time.
-      const rawTime = profile.finish_time || profile.time || null
+      // Fetch splits to get actual finish time and pace
+      let time = null
+      let pace = null
+      if (pid) {
+        try {
+          const splits = await this.fetchSplits(pid)
+          const finishSplit = splits.find(s => s.isFinish === '1' || (s.point || '').toUpperCase().includes('FINISH'))
+          if (finishSplit) {
+            const rawTime = finishSplit.netTime || finishSplit.time
+            // Round milliseconds to nearest second (4:37:44.935 -> 4:37:45)
+            const cleanTime = rawTime ? this.roundTime(rawTime) : null
+            time = this.formatTime(cleanTime ? this.normalizeTime(cleanTime) : null)
+            // paceAvg comes as "10:36 min/mile" — strip the "min/mile" suffix, just keep the pace
+            const rawPace = finishSplit.paceAvg?.replace(/\s*min\/mile$/i, '') || null
+            pace = rawPace || this.formatPace(cleanTime ? this.calculatePace(this.normalizeTime(cleanTime), 26.2) : null)
+            console.log(`  Time: ${time}`)
+            console.log(`  Pace: ${pace}`)
+          }
+        } catch (err) {
+          console.log(`[MCM] Could not fetch splits: ${err.message}`)
+        }
+      }
 
-      const normalizedTime = rawTime ? this.normalizeTime(rawTime) : null
-      const time = this.formatTime(normalizedTime)
-      const rawPace = normalizedTime ? this.calculatePace(normalizedTime, 26.2) : null
-      const pace = this.formatPace(rawPace)
+      const resultsUrl = pid
+        ? `https://track.rtrt.me/e/${this.eventId}#/tracker/${pid}`
+        : `https://track.rtrt.me/e/${this.eventId}#/dashboard`
 
       return {
         found: true,
@@ -131,7 +150,7 @@ export class MarineCorpsMarathonScraper extends BaseScraper {
         eventType: 'Marathon',
         yearFound: this.year,
         researchNotes: null,
-        resultsUrl: `https://track.rtrt.me/e/${this.eventId}#/dashboard`,
+        resultsUrl,
         rawData: profile
       }
     } catch (error) {
@@ -141,6 +160,39 @@ export class MarineCorpsMarathonScraper extends BaseScraper {
         researchNotes: `Error: ${error.message}`
       }
     }
+  }
+
+  /**
+   * Fetch split times for a runner by their profile ID.
+   * @param {string} pid - Runner profile ID from the profiles endpoint
+   * @returns {Promise<Array>} Array of split objects
+   */
+  async fetchSplits(pid) {
+    const url = `${this.baseUrl}/events/${this.eventId}/profiles/${pid}/splits`
+
+    const form = new URLSearchParams({
+      appid: this.appId,
+      token: this.token,
+      source: 'webtracker'
+    })
+
+    console.log(`[MCM] Fetching splits for PID ${pid}`)
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      },
+      body: form.toString()
+    })
+
+    if (!response.ok) {
+      throw new Error(`RTRT splits error ${response.status}`)
+    }
+
+    const data = await response.json()
+    return Array.isArray(data.list) ? data.list : []
   }
 
   /**

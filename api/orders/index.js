@@ -32,7 +32,24 @@ function formatTemp(temp) {
  */
 function formatTime(time) {
   if (!time) return null
-  return time.replace(/^0(\d):/, '$1:')
+  // Round up milliseconds to nearest second (4:37:44.935 -> 4:37:45)
+  let cleaned = time
+  const msMatch = cleaned.match(/^(.+)\.(\d+)$/)
+  if (msMatch) {
+    const ms = parseInt(msMatch[2].padEnd(3, '0').slice(0, 3))
+    cleaned = msMatch[1]
+    if (ms >= 500) {
+      // Add 1 second and handle carry
+      const parts = cleaned.split(':').map(Number)
+      parts[parts.length - 1] += 1
+      for (let i = parts.length - 1; i > 0; i--) {
+        if (parts[i] >= 60) { parts[i] -= 60; parts[i - 1] += 1 }
+      }
+      cleaned = parts.map((p, i) => i === 0 ? String(p) : String(p).padStart(2, '0')).join(':')
+    }
+  }
+  // Remove leading zero from hours (04:14:45 -> 4:14:45)
+  return cleaned.replace(/^0(\d):/, '$1:')
 }
 
 /**
@@ -40,8 +57,8 @@ function formatTime(time) {
  */
 function formatPace(pace) {
   if (!pace) return null
-  // Remove " / mi" suffix if present (e.g. "9:43 / mi" -> "9:43")
-  let cleaned = pace.replace(/\s*\/\s*mi$/i, '')
+  // Remove pace suffixes (e.g. "9:43 / mi" -> "9:43", "10:36 min/mile" -> "10:36")
+  let cleaned = pace.replace(/\s*\/\s*mi$/i, '').replace(/\s*min\/mile$/i, '')
   // Remove "/M" suffix from MyChipTime (e.g. "10:04/M" -> "10:04")
   cleaned = cleaned.replace(/\/M$/i, '')
   // Remove leading zero if present (09:43 -> 9:43)

@@ -163,6 +163,8 @@ export default function Dashboard() {
   const [isResearching, setIsResearching] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [settingsAction, setSettingsAction] = useState<string | null>(null)
+  const [scraperResults, setScraperResults] = useState<{ raceName: string; status: 'untested' | 'pass' | 'fail'; durationMs?: number; error?: string }[]>([])
+  const [isTestingScrapers, setIsTestingScrapers] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
 
@@ -293,6 +295,41 @@ export default function Dashboard() {
     }
   }
 
+  // Fetch supported races when settings modal opens
+  useEffect(() => {
+    if (!showSettings) return
+    fetch('/api/orders/test-scrapers')
+      .then(res => res.json())
+      .then(data => {
+        if (data.races && scraperResults.length === 0) {
+          setScraperResults(data.races.map((r: string) => ({ raceName: r, status: 'untested' as const })))
+        }
+      })
+      .catch(() => {})
+  }, [showSettings])
+
+  const testScrapers = async () => {
+    setIsTestingScrapers(true)
+    try {
+      const response = await fetch('/api/orders/test-scrapers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      })
+      if (!response.ok) throw new Error(`Test failed (${response.status})`)
+      const data = await response.json()
+      setScraperResults(data.results)
+      setToast({
+        message: `Scrapers tested: ${data.passed} passed, ${data.failed} failed`,
+        type: data.failed > 0 ? 'error' : 'success'
+      })
+    } catch (error) {
+      setToast({ message: error instanceof Error ? error.message : 'Scraper test failed', type: 'error' })
+    } finally {
+      setIsTestingScrapers(false)
+    }
+  }
+
   // Research a single order
   const researchOrder = async (orderNumber: string) => {
     setIsResearching(true)
@@ -339,7 +376,9 @@ export default function Dashboard() {
           return {
             id: order.id as string,
             orderNumber: order.orderNumber as string,
-            displayOrderNumber: displayNum || (order.orderNumber as string),
+            parentOrderNumber: order.parentOrderNumber as string,
+            lineItemIndex: order.lineItemIndex as number,
+            displayOrderNumber: displayNum || (order.parentOrderNumber as string),
             source: order.source as 'shopify' | 'etsy',
             raceName: order.raceName as string,
             raceYear: order.raceYear as number | null,
@@ -927,7 +966,7 @@ Thank you!`
             className="fixed inset-0 bg-off-black/60 flex items-center justify-center p-4 z-50"
             onClick={(e) => { if (e.target === e.currentTarget) setShowSettings(false) }}
           >
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-y-auto">
               <div className="flex items-center justify-between px-6 py-4 border-b border-border-gray">
                 <h2 className="text-base font-semibold text-off-black">Cache & Data Settings</h2>
                 <button onClick={() => setShowSettings(false)} className="text-off-black/40 hover:text-off-black/70 text-xl leading-none">×</button>
@@ -972,6 +1011,38 @@ Thank you!`
                     </div>
                   </div>
                 ))}
+              </div>
+              {/* Scraper Status Section */}
+              <div className="border-t border-border-gray px-6 py-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-off-black">Scraper Status</h3>
+                  <button
+                    onClick={testScrapers}
+                    disabled={isTestingScrapers || settingsAction !== null}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-off-black text-white hover:opacity-80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isTestingScrapers && <Loader2 className="w-3 h-3 animate-spin" />}
+                    {isTestingScrapers ? 'Testing...' : 'Test All Scrapers'}
+                  </button>
+                </div>
+                <div className="space-y-1.5">
+                  {scraperResults.map((result) => (
+                    <div key={result.raceName} className="flex items-center justify-between py-1.5 px-3 rounded-md bg-subtle-gray">
+                      <span className="text-xs text-off-black">{result.raceName}</span>
+                      <span className={`inline-flex items-center gap-1 text-xs font-medium ${
+                        result.status === 'pass' ? 'text-green-600' :
+                        result.status === 'fail' ? 'text-red-600' :
+                        'text-off-black/40'
+                      }`}>
+                        {result.status === 'pass' && <Check className="w-3 h-3" />}
+                        {result.status === 'fail' && <X className="w-3 h-3" />}
+                        {result.status === 'pass' ? `OK (${((result.durationMs || 0) / 1000).toFixed(1)}s)` :
+                         result.status === 'fail' ? (result.error ? result.error.substring(0, 30) : 'Failed') :
+                         'Not tested'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
