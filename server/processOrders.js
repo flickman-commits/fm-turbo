@@ -273,7 +273,7 @@ export async function processOrders(options = {}) {
       throw new Error('ARTELO_API_KEY not configured')
     }
 
-    const params = new URLSearchParams({ limit: '100', allOrders: 'true' })
+    const params = new URLSearchParams({ limit: '500', allOrders: 'true' })
     const response = await fetch(`${ARTELO_API_URL}?${params}`, {
       method: 'GET',
       headers: {
@@ -327,7 +327,28 @@ export async function processOrders(options = {}) {
       }
     }
 
-    // 2b. Process actionable orders (new or needing updates)
+    // 2b. Mark any DB orders as completed if they no longer appear in Artelo at all
+    // (Artelo stops returning orders once they're fully fulfilled and aged out)
+    // Only do this if Artelo returned orders (to avoid falsely completing everything on an empty response)
+    if (allOrders.length > 0) {
+      const allArteloOrderIds = new Set(allOrders.map(o => o.orderId))
+      const pendingDbOrders = await prisma.order.findMany({
+        where: { status: { notIn: ['completed'] } },
+        select: { id: true, orderNumber: true, parentOrderNumber: true }
+      })
+      for (const dbOrder of pendingDbOrders) {
+        if (!allArteloOrderIds.has(dbOrder.parentOrderNumber)) {
+          log(`[processOrders] Order ${dbOrder.orderNumber} no longer in Artelo — marking completed`)
+          await prisma.order.update({
+            where: { id: dbOrder.id },
+            data: { status: 'completed', researchedAt: new Date() }
+          })
+          results.updated++
+        }
+      }
+    }
+
+    // 2c. Process actionable orders (new or needing updates)
     for (const order of actionableOrders) {
       try {
         const orderSource = determineOrderSource(order)
