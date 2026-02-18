@@ -211,6 +211,7 @@ export class AustinMarathonScraper extends BaseScraper {
         classPosition: result.classPosition,
         city: result.city,
         state: result.state,
+        resultsUrl: searchUrl, // The exact search URL used - links directly to this runner's results
         researchNotes: `Found via MyChipTime - ${result.firstName} ${result.lastName} from ${result.city}, ${result.state}`
       }
 
