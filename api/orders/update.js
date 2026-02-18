@@ -46,7 +46,7 @@ export default async function handler(req, res) {
     }
 
     // If year was missing and we now have an override, update status
-    const existingOrder = await prisma.order.findUnique({
+    const existingOrder = await prisma.order.findFirst({
       where: { orderNumber }
     })
 
@@ -61,7 +61,7 @@ export default async function handler(req, res) {
 
     // Update the order
     const order = await prisma.order.update({
-      where: { orderNumber },
+      where: { id: existingOrder.id },
       data: updateData
     })
 
