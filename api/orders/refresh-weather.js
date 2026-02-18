@@ -61,8 +61,8 @@ export default async function handler(req, res) {
     const races = await prisma.race.findMany({
       where: {
         weatherFetchedAt: { not: null },
-        raceDate: { not: null },
         location: { not: null },
+        // raceDate is non-nullable in schema so no filter needed
       }
     })
 
