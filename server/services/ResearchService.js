@@ -88,8 +88,8 @@ export class ResearchService {
       }
     })
 
-    // If we have complete race data, return it
-    if (race && race.raceDate && race.location) {
+    // If we have complete race data (including resultsUrl), return it
+    if (race && race.raceDate && race.location && race.resultsUrl) {
       console.log(`[ResearchService] Race data found in cache: ${raceName} ${year}`)
       return race
     }
