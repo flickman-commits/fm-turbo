@@ -3,34 +3,6 @@ import { hasScraperForRace } from '../../server/scrapers/index.js'
 
 const prisma = new PrismaClient()
 
-// MyChipTime event IDs by race + year - used to build runner-specific search URLs
-const MYCHIPTIME_EVENT_IDS = {
-  'austin_2026_marathon': '17035',
-  'austin_2026_halfmarathon': '17034',
-}
-
-// Build a runner-specific results URL using the exact same search the scraper does.
-// Falls back to the generic event page if no runner name available.
-function getResultsUrl(race, effectiveRaceName, effectiveRaceYear, runnerName) {
-  if (race?.resultsUrl) return race.resultsUrl
-
-  const nameLower = (effectiveRaceName || '').toLowerCase()
-
-  if (nameLower.includes('austin') && nameLower.includes('marathon')) {
-    const eventId = MYCHIPTIME_EVENT_IDS[`austin_${effectiveRaceYear}_marathon`]
-    if (eventId) {
-      if (runnerName) {
-        const parts = runnerName.trim().split(/\s+/)
-        const fname = encodeURIComponent(parts[0] || '')
-        const lname = encodeURIComponent(parts.slice(1).join(' ') || '')
-        return `https://www.mychiptime.com/searchResultGen.php?eID=${eventId}&fname=${fname}&lname=${lname}`
-      }
-      return `https://www.mychiptime.com/searchevent.php?id=${eventId}`
-    }
-  }
-
-  return null
-}
 
 /**
  * Format date as MM.DD.YY (e.g., "12.02.18")
@@ -132,7 +104,7 @@ export default async function handler(req, res) {
         // Race data (Tier 1) - formatted for direct copy to Illustrator
         raceDate: formatRaceDate(race?.raceDate),
         raceLocation: race?.location || null,
-        resultsUrl: getResultsUrl(race, effectiveRaceName, effectiveRaceYear, research?.runnerName || effectiveRunnerName),
+        resultsUrl: research?.resultsUrl || null,
         weatherTemp: formatTemp(race?.weatherTemp),
         weatherCondition: race?.weatherCondition ?
           race.weatherCondition.charAt(0).toUpperCase() + race.weatherCondition.slice(1) : null,

@@ -234,7 +234,8 @@ export class ResearchService {
       eventType: results.eventType,
       yearFound: results.yearFound,
       researchStatus: results.found ? 'found' : (results.ambiguous ? 'ambiguous' : 'not_found'),
-      researchNotes: results.researchNotes
+      researchNotes: results.researchNotes,
+      resultsUrl: results.resultsUrl || null
     }
 
     let research
