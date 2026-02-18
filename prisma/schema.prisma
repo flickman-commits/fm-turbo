@@ -79,6 +79,7 @@ model RunnerResearch {
   yearFound      Int?
   researchStatus String   @default("pending") // "found", "not_found", "ambiguous"
   researchNotes  String?
+  resultsUrl     String?  // The exact URL used to find this runner's results
   createdAt      DateTime @default(now())
 
   // Relations
