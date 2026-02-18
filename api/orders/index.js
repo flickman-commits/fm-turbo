@@ -7,6 +7,22 @@ const prisma = new PrismaClient()
 // may have been cached before resultsUrl was introduced
 const RESULTS_URL_FALLBACK = {
   'Austin Marathon_2026': 'https://www.mychiptime.com/searchevent.php?id=17035',
+  'Ascension Seton Austin Marathon_2026': 'https://www.mychiptime.com/searchevent.php?id=17035',
+}
+
+// Get results URL: prefer DB value, then fallback map, then name-only match for Austin
+function getResultsUrl(race, effectiveRaceName, effectiveRaceYear) {
+  if (race?.resultsUrl) return race.resultsUrl
+  const key = `${effectiveRaceName}_${effectiveRaceYear}`
+  if (RESULTS_URL_FALLBACK[key]) return RESULTS_URL_FALLBACK[key]
+  // Name-only fallback: catch any Austin Marathon variant
+  const nameLower = (effectiveRaceName || '').toLowerCase()
+  if (nameLower.includes('austin') && nameLower.includes('marathon')) {
+    const austinEventIds = { 2026: '17035' }
+    const eventId = austinEventIds[effectiveRaceYear]
+    if (eventId) return `https://www.mychiptime.com/searchevent.php?id=${eventId}`
+  }
+  return null
 }
 
 /**
@@ -109,7 +125,7 @@ export default async function handler(req, res) {
         // Race data (Tier 1) - formatted for direct copy to Illustrator
         raceDate: formatRaceDate(race?.raceDate),
         raceLocation: race?.location || null,
-        resultsUrl: race?.resultsUrl || RESULTS_URL_FALLBACK[`${effectiveRaceName}_${effectiveRaceYear}`] || null,
+        resultsUrl: getResultsUrl(race, effectiveRaceName, effectiveRaceYear),
         weatherTemp: formatTemp(race?.weatherTemp),
         weatherCondition: race?.weatherCondition ?
           race.weatherCondition.charAt(0).toUpperCase() + race.weatherCondition.slice(1) : null,
