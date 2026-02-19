@@ -105,7 +105,7 @@ export class AustinMarathonScraper extends BaseScraper {
    * @param {string} eventType - 'marathon' or 'halfMarathon' (optional)
    * @returns {Promise<Object>} Standardized result object
    */
-  async searchRunner(runnerName, eventType = 'marathon') {
+  async searchRunner(runnerName, eventType = null) {
     console.log(`\n${'='.repeat(50)}`)
     console.log(`[Austin Marathon ${this.year}] Searching for: "${runnerName}"`)
     console.log(`${'='.repeat(50)}`)
@@ -115,6 +115,19 @@ export class AustinMarathonScraper extends BaseScraper {
       if (!this.eventIds[this.year]) {
         console.log(`[Austin Marathon] No event IDs configured for year ${this.year}`)
         return this.notFoundResult(`No results available for ${this.year} yet`)
+      }
+
+      // If no specific event type, try marathon first then half marathon
+      if (!eventType) {
+        console.log(`[Austin Marathon] Searching Marathon results...`)
+        const marathonResult = await this.searchRunner(runnerName, 'marathon')
+        if (marathonResult.found) return marathonResult
+
+        if (this.eventIds[this.year].halfMarathon) {
+          console.log(`[Austin Marathon] Not found in Marathon, searching Half Marathon...`)
+          return this.searchRunner(runnerName, 'halfMarathon')
+        }
+        return marathonResult
       }
 
       const eventId = this.eventIds[this.year][eventType]
@@ -185,8 +198,52 @@ export class AustinMarathonScraper extends BaseScraper {
         }
       }
 
-      // Single result found
-      const result = results[0]
+      // Verify name match — MyChipTime can return partial/fuzzy matches
+      const nameMatched = results.filter(r => {
+        const fullName = `${r.firstName} ${r.lastName}`
+        return this.namesMatch(runnerName, fullName)
+      })
+
+      if (nameMatched.length === 0) {
+        console.log(`[Austin Marathon] Results returned but no name match for "${runnerName}":`)
+        results.forEach(r => console.log(`  - ${r.firstName} ${r.lastName}`))
+        // Return unmatched results as ambiguous so the user can verify
+        const eventTypeDisplay = eventType === 'halfMarathon' ? 'Half Marathon' : 'Marathon'
+        return {
+          found: false,
+          ambiguous: true,
+          researchNotes: `No exact match for "${runnerName}". Found: ${results.map(r => `${r.firstName} ${r.lastName}`).join(', ')}`,
+          possibleMatches: results.map(r => ({
+            name: `${r.firstName} ${r.lastName}`,
+            bib: r.bib,
+            time: r.chipTime,
+            pace: r.pace,
+            city: r.city,
+            state: r.state,
+            eventType: eventTypeDisplay,
+            resultsUrl: searchUrl
+          }))
+        }
+      }
+
+      if (nameMatched.length > 1) {
+        console.log(`[Austin Marathon] Multiple name matches found`)
+        return {
+          found: false,
+          ambiguous: true,
+          researchNotes: `Found ${nameMatched.length} runners matching "${runnerName}". Please specify more details.`,
+          possibleMatches: nameMatched.map(r => ({
+            name: `${r.firstName} ${r.lastName}`,
+            bib: r.bib,
+            time: r.chipTime,
+            city: r.city,
+            state: r.state
+          }))
+        }
+      }
+
+      // Single verified match
+      const result = nameMatched[0]
       console.log(`[Austin Marathon] Found result:`)
       console.log(`  Bib: ${result.bib}`)
       console.log(`  Chip Time: ${result.chipTime}`)
@@ -230,8 +287,18 @@ export class AustinMarathonScraper extends BaseScraper {
     const $ = cheerio.load(html)
     const results = []
 
-    // MyChipTime results are in a table with class "table-striped" or similar
-    $('table tr').each((_, row) => {
+    // Check if MyChipTime returned "0 results returned" — the page still renders
+    // leaderboard tables, so we must bail early to avoid false positives
+    if (html.includes('0 results returned')) {
+      console.log('[Austin Marathon] MyChipTime returned 0 results')
+      return results
+    }
+
+    // Only parse the main results table (id="myTable"), not leaderboard tables
+    const mainTable = $('table#myTable')
+    const tableEl = mainTable.length ? mainTable : $('table').first()
+
+    tableEl.find('tr').each((_, row) => {
       const cells = $(row).find('td')
       if (cells.length < 14) return // Skip header rows or short rows
 

@@ -70,7 +70,8 @@ export default async function handler(req, res) {
         researchStatus: runnerResearch.researchStatus,
         researchNotes: runnerResearch.researchNotes
       },
-      research: runnerResearch
+      research: runnerResearch,
+      possibleMatches: runnerResearch.possibleMatches || null
     })
 
   } catch (error) {

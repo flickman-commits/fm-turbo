@@ -167,6 +167,8 @@ export default function Dashboard() {
   const [isTestingScrapers, setIsTestingScrapers] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
+  // Store possible matches per order for ambiguous results (not persisted to DB)
+  const [possibleMatchesMap, setPossibleMatchesMap] = useState<Record<string, Array<{ name: string; bib: string; time: string; pace?: string; city?: string; state?: string; eventType?: string; resultsUrl?: string }>>>({})
 
   // Fetch orders from database
   const fetchOrders = useCallback(async () => {
@@ -355,10 +357,19 @@ export default function Dashboard() {
           type: 'success'
         })
       } else if (data.ambiguous) {
-        setToast({
-          message: 'Multiple runners found with that name',
-          type: 'error'
-        })
+        // Store possible matches for this order so the UI can show "Accept" buttons
+        if (data.possibleMatches?.length > 0) {
+          setPossibleMatchesMap(prev => ({ ...prev, [orderNumber]: data.possibleMatches }))
+          setToast({
+            message: `Found ${data.possibleMatches.length} possible match${data.possibleMatches.length > 1 ? 'es' : ''} — please verify`,
+            type: 'info'
+          })
+        } else {
+          setToast({
+            message: 'Multiple runners found with that name',
+            type: 'error'
+          })
+        }
       } else {
         setToast({
           message: 'Runner not found in race results',
@@ -428,6 +439,93 @@ export default function Dashboard() {
       setToast({ message, type: 'error' })
     } finally {
       setIsResearching(false)
+    }
+  }
+
+  // Accept a suggested match for an ambiguous result
+  const acceptMatch = async (orderNumber: string, match: { name: string; bib: string; time: string; pace?: string; eventType?: string; resultsUrl?: string }) => {
+    try {
+      setToast({ message: 'Accepting match...', type: 'info' })
+
+      const response = await fetch(`/api/orders/accept-match`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderNumber, match })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to accept match')
+      }
+
+      setToast({
+        message: `Match accepted: ${match.name} — Bib: ${match.bib}, Time: ${match.time}`,
+        type: 'success'
+      })
+
+      // Clear possible matches for this order
+      setPossibleMatchesMap(prev => {
+        const next = { ...prev }
+        delete next[orderNumber]
+        return next
+      })
+
+      // Refresh orders to get updated data
+      await fetchOrders()
+
+      // Update selected order with fresh data
+      const freshResponse = await fetch(`/api/orders`)
+      if (freshResponse.ok) {
+        const freshData = await freshResponse.json()
+        const freshOrders: Order[] = (freshData.orders || []).map((order: Record<string, unknown>) => {
+          const shopifyData = order.shopifyOrderData as Record<string, unknown> | null
+          const displayNum = shopifyData?.name as string | undefined
+          return {
+            id: order.id as string,
+            orderNumber: order.orderNumber as string,
+            parentOrderNumber: order.parentOrderNumber as string,
+            lineItemIndex: order.lineItemIndex as number,
+            displayOrderNumber: displayNum || (order.parentOrderNumber as string),
+            source: order.source as 'shopify' | 'etsy',
+            raceName: order.raceName as string,
+            raceYear: order.raceYear as number | null,
+            raceDate: order.raceDate as string | undefined,
+            raceLocation: order.raceLocation as string | undefined,
+            runnerName: order.runnerName as string,
+            productSize: order.productSize as string,
+            notes: order.notes as string | undefined,
+            status: order.status as 'pending' | 'ready' | 'flagged' | 'completed' | 'missing_year',
+            createdAt: order.createdAt as string,
+            completedAt: order.researchedAt as string | undefined,
+            bibNumber: order.bibNumber as string | undefined,
+            officialTime: order.officialTime as string | undefined,
+            officialPace: order.officialPace as string | undefined,
+            eventType: order.eventType as string | undefined,
+            researchStatus: order.researchStatus as 'found' | 'not_found' | 'ambiguous' | null,
+            researchNotes: order.researchNotes as string | undefined,
+            resultsUrl: order.resultsUrl as string | undefined,
+            weatherTemp: order.weatherTemp as string | undefined,
+            weatherCondition: order.weatherCondition as string | undefined,
+            hasScraperAvailable: order.hasScraperAvailable as boolean | undefined,
+            yearOverride: order.yearOverride as number | null | undefined,
+            raceNameOverride: order.raceNameOverride as string | null | undefined,
+            runnerNameOverride: order.runnerNameOverride as string | null | undefined,
+            effectiveRaceYear: order.effectiveRaceYear as number | null | undefined,
+            effectiveRaceName: order.effectiveRaceName as string | undefined,
+            effectiveRunnerName: order.effectiveRunnerName as string | undefined,
+            hasOverrides: order.hasOverrides as boolean | undefined
+          }
+        })
+        setOrders(freshOrders)
+        const updatedOrder = freshOrders.find(o => o.orderNumber === orderNumber)
+        if (updatedOrder) {
+          setSelectedOrder(updatedOrder)
+        }
+      }
+    } catch (error) {
+      console.error('Error accepting match:', error)
+      const message = error instanceof Error ? error.message : 'Failed to accept match'
+      setToast({ message, type: 'error' })
     }
   }
 
@@ -1314,12 +1412,43 @@ Thank you!`
                       <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
                         <p className="text-body-sm text-amber-800">
                           {selectedOrder.researchStatus === 'not_found' && 'Runner not found in race results. Please verify the name and year.'}
-                          {selectedOrder.researchStatus === 'ambiguous' && 'Multiple runners found with this name. Manual verification needed.'}
+                          {selectedOrder.researchStatus === 'ambiguous' && (possibleMatchesMap[selectedOrder.orderNumber]?.length
+                            ? 'Possible matches found. Is this the right runner?'
+                            : 'Multiple runners found with this name. Manual verification needed.'
+                          )}
                         </p>
-                        {selectedOrder.researchNotes && (
+                        {selectedOrder.researchNotes && !possibleMatchesMap[selectedOrder.orderNumber]?.length && (
                           <p className="text-body-sm text-amber-700 mt-2">{selectedOrder.researchNotes}</p>
                         )}
                       </div>
+
+                      {/* Suggested matches with Accept buttons */}
+                      {possibleMatchesMap[selectedOrder.orderNumber]?.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          {possibleMatchesMap[selectedOrder.orderNumber].map((match, idx) => (
+                            <div key={idx} className="flex items-center justify-between bg-white border border-amber-200 rounded-md p-3">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-body-sm font-medium text-off-black">{match.name}</p>
+                                <p className="text-xs text-off-black/60">
+                                  {[
+                                    match.bib && `Bib: ${match.bib}`,
+                                    match.time && `Time: ${match.time}`,
+                                    match.pace && `Pace: ${match.pace}`,
+                                    match.city && match.state && `${match.city}, ${match.state}`
+                                  ].filter(Boolean).join(' · ')}
+                                </p>
+                              </div>
+                              <button
+                                onClick={() => acceptMatch(selectedOrder.orderNumber, match)}
+                                className="ml-3 flex items-center gap-1.5 px-3 py-1.5 bg-success-green/10 text-success-green border border-success-green/30 rounded-md hover:bg-success-green/20 transition-colors text-xs font-medium"
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                                Accept
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
 
