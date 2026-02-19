@@ -3,7 +3,7 @@ import { Search, Upload, Copy, Loader2, FlaskConical, Pencil, Check, X, Settings
 
 // API calls now go to /api/* serverless functions (same origin)
 
-type DesignStatus = 'not_started' | 'in_progress' | 'awaiting_review' | 'ready_to_send' | 'done'
+type DesignStatus = 'not_started' | 'concepts_done' | 'in_revision' | 'production_files_made' | 'sent_to_customer'
 
 interface Order {
   id: string
@@ -61,10 +61,10 @@ interface Order {
 // Design status display config
 const DESIGN_STATUS_CONFIG: Record<DesignStatus, { icon: string; label: string; color: string; bgColor: string }> = {
   not_started: { icon: '⚪', label: 'Not Started', color: 'text-off-black/50', bgColor: 'bg-off-black/5' },
-  in_progress: { icon: '🟡', label: 'In Progress', color: 'text-amber-700', bgColor: 'bg-amber-50' },
-  awaiting_review: { icon: '🔵', label: 'Awaiting Review', color: 'text-blue-700', bgColor: 'bg-blue-50' },
-  ready_to_send: { icon: '🟢', label: 'Ready to Send', color: 'text-green-700', bgColor: 'bg-green-50' },
-  done: { icon: '✅', label: 'Done', color: 'text-green-700', bgColor: 'bg-green-50' },
+  concepts_done: { icon: '🟡', label: 'Concepts Done', color: 'text-amber-700', bgColor: 'bg-amber-50' },
+  in_revision: { icon: '🔵', label: 'In Revision', color: 'text-blue-700', bgColor: 'bg-blue-50' },
+  production_files_made: { icon: '🟢', label: 'Production Files Made', color: 'text-green-700', bgColor: 'bg-green-50' },
+  sent_to_customer: { icon: '✅', label: 'Sent to Customer', color: 'text-green-700', bgColor: 'bg-green-50' },
 }
 
 // Toast notification component
@@ -758,11 +758,11 @@ export default function Dashboard() {
 
   // Designs to be personalized
   // Standard view: pending + flagged + ready + missing_year, sorted newest first
-  // Custom view: all items where designStatus !== 'done', sorted oldest first (by due date)
+  // Custom view: all items where designStatus !== 'sent_to_customer', sorted oldest first (by due date)
   const ordersToFulfill = useMemo(() => {
     if (activeView === 'custom') {
       // Custom view: show all non-done designs, sorted by due date ascending (oldest/most urgent first)
-      const customOrders = orders.filter(o => o.designStatus !== 'done')
+      const customOrders = orders.filter(o => o.designStatus !== 'sent_to_customer')
       return customOrders.sort((a, b) => {
         const dateA = a.dueDate ? new Date(a.dueDate).getTime() : Infinity
         const dateB = b.dueDate ? new Date(b.dueDate).getTime() : Infinity
@@ -782,7 +782,7 @@ export default function Dashboard() {
 
   const completedOrders = useMemo(() => {
     if (activeView === 'custom') {
-      return orders.filter(o => o.designStatus === 'done')
+      return orders.filter(o => o.designStatus === 'sent_to_customer')
     }
     return orders.filter(o => o.status === 'completed')
   }, [orders, activeView])
@@ -1119,7 +1119,7 @@ Thank you!`
                     </thead>
                     <tbody className="divide-y divide-border-gray">
                       {filteredOrders.map((order, index) => {
-                        const designConfig = DESIGN_STATUS_CONFIG[order.designStatus || 'not_started']
+                        const designConfig = DESIGN_STATUS_CONFIG[order.designStatus as DesignStatus] || DESIGN_STATUS_CONFIG.not_started
                         const itemCount = getOrderItemCount(order.parentOrderNumber)
                         return (
                           <tr
@@ -1429,25 +1429,29 @@ Thank you!`
                   {/* ========== CUSTOM ORDER DETAIL VIEW ========== */}
                   {selectedOrder.trackstarOrderType === 'custom' ? (
                     <>
-                      {/* Design Status Selector */}
+                      {/* Design Status Dropdown */}
                       <div>
                         <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Design Status</h4>
-                        <div className="bg-subtle-gray border border-border-gray rounded-md p-4">
-                          <div className="grid grid-cols-2 gap-2">
+                        <div className="relative">
+                          <select
+                            value={DESIGN_STATUS_CONFIG[selectedOrder.designStatus as DesignStatus] ? selectedOrder.designStatus : 'not_started'}
+                            onChange={(e) => updateDesignStatus(selectedOrder.orderNumber, e.target.value as DesignStatus)}
+                            className={`w-full appearance-none px-3 py-2.5 pr-8 rounded-md text-sm font-medium border transition-colors cursor-pointer ${
+                              (DESIGN_STATUS_CONFIG[selectedOrder.designStatus as DesignStatus] || DESIGN_STATUS_CONFIG.not_started).bgColor
+                            } ${
+                              (DESIGN_STATUS_CONFIG[selectedOrder.designStatus as DesignStatus] || DESIGN_STATUS_CONFIG.not_started).color
+                            } border-border-gray focus:outline-none focus:ring-2 focus:ring-off-black/20`}
+                          >
                             {(Object.entries(DESIGN_STATUS_CONFIG) as [DesignStatus, typeof DESIGN_STATUS_CONFIG[DesignStatus]][]).map(([status, config]) => (
-                              <button
-                                key={status}
-                                onClick={() => updateDesignStatus(selectedOrder.orderNumber, status)}
-                                className={`flex items-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition-colors ${
-                                  selectedOrder.designStatus === status
-                                    ? `${config.bgColor} ${config.color} ring-2 ring-offset-1 ring-off-black/20`
-                                    : 'bg-white border border-border-gray text-off-black/60 hover:bg-off-black/5'
-                                }`}
-                              >
-                                <span>{config.icon}</span>
-                                {config.label}
-                              </button>
+                              <option key={status} value={status}>
+                                {config.icon} {config.label}
+                              </option>
                             ))}
+                          </select>
+                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                            <svg className="h-4 w-4 text-off-black/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
                           </div>
                         </div>
                       </div>
@@ -1517,8 +1521,8 @@ Thank you!`
 
                       {/* Actions for Custom Designs */}
                       <div className="flex gap-3 pt-3">
-                        {/* Email Customer button - only show when ready_to_send */}
-                        {selectedOrder.designStatus === 'ready_to_send' && selectedOrder.customerEmail && (
+                        {/* Email Customer button - show when production files are made */}
+                        {selectedOrder.designStatus === 'production_files_made' && selectedOrder.customerEmail && (
                           <a
                             href={generateEmailLink(selectedOrder)}
                             className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium"
@@ -1527,9 +1531,9 @@ Thank you!`
                             Email Customer
                           </a>
                         )}
-                        {selectedOrder.designStatus !== 'done' ? (
+                        {selectedOrder.designStatus !== 'sent_to_customer' ? (
                           <button
-                            onClick={() => updateDesignStatus(selectedOrder.orderNumber, 'done')}
+                            onClick={() => updateDesignStatus(selectedOrder.orderNumber, 'sent_to_customer')}
                             className="flex-1 px-5 py-3 bg-off-black text-white rounded-md hover:opacity-90 transition-opacity font-medium"
                           >
                             Mark as Done
