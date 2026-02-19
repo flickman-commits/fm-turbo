@@ -1,16 +1,11 @@
 /**
  * API endpoint to research a runner's race results
- * Also handles accepting a suggested match (action: 'accept-match')
- *
  * Uses two-tier caching:
  *   1. Race-level data (date, location, weather) - cached once per race/year
  *   2. Runner-level data (bib, time, pace) - cached per order
  */
-import { PrismaClient } from '@prisma/client'
 import { researchService } from '../../server/services/ResearchService.js'
 import { hasScraperForRace, getSupportedRaces } from '../../server/scrapers/index.js'
-
-const prisma = new PrismaClient()
 
 export default async function handler(req, res) {
   // CORS
@@ -27,51 +22,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { action, orderNumber, orderNumbers, match } = req.body
-
-    // Accept match mode — populate data from a suggested match
-    if (action === 'accept-match') {
-      if (!orderNumber || !match) {
-        return res.status(400).json({ error: 'orderNumber and match are required' })
-      }
-
-      console.log(`[API] Accept match for order: ${orderNumber}`)
-      console.log(`[API] Match data:`, match)
-
-      const order = await prisma.order.findFirst({ where: { orderNumber } })
-      if (!order) {
-        return res.status(404).json({ error: `Order not found: ${orderNumber}` })
-      }
-
-      const research = await prisma.runnerResearch.findFirst({
-        where: { orderId: order.id },
-        orderBy: { createdAt: 'desc' }
-      })
-      if (!research) {
-        return res.status(404).json({ error: 'No research record found for this order' })
-      }
-
-      const updatedResearch = await prisma.runnerResearch.update({
-        where: { id: research.id },
-        data: {
-          bibNumber: match.bib || null,
-          officialTime: match.time || null,
-          officialPace: match.pace || null,
-          eventType: match.eventType || research.eventType || null,
-          resultsUrl: match.resultsUrl || research.resultsUrl || null,
-          researchStatus: 'found',
-          researchNotes: `Accepted match: "${match.name}" (original search: "${order.runnerName}")`
-        }
-      })
-
-      await prisma.order.update({
-        where: { id: order.id },
-        data: { status: 'ready', researchedAt: new Date() }
-      })
-
-      console.log(`[API] Match accepted for order ${orderNumber}: ${match.name}`)
-      return res.status(200).json({ success: true, research: updatedResearch })
-    }
+    const { orderNumber, orderNumbers } = req.body
 
     // Batch mode - research multiple orders
     if (orderNumbers && Array.isArray(orderNumbers)) {

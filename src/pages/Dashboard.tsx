@@ -447,10 +447,10 @@ export default function Dashboard() {
     try {
       setToast({ message: 'Accepting match...', type: 'info' })
 
-      const response = await fetch(`/api/orders/research-runner`, {
+      const response = await fetch(`/api/orders/accept-match`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'accept-match', orderNumber, match })
+        body: JSON.stringify({ orderNumber, match })
       })
 
       if (!response.ok) {

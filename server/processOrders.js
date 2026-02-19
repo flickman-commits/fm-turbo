@@ -14,7 +14,7 @@
  */
 
 import { PrismaClient } from '@prisma/client'
-import { shopifyFetch } from '../api/utils/shopifyAuth.js'
+import { shopifyFetch } from './services/shopifyAuth.js'
 import { researchService } from './services/ResearchService.js'
 import { hasScraperForRace } from './scrapers/index.js'
 

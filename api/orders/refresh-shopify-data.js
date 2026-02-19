@@ -1,16 +1,19 @@
 /**
  * POST /api/orders/refresh-shopify-data
  *
- * Re-fetches Shopify data for all existing orders in the database
+ * Handles two modes:
+ *   1. Single order: { shopifyOrderId } — fetches personalization for one order
+ *   2. Batch refresh: {} (no body) — re-fetches Shopify data for ALL orders
+ *
  * Useful for updating orders when extraction logic changes
  */
 
 import { PrismaClient } from '@prisma/client'
-import fetch from 'node-fetch'
+import { shopifyFetch } from '../../server/services/shopifyAuth.js'
 
 const prisma = new PrismaClient()
 
-// Shopify OAuth configuration
+// Fallback for batch mode (uses direct token auth)
 const SHOPIFY_SHOP_URL = process.env.SHOPIFY_SHOP_URL
 const SHOPIFY_ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN
 
@@ -29,101 +32,159 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log('[API /orders/refresh-shopify-data] Starting refresh...')
+    const { shopifyOrderId } = req.body || {}
 
-    // Get all orders from database
-    const orders = await prisma.order.findMany({
-      where: {
-        source: 'shopify'
-      },
-      select: {
-        orderNumber: true
-      }
-    })
-
-    console.log(`[Refresh] Found ${orders.length} Shopify orders to refresh`)
-
-    const results = {
-      total: orders.length,
-      updated: 0,
-      failed: 0,
-      errors: []
+    // Single order mode — fetch personalization for one order
+    if (shopifyOrderId) {
+      return await handleSingleOrder(req, res, shopifyOrderId)
     }
 
-    // Re-fetch Shopify data for each order
-    for (const order of orders) {
-      try {
-        const orderNumber = order.orderNumber
-
-        // Fetch from Shopify
-        const shopifyUrl = `https://${SHOPIFY_SHOP_URL}/admin/api/2024-01/orders/${orderNumber}.json`
-        const response = await fetch(shopifyUrl, {
-          headers: {
-            'X-Shopify-Access-Token': SHOPIFY_ACCESS_TOKEN,
-            'Content-Type': 'application/json'
-          }
-        })
-
-        if (!response.ok) {
-          console.log(`[Refresh] Order ${orderNumber}: Shopify API error ${response.status}`)
-          results.failed++
-          results.errors.push({ orderNumber, error: `Shopify API ${response.status}` })
-          continue
-        }
-
-        const data = await response.json()
-        const shopifyOrder = data.order
-
-        if (!shopifyOrder) {
-          results.failed++
-          results.errors.push({ orderNumber, error: 'No order data returned' })
-          continue
-        }
-
-        // Extract Shopify personalization data
-        const parsed = extractShopifyData(shopifyOrder.line_items || [])
-
-        // Update database
-        await prisma.order.update({
-          where: { orderNumber: String(orderNumber) },
-          data: {
-            raceName: parsed.raceName,
-            runnerName: parsed.runnerName,
-            raceYear: parsed.raceYear,
-            shopifyOrderData: shopifyOrder,
-            hadNoTime: parsed.hadNoTime,
-            status: parsed.needsAttention ? 'missing_year' : 'pending'
-          }
-        })
-
-        results.updated++
-        console.log(`[Refresh] Updated order ${orderNumber}: ${parsed.runnerName} - ${parsed.raceName} (${parsed.raceYear})`)
-
-      } catch (error) {
-        console.error(`[Refresh] Error processing order ${order.orderNumber}:`, error.message)
-        results.failed++
-        results.errors.push({ orderNumber: order.orderNumber, error: error.message })
-      }
-    }
-
-    console.log(`[Refresh] Complete: ${results.updated} updated, ${results.failed} failed`)
-
-    return res.status(200).json({
-      success: true,
-      ...results
-    })
+    // Batch mode — refresh all orders
+    return await handleBatchRefresh(req, res)
 
   } catch (error) {
     console.error('[API /orders/refresh-shopify-data] Error:', error)
     return res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     })
+  } finally {
+    await prisma.$disconnect()
   }
 }
 
 /**
- * Extract personalization data from Shopify line items
+ * Fetch personalization data from Shopify for a single order
+ */
+async function handleSingleOrder(req, res, shopifyOrderId) {
+  const data = await shopifyFetch(`/orders/${shopifyOrderId}.json`)
+  const shopifyOrder = data.order
+
+  if (!shopifyOrder) {
+    return res.status(404).json({ error: 'Order not found in Shopify' })
+  }
+
+  const parsed = extractShopifyData(shopifyOrder.line_items)
+  const notes = await fetchShopifyComments(shopifyOrderId)
+
+  // Update all line items for this order
+  const existingOrders = await prisma.order.findMany({
+    where: { parentOrderNumber: String(shopifyOrderId) }
+  })
+
+  for (const existing of existingOrders) {
+    const lineItemIndex = existing.lineItemIndex
+    const lineItem = shopifyOrder.line_items?.[lineItemIndex]
+
+    if (lineItem) {
+      const lineItemData = extractShopifyData([lineItem])
+
+      await prisma.order.update({
+        where: { id: existing.id },
+        data: {
+          raceName: lineItemData.raceName || existing.raceName,
+          runnerName: lineItemData.runnerName || existing.runnerName,
+          raceYear: lineItemData.raceYear || existing.raceYear,
+          hadNoTime: lineItemData.hadNoTime || false,
+          notes: notes || existing.notes,
+          shopifyOrderData: shopifyOrder,
+          status: lineItemData.needsAttention ? 'missing_year' : existing.status
+        }
+      })
+    }
+  }
+
+  return res.status(200).json({
+    success: true,
+    shopifyOrderId: shopifyOrder.id,
+    orderName: shopifyOrder.name,
+    raceName: parsed.raceName,
+    runnerName: parsed.runnerName,
+    raceYear: parsed.raceYear,
+    hadNoTime: parsed.hadNoTime,
+    notes,
+    needsAttention: parsed.needsAttention,
+    raw: {
+      productTitle: parsed.rawProductTitle,
+      raceName: parsed.rawRaceName,
+      runnerName: parsed.rawRunnerName,
+      raceYear: parsed.rawRaceYear
+    }
+  })
+}
+
+/**
+ * Re-fetch Shopify data for ALL orders in the database
+ */
+async function handleBatchRefresh(req, res) {
+  console.log('[API /orders/refresh-shopify-data] Starting batch refresh...')
+
+  const orders = await prisma.order.findMany({
+    where: { source: 'shopify' },
+    select: { orderNumber: true }
+  })
+
+  console.log(`[Refresh] Found ${orders.length} Shopify orders to refresh`)
+
+  const results = { total: orders.length, updated: 0, failed: 0, errors: [] }
+
+  for (const order of orders) {
+    try {
+      const orderNumber = order.orderNumber
+
+      const response = await fetch(`https://${SHOPIFY_SHOP_URL}/admin/api/2024-01/orders/${orderNumber}.json`, {
+        headers: {
+          'X-Shopify-Access-Token': SHOPIFY_ACCESS_TOKEN,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        results.failed++
+        results.errors.push({ orderNumber, error: `Shopify API ${response.status}` })
+        continue
+      }
+
+      const data = await response.json()
+      const shopifyOrder = data.order
+
+      if (!shopifyOrder) {
+        results.failed++
+        results.errors.push({ orderNumber, error: 'No order data returned' })
+        continue
+      }
+
+      const parsed = extractShopifyData(shopifyOrder.line_items || [])
+
+      await prisma.order.update({
+        where: { orderNumber: String(orderNumber) },
+        data: {
+          raceName: parsed.raceName,
+          runnerName: parsed.runnerName,
+          raceYear: parsed.raceYear,
+          shopifyOrderData: shopifyOrder,
+          hadNoTime: parsed.hadNoTime,
+          status: parsed.needsAttention ? 'missing_year' : 'pending'
+        }
+      })
+
+      results.updated++
+      console.log(`[Refresh] Updated order ${orderNumber}: ${parsed.runnerName} - ${parsed.raceName} (${parsed.raceYear})`)
+
+    } catch (error) {
+      console.error(`[Refresh] Error processing order ${order.orderNumber}:`, error.message)
+      results.failed++
+      results.errors.push({ orderNumber: order.orderNumber, error: error.message })
+    }
+  }
+
+  console.log(`[Refresh] Complete: ${results.updated} updated, ${results.failed} failed`)
+  return res.status(200).json({ success: true, ...results })
+}
+
+/**
+ * Extract and parse Shopify line item data
  */
 function extractShopifyData(lineItems) {
   const result = {
@@ -142,21 +203,17 @@ function extractShopifyData(lineItems) {
     return result
   }
 
-  // Get product title (fallback for race name)
-  if (lineItems[0]?.title) {
-    result.rawProductTitle = lineItems[0].title
-    result.raceName = lineItems[0].title
-  }
+  const firstItem = lineItems[0]
+  result.rawProductTitle = firstItem.title || null
+  result.raceName = parseRaceName(result.rawProductTitle)
 
-  // Extract from line item properties
   for (const item of lineItems) {
-    const properties = item.properties || []
+    if (!item.properties || !Array.isArray(item.properties)) continue
 
-    for (const prop of properties) {
-      const name = prop.name
-      const value = prop.value
+    for (const prop of item.properties) {
+      const name = (prop.name || '').trim()
+      const value = (prop.value || '').trim()
 
-      // Runner name
       if (name === 'Runner Name (First & Last)' ||
           name === 'Runner Name' ||
           name === 'runner name' ||
@@ -166,23 +223,18 @@ function extractShopifyData(lineItems) {
         result.runnerName = cleaned.cleaned
         result.hadNoTime = cleaned.hadNoTime
       }
-      // Race year
       else if (name === 'Race Year' || name === 'race year' || name === 'race_year') {
         result.rawRaceYear = value
         const yearInt = parseInt(value, 10)
         result.raceYear = isNaN(yearInt) ? null : yearInt
       }
-      // Race name (override product title if provided)
       else if (name === 'Race Name' || name === 'race name' || name === 'race_name') {
         result.rawRaceName = value
-        if (value) {
-          result.raceName = value
-        }
+        if (value) result.raceName = value
       }
     }
   }
 
-  // Flag if missing critical data
   if (!result.runnerName || !result.raceYear) {
     result.needsAttention = true
   }
@@ -191,27 +243,51 @@ function extractShopifyData(lineItems) {
 }
 
 /**
- * Clean runner name - remove "no time" variations
+ * Parse race name from product title
  */
-function cleanRunnerName(rawName) {
-  if (!rawName) {
-    return { cleaned: null, hadNoTime: false }
+function parseRaceName(productTitle) {
+  if (!productTitle) return null
+
+  const suffixes = ['Personalized Race Print', 'Race Print', 'Print']
+  let raceName = productTitle.trim()
+  for (const suffix of suffixes) {
+    if (raceName.toLowerCase().endsWith(suffix.toLowerCase())) {
+      raceName = raceName.slice(0, -suffix.length).trim()
+      break
+    }
   }
+  return raceName || null
+}
 
-  const trimmed = rawName.trim()
+/**
+ * Clean runner name by removing "no time" variations
+ */
+function cleanRunnerName(runnerName) {
+  if (!runnerName) return { cleaned: null, hadNoTime: false }
 
-  // Check for "no time" variations (case insensitive)
-  const noTimePattern = /\bno\s*time\b/i
-  const hadNoTime = noTimePattern.test(trimmed)
+  let cleaned = runnerName.trim()
+  const hadNoTime = /\bno\s+time\b/i.test(cleaned)
+  cleaned = cleaned.replace(/\bno\s+time\b/gi, '').replace(/\s+/g, ' ').trim()
 
-  // Remove "no time" and extra whitespace
-  const cleaned = trimmed
-    .replace(noTimePattern, '')
-    .replace(/\s+/g, ' ')
-    .trim()
+  return { cleaned: cleaned || null, hadNoTime }
+}
 
-  return {
-    cleaned: cleaned || null,
-    hadNoTime
+/**
+ * Fetch timeline comments (internal notes) from Shopify order events
+ */
+async function fetchShopifyComments(shopifyOrderId) {
+  try {
+    const data = await shopifyFetch(`/orders/${shopifyOrderId}/events.json`)
+    const events = data.events || []
+
+    const comments = events
+      .filter(e => e.verb === 'comment' && e.body)
+      .map(e => ({ body: e.body, author: e.author, createdAt: e.created_at }))
+
+    if (comments.length === 0) return null
+    return comments.map(c => c.body).join(' | ')
+  } catch (error) {
+    console.error(`Failed to fetch comments for order ${shopifyOrderId}:`, error.message)
+    return null
   }
 }
