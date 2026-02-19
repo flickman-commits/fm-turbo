@@ -19,7 +19,6 @@ const routes = [
   { method: 'get',  path: '/api/orders',                    handler: '../api/orders/index.js' },
   { method: 'post', path: '/api/orders/import',              handler: '../api/orders/import.js' },
   { method: 'post', path: '/api/orders/research-runner',     handler: '../api/orders/research-runner.js' },
-  { method: 'post', path: '/api/orders/accept-match',        handler: '../api/orders/accept-match.js' },
   { method: 'post', path: '/api/orders/update',              handler: '../api/orders/update.js' },
   { method: 'post', path: '/api/orders/complete',            handler: '../api/orders/complete.js' },
   { method: 'post', path: '/api/orders/clear-research',      handler: '../api/orders/clear-research.js' },
