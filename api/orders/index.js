@@ -91,8 +91,16 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Support filtering by order type: ?type=standard or ?type=custom
+    const { type } = req.query
+    const whereClause = {}
+    if (type === 'standard' || type === 'custom') {
+      whereClause.trackstarOrderType = type
+    }
+
     // Fetch orders with their research data and race info
     const orders = await prisma.order.findMany({
+      where: whereClause,
       orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
       include: {
         runnerResearch: {
@@ -144,6 +152,16 @@ export default async function handler(req, res) {
           race.weatherCondition.charAt(0).toUpperCase() + race.weatherCondition.slice(1) : null,
         // Scraper availability - use effective race name
         hasScraperAvailable: hasScraperForRace(effectiveRaceName),
+        // Trackstar order type and custom order fields
+        trackstarOrderType: order.trackstarOrderType,
+        designStatus: order.designStatus,
+        dueDate: order.dueDate,
+        customerEmail: order.customerEmail,
+        customerName: order.customerName,
+        bibNumberCustomer: order.bibNumberCustomer,
+        timeCustomer: order.timeCustomer,
+        creativeDirection: order.creativeDirection,
+        isGift: order.isGift,
         // Clean up - don't send nested objects to frontend
         runnerResearch: undefined
       }

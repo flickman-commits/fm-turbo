@@ -1,7 +1,9 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import { Search, Upload, Copy, Loader2, FlaskConical, Pencil, Check, X, Settings } from 'lucide-react'
+import { Search, Upload, Copy, Loader2, FlaskConical, Pencil, Check, X, Settings, Mail } from 'lucide-react'
 
 // API calls now go to /api/* serverless functions (same origin)
+
+type DesignStatus = 'not_started' | 'in_progress' | 'awaiting_review' | 'ready_to_send' | 'done'
 
 interface Order {
   id: string
@@ -44,6 +46,25 @@ interface Order {
   effectiveRaceName?: string
   effectiveRunnerName?: string
   hasOverrides?: boolean
+  // Trackstar order type and custom order fields
+  trackstarOrderType?: 'standard' | 'custom'
+  designStatus?: DesignStatus
+  dueDate?: string
+  customerEmail?: string
+  customerName?: string
+  bibNumberCustomer?: string
+  timeCustomer?: string
+  creativeDirection?: string
+  isGift?: boolean
+}
+
+// Design status display config
+const DESIGN_STATUS_CONFIG: Record<DesignStatus, { icon: string; label: string; color: string; bgColor: string }> = {
+  not_started: { icon: '⚪', label: 'Not Started', color: 'text-off-black/50', bgColor: 'bg-off-black/5' },
+  in_progress: { icon: '🟡', label: 'In Progress', color: 'text-amber-700', bgColor: 'bg-amber-50' },
+  awaiting_review: { icon: '🔵', label: 'Awaiting Review', color: 'text-blue-700', bgColor: 'bg-blue-50' },
+  ready_to_send: { icon: '🟢', label: 'Ready to Send', color: 'text-green-700', bgColor: 'bg-green-50' },
+  done: { icon: '✅', label: 'Done', color: 'text-green-700', bgColor: 'bg-green-50' },
 }
 
 // Toast notification component
@@ -128,10 +149,10 @@ function NotAvailableField({ label }: { label: string }) {
   )
 }
 
-function getGreeting(): string {
+function getGreeting(timezone: string = 'America/Costa_Rica'): string {
   const now = new Date()
-  const costaRicaTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Costa_Rica' }))
-  const hour = costaRicaTime.getHours()
+  const localTime = new Date(now.toLocaleString('en-US', { timeZone: timezone }))
+  const hour = localTime.getHours()
 
   if (hour < 12) return 'Good morning'
   if (hour < 18) return 'Good afternoon'
@@ -169,11 +190,13 @@ export default function Dashboard() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
   // Store possible matches per order for ambiguous results (not persisted to DB)
   const [possibleMatchesMap, setPossibleMatchesMap] = useState<Record<string, Array<{ name: string; bib: string; time: string; pace?: string; city?: string; state?: string; eventType?: string; resultsUrl?: string }>>>({})
+  // Tab switcher: standard vs custom order view
+  const [activeView, setActiveView] = useState<'standard' | 'custom'>('standard')
 
-  // Fetch orders from database
+  // Fetch orders from database (filtered by activeView type)
   const fetchOrders = useCallback(async () => {
     try {
-      const response = await fetch(`/api/orders`)
+      const response = await fetch(`/api/orders?type=${activeView}`)
       if (!response.ok) throw new Error('Failed to fetch orders')
       const data = await response.json()
 
@@ -221,7 +244,17 @@ export default function Dashboard() {
           effectiveRaceYear: order.effectiveRaceYear as number | null | undefined,
           effectiveRaceName: order.effectiveRaceName as string | undefined,
           effectiveRunnerName: order.effectiveRunnerName as string | undefined,
-          hasOverrides: order.hasOverrides as boolean | undefined
+          hasOverrides: order.hasOverrides as boolean | undefined,
+          // Custom order fields
+          trackstarOrderType: order.trackstarOrderType as 'standard' | 'custom' | undefined,
+          designStatus: order.designStatus as DesignStatus | undefined,
+          dueDate: order.dueDate as string | undefined,
+          customerEmail: order.customerEmail as string | undefined,
+          customerName: order.customerName as string | undefined,
+          bibNumberCustomer: order.bibNumberCustomer as string | undefined,
+          timeCustomer: order.timeCustomer as string | undefined,
+          creativeDirection: order.creativeDirection as string | undefined,
+          isGift: order.isGift as boolean | undefined
         }
       })
 
@@ -233,7 +266,7 @@ export default function Dashboard() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [activeView])
 
   // Import new orders from Artelo
   const importOrders = async () => {
@@ -417,7 +450,16 @@ export default function Dashboard() {
             effectiveRaceYear: order.effectiveRaceYear as number | null | undefined,
             effectiveRaceName: order.effectiveRaceName as string | undefined,
             effectiveRunnerName: order.effectiveRunnerName as string | undefined,
-            hasOverrides: order.hasOverrides as boolean | undefined
+            hasOverrides: order.hasOverrides as boolean | undefined,
+            trackstarOrderType: order.trackstarOrderType as 'standard' | 'custom' | undefined,
+            designStatus: order.designStatus as DesignStatus | undefined,
+            dueDate: order.dueDate as string | undefined,
+            customerEmail: order.customerEmail as string | undefined,
+            customerName: order.customerName as string | undefined,
+            bibNumberCustomer: order.bibNumberCustomer as string | undefined,
+            timeCustomer: order.timeCustomer as string | undefined,
+            creativeDirection: order.creativeDirection as string | undefined,
+            isGift: order.isGift as boolean | undefined
           }
         })
 
@@ -513,7 +555,16 @@ export default function Dashboard() {
             effectiveRaceYear: order.effectiveRaceYear as number | null | undefined,
             effectiveRaceName: order.effectiveRaceName as string | undefined,
             effectiveRunnerName: order.effectiveRunnerName as string | undefined,
-            hasOverrides: order.hasOverrides as boolean | undefined
+            hasOverrides: order.hasOverrides as boolean | undefined,
+            trackstarOrderType: order.trackstarOrderType as 'standard' | 'custom' | undefined,
+            designStatus: order.designStatus as DesignStatus | undefined,
+            dueDate: order.dueDate as string | undefined,
+            customerEmail: order.customerEmail as string | undefined,
+            customerName: order.customerName as string | undefined,
+            bibNumberCustomer: order.bibNumberCustomer as string | undefined,
+            timeCustomer: order.timeCustomer as string | undefined,
+            creativeDirection: order.creativeDirection as string | undefined,
+            isGift: order.isGift as boolean | undefined
           }
         })
         setOrders(freshOrders)
@@ -638,26 +689,103 @@ export default function Dashboard() {
     setEditValues({ yearOverride: '', raceNameOverride: '', runnerNameOverride: '' })
   }
 
-  // Fetch orders on mount
+  // Fetch orders on mount and when view changes
   useEffect(() => {
+    setIsLoading(true)
     fetchOrders()
   }, [fetchOrders])
 
-  // Designs to be personalized: pending + flagged + ready + missing_year, sorted by order number descending
+  // Update design status for custom orders
+  const updateDesignStatus = async (orderNumber: string, designStatus: DesignStatus) => {
+    try {
+      const response = await fetch('/api/orders/design-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderNumber, designStatus })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update design status')
+      }
+
+      setToast({ message: `Design status updated to ${DESIGN_STATUS_CONFIG[designStatus].label}`, type: 'success' })
+      await fetchOrders()
+
+      // Update selected order if it's the one we just changed
+      if (selectedOrder?.orderNumber === orderNumber) {
+        setSelectedOrder(prev => prev ? { ...prev, designStatus } : null)
+      }
+    } catch (error) {
+      console.error('Error updating design status:', error)
+      const message = error instanceof Error ? error.message : 'Failed to update design status'
+      setToast({ message, type: 'error' })
+    }
+  }
+
+  // Format due date for display
+  const formatDueDate = (dateStr?: string): string => {
+    if (!dateStr) return 'N/A'
+    const d = new Date(dateStr)
+    const now = new Date()
+    const diffDays = Math.ceil((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+    const formatted = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    if (diffDays < 0) return `${formatted} (overdue)`
+    if (diffDays === 0) return `${formatted} (today)`
+    if (diffDays === 1) return `${formatted} (in 1 day)`
+    if (diffDays <= 3) return `${formatted} (in ${diffDays} days)`
+    return formatted
+  }
+
+  // Check if due date is urgent
+  const isDueDateUrgent = (dateStr?: string): boolean => {
+    if (!dateStr) return false
+    const d = new Date(dateStr)
+    const now = new Date()
+    const diffDays = Math.ceil((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+    return diffDays <= 3
+  }
+
+  // Generate mailto link for custom order email
+  const generateEmailLink = (order: Order): string => {
+    const customerName = order.customerName || 'there'
+    const subject = encodeURIComponent(`Your Custom Trackstar Print — Order ${order.displayOrderNumber}`)
+    const body = encodeURIComponent(
+      `Hey ${customerName},\n\nSuper excited to share with you our mock-ups — see below.\n\n`
+    )
+    return `mailto:${order.customerEmail || ''}?subject=${subject}&body=${body}`
+  }
+
+  // Designs to be personalized
+  // Standard view: pending + flagged + ready + missing_year, sorted newest first
+  // Custom view: all items where designStatus !== 'done', sorted oldest first (by due date)
   const ordersToFulfill = useMemo(() => {
+    if (activeView === 'custom') {
+      // Custom view: show all non-done designs, sorted by due date ascending (oldest/most urgent first)
+      const customOrders = orders.filter(o => o.designStatus !== 'done')
+      return customOrders.sort((a, b) => {
+        const dateA = a.dueDate ? new Date(a.dueDate).getTime() : Infinity
+        const dateB = b.dueDate ? new Date(b.dueDate).getTime() : Infinity
+        return dateA - dateB
+      })
+    }
+    // Standard view: filter by status, newest first
     const fulfillOrders = orders.filter(o =>
       o.status === 'flagged' || o.status === 'ready' || o.status === 'pending' || o.status === 'missing_year'
     )
-    // Sort by displayOrderNumber descending (highest order number first)
     return fulfillOrders.sort((a, b) => {
       const numA = parseInt(a.displayOrderNumber) || parseInt(a.orderNumber) || 0
       const numB = parseInt(b.displayOrderNumber) || parseInt(b.orderNumber) || 0
       return numB - numA
     })
-  }, [orders])
+  }, [orders, activeView])
 
-  const completedOrders = useMemo(() =>
-    orders.filter(o => o.status === 'completed'), [orders])
+  const completedOrders = useMemo(() => {
+    if (activeView === 'custom') {
+      return orders.filter(o => o.designStatus === 'done')
+    }
+    return orders.filter(o => o.status === 'completed')
+  }, [orders, activeView])
 
   const filteredOrders = useMemo(() => {
     if (!searchQuery) return ordersToFulfill
@@ -798,7 +926,7 @@ Thank you!`
             </div>
             <div>
               <h1 className="text-3xl md:text-4xl lg:text-[40px] font-bold text-off-black mb-1">
-                {getGreeting()}, Elí
+                {getGreeting(activeView === 'custom' ? 'America/New_York' : 'America/Costa_Rica')}, {activeView === 'custom' ? 'Dan' : 'Elí'}
               </h1>
               <p className="text-sm md:text-base text-off-black/60">
                 Last updated {formatLastUpdated(lastUpdated)}
@@ -849,10 +977,35 @@ Thank you!`
           {/* Section Header */}
           <div className="flex items-center justify-between mb-4 flex-shrink-0">
             <div className="flex items-center gap-3">
-              <h2 className="text-lg font-semibold text-off-black uppercase tracking-tight">Designs to be Personalized</h2>
+              <h2 className="text-lg font-semibold text-off-black uppercase tracking-tight">
+                {activeView === 'standard' ? 'Designs to be Personalized' : 'Custom Designs'}
+              </h2>
               <span className="px-2.5 py-1 bg-off-black/10 text-off-black/60 text-sm font-medium rounded">
                 {ordersToFulfill.length}
               </span>
+            </div>
+            {/* View Switcher */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setActiveView('standard'); setSearchQuery('') }}
+                className={`px-5 py-2 text-sm font-medium rounded-full transition-colors border ${
+                  activeView === 'standard'
+                    ? 'bg-off-black text-white border-off-black'
+                    : 'bg-white text-off-black border-border-gray hover:bg-subtle-gray'
+                }`}
+              >
+                Standard
+              </button>
+              <button
+                onClick={() => { setActiveView('custom'); setSearchQuery('') }}
+                className={`px-5 py-2 text-sm font-medium rounded-full transition-colors border ${
+                  activeView === 'custom'
+                    ? 'bg-off-black text-white border-off-black'
+                    : 'bg-white text-off-black border-border-gray hover:bg-subtle-gray'
+                }`}
+              >
+                Custom
+              </button>
             </div>
           </div>
 
@@ -864,7 +1017,7 @@ Thank you!`
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-off-black/40" />
                 <input
                   type="text"
-                  placeholder="Search by order #, race, or runner..."
+                  placeholder={activeView === 'standard' ? "Search by order #, race, or runner..." : "Search custom designs..."}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-11 pr-4 py-3 bg-subtle-gray border border-border-gray rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-off-black/10 focus:border-off-black/30 transition-colors"
@@ -875,83 +1028,154 @@ Thank you!`
             {/* Scrollable Table Container */}
             <div className="flex-1 overflow-y-auto min-h-0">
               <table className="w-full">
-                <thead className="bg-subtle-gray border-b border-border-gray sticky top-0 z-10">
-                  <tr>
-                    <th className="text-center pl-6 pr-2 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider w-12">Src</th>
-                    <th className="text-left px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider">Order #</th>
-                    <th className="text-center px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider w-20">Status</th>
-                    <th className="text-left px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider">Runner</th>
-                    <th className="text-left px-3 pr-6 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider hidden md:table-cell">Race</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border-gray">
-                  {filteredOrders.map((order, index) => {
-                    const statusDisplay = getStatusDisplay(order)
-                    const itemCount = getOrderItemCount(order.parentOrderNumber)
-                    return (
-                      <tr
-                        key={order.id}
-                        onClick={() => setSelectedOrder(order)}
-                        className={`hover:bg-subtle-gray cursor-pointer transition-colors ${index % 2 === 1 ? 'bg-subtle-gray/30' : ''}`}
-                      >
-                        <td className="pl-6 pr-2 py-5 text-center">
-                          <img
-                            src={order.source === 'shopify' ? '/shopify-icon.png' : '/etsy-icon.png'}
-                            alt={order.source === 'shopify' ? 'Shopify' : 'Etsy'}
-                            title={order.source === 'shopify' ? 'Shopify' : 'Etsy'}
-                            className="w-5 h-5 inline-block"
-                          />
-                        </td>
-                        <td className="px-3 py-5">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-off-black">{order.displayOrderNumber}</span>
-                            {itemCount > 1 && (
-                              <span className="px-1.5 py-0.5 bg-off-black/5 text-off-black/60 text-[10px] font-medium rounded whitespace-nowrap">
-                                Item {order.lineItemIndex + 1} of {itemCount}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-3 py-5 text-center">
-                          <span className="text-lg" title={statusDisplay.label}>
-                            {statusDisplay.icon}
-                          </span>
-                        </td>
-                        <td className="px-3 py-5">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-sm text-off-black">{order.effectiveRunnerName || order.runnerName || 'Unknown Runner'}</span>
-                            {order.hasOverrides && (
-                              <span className="px-1 py-0.5 bg-blue-100 text-blue-600 text-[9px] rounded">edited</span>
-                            )}
-                          </div>
-                          {order.status === 'flagged' && order.flagReason && (
-                            <p className="text-xs text-warning-amber mt-1 leading-tight">{order.flagReason}</p>
-                          )}
-                          {order.status === 'missing_year' && !order.yearOverride && (
-                            <p className="text-xs text-warning-amber mt-1 leading-tight">Year Missing</p>
-                          )}
-                          {order.status === 'ready' && order.bibNumber && (
-                            <p className="text-xs text-green-600 mt-1 leading-tight">Bib: {order.bibNumber} • {order.officialTime}</p>
-                          )}
-                          {order.status === 'pending' && order.hasScraperAvailable && (order.effectiveRaceYear || order.raceYear) && (
-                            <p className="text-xs text-blue-600 mt-1 leading-tight">Ready to research</p>
-                          )}
-                          {order.status === 'pending' && !order.hasScraperAvailable && (
-                            <p className="text-xs text-off-black/40 mt-1 leading-tight">Manual research needed</p>
-                          )}
-                        </td>
-                        <td className="px-3 pr-6 py-5 text-sm text-off-black/60 hidden md:table-cell">
-                          {order.effectiveRaceName || order.raceName} {order.effectiveRaceYear || order.raceYear}
-                        </td>
+                {activeView === 'standard' ? (
+                  <>
+                    {/* Standard Orders Table */}
+                    <thead className="bg-subtle-gray border-b border-border-gray sticky top-0 z-10">
+                      <tr>
+                        <th className="text-center pl-6 pr-2 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider w-12">Src</th>
+                        <th className="text-left px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider">Order #</th>
+                        <th className="text-center px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider w-20">Status</th>
+                        <th className="text-left px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider">Runner</th>
+                        <th className="text-left px-3 pr-6 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider hidden md:table-cell">Race</th>
                       </tr>
-                    )
-                  })}
-                </tbody>
+                    </thead>
+                    <tbody className="divide-y divide-border-gray">
+                      {filteredOrders.map((order, index) => {
+                        const statusDisplay = getStatusDisplay(order)
+                        const itemCount = getOrderItemCount(order.parentOrderNumber)
+                        return (
+                          <tr
+                            key={order.id}
+                            onClick={() => setSelectedOrder(order)}
+                            className={`hover:bg-subtle-gray cursor-pointer transition-colors ${index % 2 === 1 ? 'bg-subtle-gray/30' : ''}`}
+                          >
+                            <td className="pl-6 pr-2 py-5 text-center">
+                              <img
+                                src={order.source === 'shopify' ? '/shopify-icon.png' : '/etsy-icon.png'}
+                                alt={order.source === 'shopify' ? 'Shopify' : 'Etsy'}
+                                title={order.source === 'shopify' ? 'Shopify' : 'Etsy'}
+                                className="w-5 h-5 inline-block"
+                              />
+                            </td>
+                            <td className="px-3 py-5">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-off-black">{order.displayOrderNumber}</span>
+                                {itemCount > 1 && (
+                                  <span className="px-1.5 py-0.5 bg-off-black/5 text-off-black/60 text-[10px] font-medium rounded whitespace-nowrap">
+                                    Item {order.lineItemIndex + 1} of {itemCount}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-3 py-5 text-center">
+                              <span className="text-lg" title={statusDisplay.label}>
+                                {statusDisplay.icon}
+                              </span>
+                            </td>
+                            <td className="px-3 py-5">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-sm text-off-black">{order.effectiveRunnerName || order.runnerName || 'Unknown Runner'}</span>
+                                {order.hasOverrides && (
+                                  <span className="px-1 py-0.5 bg-blue-100 text-blue-600 text-[9px] rounded">edited</span>
+                                )}
+                              </div>
+                              {order.status === 'flagged' && order.flagReason && (
+                                <p className="text-xs text-warning-amber mt-1 leading-tight">{order.flagReason}</p>
+                              )}
+                              {order.status === 'missing_year' && !order.yearOverride && (
+                                <p className="text-xs text-warning-amber mt-1 leading-tight">Year Missing</p>
+                              )}
+                              {order.status === 'ready' && order.bibNumber && (
+                                <p className="text-xs text-green-600 mt-1 leading-tight">Bib: {order.bibNumber} • {order.officialTime}</p>
+                              )}
+                              {order.status === 'pending' && order.hasScraperAvailable && (order.effectiveRaceYear || order.raceYear) && (
+                                <p className="text-xs text-blue-600 mt-1 leading-tight">Ready to research</p>
+                              )}
+                              {order.status === 'pending' && !order.hasScraperAvailable && (
+                                <p className="text-xs text-off-black/40 mt-1 leading-tight">Manual research needed</p>
+                              )}
+                            </td>
+                            <td className="px-3 pr-6 py-5 text-sm text-off-black/60 hidden md:table-cell">
+                              {order.effectiveRaceName || order.raceName} {order.effectiveRaceYear || order.raceYear}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </>
+                ) : (
+                  <>
+                    {/* Custom Designs Table */}
+                    <thead className="bg-subtle-gray border-b border-border-gray sticky top-0 z-10">
+                      <tr>
+                        <th className="text-center pl-6 pr-2 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider w-12">Src</th>
+                        <th className="text-left px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider w-32">Design Status</th>
+                        <th className="text-left px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider">Order #</th>
+                        <th className="text-left px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider">Due Date</th>
+                        <th className="text-left px-3 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider hidden md:table-cell">Runner</th>
+                        <th className="text-left px-3 pr-6 py-4 text-xs font-semibold text-off-black/60 uppercase tracking-wider hidden lg:table-cell">Race</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-gray">
+                      {filteredOrders.map((order, index) => {
+                        const designConfig = DESIGN_STATUS_CONFIG[order.designStatus || 'not_started']
+                        const itemCount = getOrderItemCount(order.parentOrderNumber)
+                        return (
+                          <tr
+                            key={order.id}
+                            onClick={() => setSelectedOrder(order)}
+                            className={`hover:bg-subtle-gray cursor-pointer transition-colors ${index % 2 === 1 ? 'bg-subtle-gray/30' : ''}`}
+                          >
+                            <td className="pl-6 pr-2 py-5 text-center">
+                              <img
+                                src={order.source === 'shopify' ? '/shopify-icon.png' : '/etsy-icon.png'}
+                                alt={order.source === 'shopify' ? 'Shopify' : 'Etsy'}
+                                title={order.source === 'shopify' ? 'Shopify' : 'Etsy'}
+                                className="w-5 h-5 inline-block"
+                              />
+                            </td>
+                            <td className="px-3 py-5">
+                              <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${designConfig.bgColor} ${designConfig.color}`}>
+                                <span>{designConfig.icon}</span>
+                                {designConfig.label}
+                              </span>
+                            </td>
+                            <td className="px-3 py-5">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-off-black">{order.displayOrderNumber}</span>
+                                {itemCount > 1 && (
+                                  <span className="px-1.5 py-0.5 bg-off-black/5 text-off-black/60 text-[10px] font-medium rounded whitespace-nowrap">
+                                    Item {order.lineItemIndex + 1} of {itemCount}
+                                  </span>
+                                )}
+                                {order.isGift && (
+                                  <span className="px-1.5 py-0.5 bg-pink-50 text-pink-600 text-[10px] font-medium rounded">🎁 Gift</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-3 py-5">
+                              <span className={`text-sm ${isDueDateUrgent(order.dueDate) ? 'text-red-600 font-medium' : 'text-off-black'}`}>
+                                {formatDueDate(order.dueDate)}
+                              </span>
+                            </td>
+                            <td className="px-3 py-5 hidden md:table-cell">
+                              <span className="text-sm text-off-black">{order.effectiveRunnerName || order.runnerName || 'Unknown Runner'}</span>
+                            </td>
+                            <td className="px-3 pr-6 py-5 text-sm text-off-black/60 hidden lg:table-cell">
+                              <span className="line-clamp-1">{order.effectiveRaceName || order.raceName || '—'}</span>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </>
+                )}
               </table>
 
               {filteredOrders.length === 0 && (
                 <div className="text-center py-16 text-off-black/40 text-sm">
-                  {searchQuery ? 'No matching orders found' : 'No orders to personalize'}
+                  {searchQuery ? 'No matching orders found' : activeView === 'standard' ? 'No orders to personalize' : 'No custom designs'}
                 </div>
               )}
             </div>
@@ -1170,15 +1394,22 @@ Thank you!`
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
                     <span className="text-xl">
-                      {selectedOrder.status === 'flagged' ? '⚠️' :
-                       selectedOrder.status === 'completed' ? '✅' :
-                       selectedOrder.status === 'missing_year' ? '📅' :
-                       selectedOrder.status === 'ready' ? '✅' :
-                       selectedOrder.researchStatus === 'found' ? '✅' : '⏳'}
+                      {selectedOrder.trackstarOrderType === 'custom'
+                        ? DESIGN_STATUS_CONFIG[selectedOrder.designStatus || 'not_started'].icon
+                        : selectedOrder.status === 'flagged' ? '⚠️' :
+                          selectedOrder.status === 'completed' ? '✅' :
+                          selectedOrder.status === 'missing_year' ? '📅' :
+                          selectedOrder.status === 'ready' ? '✅' :
+                          selectedOrder.researchStatus === 'found' ? '✅' : '⏳'}
                     </span>
                     <h3 className="text-heading-md text-off-black">
                       Order {selectedOrder.displayOrderNumber}
                     </h3>
+                    {selectedOrder.trackstarOrderType === 'custom' && (
+                      <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-medium rounded">
+                        custom
+                      </span>
+                    )}
                     {selectedOrder.hasOverrides && (
                       <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded">
                         edited
@@ -1194,6 +1425,134 @@ Thank you!`
                 </div>
 
                 <div className="space-y-5">
+
+                  {/* ========== CUSTOM ORDER DETAIL VIEW ========== */}
+                  {selectedOrder.trackstarOrderType === 'custom' ? (
+                    <>
+                      {/* Design Status Selector */}
+                      <div>
+                        <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Design Status</h4>
+                        <div className="bg-subtle-gray border border-border-gray rounded-md p-4">
+                          <div className="grid grid-cols-2 gap-2">
+                            {(Object.entries(DESIGN_STATUS_CONFIG) as [DesignStatus, typeof DESIGN_STATUS_CONFIG[DesignStatus]][]).map(([status, config]) => (
+                              <button
+                                key={status}
+                                onClick={() => updateDesignStatus(selectedOrder.orderNumber, status)}
+                                className={`flex items-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition-colors ${
+                                  selectedOrder.designStatus === status
+                                    ? `${config.bgColor} ${config.color} ring-2 ring-offset-1 ring-off-black/20`
+                                    : 'bg-white border border-border-gray text-off-black/60 hover:bg-off-black/5'
+                                }`}
+                              >
+                                <span>{config.icon}</span>
+                                {config.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Due Date & Product Info */}
+                      <div>
+                        <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Order Info</h4>
+                        <div className="bg-subtle-gray border border-border-gray rounded-md p-4 space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-body-sm text-off-black/60">Due Date</span>
+                            <span className={`text-body-sm font-medium ${isDueDateUrgent(selectedOrder.dueDate) ? 'text-red-600' : 'text-off-black'}`}>
+                              {formatDueDate(selectedOrder.dueDate)}
+                            </span>
+                          </div>
+                          <StaticField label="Size" value={selectedOrder.productSize} />
+                          <CopyableField label="Filename" value={generateFilename(selectedOrder)} />
+                          {selectedOrder.isGift && (
+                            <div className="flex justify-between items-center">
+                              <span className="text-body-sm text-off-black/60">Gift Order</span>
+                              <span className="text-body-sm font-medium text-pink-600">🎁 Yes</span>
+                            </div>
+                          )}
+                          {selectedOrder.customerEmail && (
+                            <div className="flex justify-between items-center">
+                              <span className="text-body-sm text-off-black/60">Customer Email</span>
+                              <span className="text-body-sm font-medium text-off-black">{selectedOrder.customerEmail}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Customer-Provided Data */}
+                      <div>
+                        <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Customer Details</h4>
+                        <div className="bg-subtle-gray border border-border-gray rounded-md p-4 space-y-3">
+                          <CopyableField label="Runner" value={selectedOrder.effectiveRunnerName || selectedOrder.runnerName || 'Unknown'} />
+                          <CopyableField label="Race" value={selectedOrder.effectiveRaceName || selectedOrder.raceName || 'Custom'} />
+                          <StaticField label="Year" value={String(selectedOrder.effectiveRaceYear || selectedOrder.raceYear || 'N/A')} />
+                          {selectedOrder.bibNumberCustomer && (
+                            <CopyableField label="Bib #" value={selectedOrder.bibNumberCustomer} />
+                          )}
+                          {selectedOrder.timeCustomer && (
+                            <CopyableField label="Time" value={selectedOrder.timeCustomer} />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Creative Direction */}
+                      {selectedOrder.creativeDirection && (
+                        <div>
+                          <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Creative Direction</h4>
+                          <div className="bg-purple-50 border border-purple-200 rounded-md p-4">
+                            <p className="text-body-sm text-purple-800 whitespace-pre-wrap">{selectedOrder.creativeDirection}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Notes */}
+                      {selectedOrder.notes && (
+                        <div>
+                          <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Notes</h4>
+                          <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                            <p className="text-body-sm text-blue-800 whitespace-pre-wrap">{selectedOrder.notes}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Actions for Custom Designs */}
+                      <div className="flex gap-3 pt-3">
+                        {/* Email Customer button - only show when ready_to_send */}
+                        {selectedOrder.designStatus === 'ready_to_send' && selectedOrder.customerEmail && (
+                          <a
+                            href={generateEmailLink(selectedOrder)}
+                            className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium"
+                          >
+                            <Mail className="w-4 h-4" />
+                            Email Customer
+                          </a>
+                        )}
+                        {selectedOrder.designStatus !== 'done' ? (
+                          <button
+                            onClick={() => updateDesignStatus(selectedOrder.orderNumber, 'done')}
+                            className="flex-1 px-5 py-3 bg-off-black text-white rounded-md hover:opacity-90 transition-opacity font-medium"
+                          >
+                            Mark as Done
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => updateDesignStatus(selectedOrder.orderNumber, 'not_started')}
+                            className="flex-1 px-5 py-3 bg-white border border-border-gray text-off-black rounded-md hover:bg-subtle-gray transition-colors font-medium"
+                          >
+                            Mark as Not Done
+                          </button>
+                        )}
+                        <button
+                          onClick={closeModal}
+                          className="px-5 py-3 bg-white border border-border-gray text-off-black rounded-md hover:bg-subtle-gray transition-colors"
+                        >
+                          Close
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                  {/* ========== STANDARD ORDER DETAIL VIEW ========== */}
                   {/* Product Info */}
                   <div>
                     <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Product Info</h4>
@@ -1549,6 +1908,8 @@ Thank you!`
                       </button>
                     )}
                   </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

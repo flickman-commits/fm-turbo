@@ -22,6 +22,7 @@ const routes = [
   { method: 'post', path: '/api/orders/accept-match',        handler: '../api/orders/accept-match.js' },
   { method: 'post', path: '/api/orders/update',              handler: '../api/orders/update.js' },
   { method: 'post', path: '/api/orders/complete',            handler: '../api/orders/complete.js' },
+  { method: 'post', path: '/api/orders/design-status',       handler: '../api/orders/design-status.js' },
   { method: 'post', path: '/api/orders/clear-research',      handler: '../api/orders/clear-research.js' },
   { method: 'get',  path: '/api/orders/clear-race-cache',    handler: '../api/orders/clear-race-cache.js' },
   { method: 'get',  path: '/api/orders/refresh-weather',     handler: '../api/orders/refresh-weather.js' },

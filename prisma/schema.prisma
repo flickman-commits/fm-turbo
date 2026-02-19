@@ -30,6 +30,19 @@ model Order {
   researchedAt       DateTime?
   createdAt          DateTime  @default(now())
 
+  // Trackstar order classification
+  trackstarOrderType String    @default("standard") // "standard" | "custom"
+
+  // Custom order fields (populated from Shopify properties for custom orders)
+  designStatus       String    @default("not_started") // "not_started" | "in_progress" | "awaiting_review" | "ready_to_send" | "done"
+  dueDate            DateTime? // Computed: order created_at + 14 days
+  customerEmail      String?   // Customer email from Shopify order
+  customerName       String?   // Customer first name from Shopify order (for email template)
+  bibNumberCustomer  String?   // Bib # provided by customer (custom orders only)
+  timeCustomer       String?   // Time provided by customer (custom orders only)
+  creativeDirection  String?   // Creative direction notes from customer
+  isGift             Boolean   @default(false) // Whether this is a gift order
+
   // Manual override fields (for customer corrections)
   yearOverride       Int?      // Override for raceYear
   raceNameOverride   String?   // Override for raceName
@@ -43,6 +56,7 @@ model Order {
   @@index([parentOrderNumber]) // For grouping items from same order
   @@index([status])
   @@index([raceName, raceYear])
+  @@index([trackstarOrderType])
 }
 
 model Race {

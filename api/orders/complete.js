@@ -29,9 +29,18 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'orderNumber is required' })
     }
 
+    // Find the order first, then update by id
+    const existing = await prisma.order.findFirst({
+      where: { orderNumber }
+    })
+
+    if (!existing) {
+      return res.status(404).json({ error: 'Order not found' })
+    }
+
     // Update order status to completed
     const order = await prisma.order.update({
-      where: { orderNumber },
+      where: { id: existing.id },
       data: {
         status: 'completed',
         researchedAt: new Date()  // Mark when it was completed

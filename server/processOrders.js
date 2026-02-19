@@ -25,6 +25,19 @@ const ARTELO_API_KEY = process.env.ARTELO_API_KEY
 // Statuses that need design work
 const ACTIONABLE_STATUSES = ['PendingFulfillmentAction', 'AwaitingPayment']
 
+// Race name strings that indicate a custom order (customer provides their own data)
+const CUSTOM_ORDER_RACE_NAMES = ['Custom Trackstar Print (Any Race)']
+
+/**
+ * Check if a race name indicates a custom order
+ */
+function isCustomOrder(raceName) {
+  if (!raceName) return false
+  return CUSTOM_ORDER_RACE_NAMES.some(keyword =>
+    raceName.toLowerCase().trim() === keyword.toLowerCase()
+  )
+}
+
 /**
  * Determine if an order is from Shopify or Etsy
  * Logic:
@@ -122,14 +135,21 @@ function parseRunnerNameAndYear_DEPRECATED(rawValue) {
 /**
  * Extract personalization data from a single Shopify line item
  * NEW FORMAT (as of 2025): Separate properties for each field
+ * Also extracts custom order fields (bib, time, creative direction, gift)
  */
 function extractShopifyPersonalization(lineItem) {
   const result = {
+    productTitle: null,  // Raw product title (used for custom order detection)
     raceName: null,
     runnerName: null,
     raceYear: null,
     hadNoTime: false,  // Flag to indicate "no time" was present
-    needsAttention: false
+    needsAttention: false,
+    // Custom order fields
+    bibNumberCustomer: null,
+    timeCustomer: null,
+    creativeDirection: null,
+    isGift: false
   }
 
   if (!lineItem) {
@@ -137,7 +157,10 @@ function extractShopifyPersonalization(lineItem) {
     return result
   }
 
-  // Parse race name from product title
+  // Store the raw product title for custom order detection
+  result.productTitle = lineItem.title || null
+
+  // Parse race name from product title (default, may be overridden by Race Name property)
   result.raceName = parseRaceName(lineItem.title)
 
   // Extract from properties
@@ -162,11 +185,24 @@ function extractShopifyPersonalization(lineItem) {
         const yearInt = parseInt(value, 10)
         result.raceYear = isNaN(yearInt) ? null : yearInt
       }
-      // Race name (override product title if provided)
+      // Race name (override product title if provided — e.g. custom orders provide the actual race)
       else if (name === 'Race Name' || name === 'race name' || name === 'race_name') {
         if (value) {
           result.raceName = value
         }
+      }
+      // Custom order fields
+      else if (name === 'Bib #' || name === 'Bib #:' || name === 'bib_number') {
+        result.bibNumberCustomer = value || null
+      }
+      else if (name === 'Time' || name === 'Time:' || name === 'time') {
+        result.timeCustomer = value || null
+      }
+      else if (name === 'Creative Direction' || name === 'Creative Direction:' || name === 'creative_direction') {
+        result.creativeDirection = value || null
+      }
+      else if (name === 'Gift' || name === 'Gift:' || name === 'gift') {
+        result.isGift = value ? (value.toLowerCase() === 'yes' || value.toLowerCase() === 'true') : false
       }
     }
   }
@@ -415,6 +451,11 @@ export async function processOrders(options = {}) {
               if (isShopify && !existing.shopifyOrderData && shopifyData) {
                 log(`[processOrders] Updating order ${existing.orderNumber} with Shopify data...`)
 
+                // Extract customer email and name
+                updateData.customerEmail = shopifyData.shopifyOrderData?.email ||
+                                           shopifyData.shopifyOrderData?.customer?.email || existing.customerEmail
+                updateData.customerName = shopifyData.shopifyOrderData?.customer?.first_name || existing.customerName
+
                 // Extract personalization for this specific line item
                 const lineItem = shopifyData.shopifyOrderData?.line_items?.[lineItemIndex]
                 if (lineItem) {
@@ -427,7 +468,23 @@ export async function processOrders(options = {}) {
                   updateData.shopifyOrderData = shopifyData.shopifyOrderData
                   updateData.notes = shopifyData.notes || existing.notes
 
-                  if (extracted.needsAttention && existing.status === 'pending') {
+                  // Classify and extract custom order fields
+                  // Check product title for custom order detection, not the extracted raceName
+                  if (isCustomOrder(extracted.productTitle)) {
+                    updateData.trackstarOrderType = 'custom'
+                    updateData.bibNumberCustomer = extracted.bibNumberCustomer
+                    updateData.timeCustomer = extracted.timeCustomer
+                    updateData.creativeDirection = extracted.creativeDirection
+                    updateData.isGift = extracted.isGift
+
+                    // Compute due date from Shopify order created_at + 14 days
+                    const orderCreatedAt = shopifyData.shopifyOrderData?.created_at
+                    if (orderCreatedAt && !existing.dueDate) {
+                      updateData.dueDate = new Date(new Date(orderCreatedAt).getTime() + 14 * 24 * 60 * 60 * 1000)
+                    }
+                  }
+
+                  if (extracted.needsAttention && existing.status === 'pending' && !isCustomOrder(extracted.productTitle)) {
                     updateData.status = 'missing_year'
                     results.needsAttention++
                   }
@@ -462,9 +519,23 @@ export async function processOrders(options = {}) {
               let lineItemShopifyData = null
               let notes = null
               let hadNoTime = false
+              // Custom order fields
+              let trackstarOrderType = 'standard'
+              let bibNumberCustomer = null
+              let timeCustomer = null
+              let creativeDirection = null
+              let isGiftOrder = false
+              let customerEmail = null
+              let customerName = null
+              let dueDate = null
 
               if (isShopify && shopifyData) {
                 log(`[processOrders] Processing Shopify line item ${lineItemIndex} for order ${order.orderId}...`)
+
+                // Extract customer email and name from Shopify order data
+                customerEmail = shopifyData.shopifyOrderData?.email ||
+                                shopifyData.shopifyOrderData?.customer?.email || null
+                customerName = shopifyData.shopifyOrderData?.customer?.first_name || null
 
                 // Extract personalization for this specific line item
                 const lineItem = shopifyData.shopifyOrderData?.line_items?.[lineItemIndex]
@@ -478,7 +549,26 @@ export async function processOrders(options = {}) {
                   lineItemShopifyData = shopifyData.shopifyOrderData
                   notes = shopifyData.notes
 
-                  if (extracted.needsAttention) {
+                  // Custom order classification — check product title, not extracted raceName
+                  // (for custom orders, raceName is the customer-provided race, e.g. "Jfk 50",
+                  //  but the product title is "Custom Trackstar Print (Any Race)")
+                  if (isCustomOrder(extracted.productTitle)) {
+                    trackstarOrderType = 'custom'
+                    bibNumberCustomer = extracted.bibNumberCustomer
+                    timeCustomer = extracted.timeCustomer
+                    creativeDirection = extracted.creativeDirection
+                    isGiftOrder = extracted.isGift
+
+                    // Compute due date: order created_at + 14 days
+                    const orderCreatedAt = shopifyData.shopifyOrderData?.created_at
+                    if (orderCreatedAt) {
+                      dueDate = new Date(new Date(orderCreatedAt).getTime() + 14 * 24 * 60 * 60 * 1000)
+                    }
+
+                    log(`[processOrders] 🎨 Custom order detected: ${order.orderId}-${lineItemIndex}`)
+                  }
+
+                  if (extracted.needsAttention && trackstarOrderType !== 'custom') {
                     status = 'missing_year'
                     results.needsAttention++
                   }
@@ -501,7 +591,17 @@ export async function processOrders(options = {}) {
                   productSize,
                   frameType,
                   notes,
-                  status
+                  status,
+                  // Custom order fields
+                  trackstarOrderType,
+                  designStatus: trackstarOrderType === 'custom' ? 'not_started' : 'not_started',
+                  dueDate,
+                  customerEmail,
+                  customerName,
+                  bibNumberCustomer,
+                  timeCustomer,
+                  creativeDirection,
+                  isGift: isGiftOrder
                 }
               })
 
@@ -510,10 +610,11 @@ export async function processOrders(options = {}) {
               orderResult.raceName = raceName
               orderResult.runnerName = runnerName
 
-              log(`[processOrders] ✅ Imported: ${order.orderId}-${lineItemIndex} (${orderSource}) - ${raceName} - ${runnerName}`)
+              log(`[processOrders] ✅ Imported: ${order.orderId}-${lineItemIndex} (${orderSource}${trackstarOrderType === 'custom' ? ', CUSTOM' : ''}) - ${raceName} - ${runnerName}`)
             }
 
             // 3. Run research if enabled and we have a scraper for this race
+            //    Skip research for custom orders (no race to scrape)
             if (runResearch && orderResult.action !== 'skipped') {
               const dbOrder = await prisma.order.findUnique({
                 where: {
@@ -524,7 +625,7 @@ export async function processOrders(options = {}) {
                 }
               })
 
-              if (dbOrder && hasScraperForRace(dbOrder.raceName)) {
+              if (dbOrder && dbOrder.trackstarOrderType !== 'custom' && hasScraperForRace(dbOrder.raceName)) {
                 log(`[processOrders] Running research for ${dbOrder.orderNumber}...`)
                 try {
                   const research = await researchService.researchOrder(dbOrder.orderNumber)
