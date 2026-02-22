@@ -749,9 +749,10 @@ export default function Dashboard() {
   // Generate mailto link for custom order email
   const generateEmailLink = (order: Order): string => {
     const customerName = order.customerName || 'there'
-    const subject = encodeURIComponent(`Your Custom Trackstar Print — Order ${order.displayOrderNumber}`)
+    const runnerName = order.effectiveRunnerName || order.runnerName || 'your runner'
+    const subject = encodeURIComponent(`Your Trackstar Order (Action Required)`)
     const body = encodeURIComponent(
-      `Hey ${customerName},\n\nSuper excited to share with you our mock-ups — see below.\n\n`
+      `Hey ${customerName},\n\nSuper pumped to show you your custom Trackstar print(s) for ${runnerName}! Let me know which of these designs you prefer or if there are any tweaks you want us to make!\n\n`
     )
     return `mailto:${order.customerEmail || ''}?subject=${subject}&body=${body}`
   }
@@ -863,6 +864,7 @@ Thank you!`
       'Air Force Marathon': 'Air Force',
       'San Francisco Marathon': 'SF',
       'Jackson Hole Marathon': 'Jackson Hole',
+      'Sydney Marathon': 'Sydney',
       // Alternate name formats
       'TCS New York City Marathon': 'NYC',
       'Bank of America Chicago Marathon': 'Chicago',
