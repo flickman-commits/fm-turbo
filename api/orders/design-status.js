@@ -2,14 +2,14 @@
  * POST /api/orders/design-status
  *
  * Update the design status of a custom order.
- * Valid statuses: "not_started", "concepts_done", "in_revision", "production_files_made", "sent_to_customer"
+ * Valid statuses: "not_started", "concepts_done", "in_revision", "approved_by_customer", "sent_to_production", "sent_to_customer"
  */
 
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-const VALID_DESIGN_STATUSES = ['not_started', 'concepts_done', 'in_revision', 'production_files_made', 'sent_to_customer']
+const VALID_DESIGN_STATUSES = ['not_started', 'concepts_done', 'in_revision', 'approved_by_customer', 'sent_to_production']
 
 export default async function handler(req, res) {
   // CORS
@@ -54,14 +54,14 @@ export default async function handler(req, res) {
     // Update design status (use id for unique lookup)
     const updateData = { designStatus }
 
-    // If marking as "sent_to_customer", also mark the overall order status as completed
-    if (designStatus === 'sent_to_customer') {
+    // If marking as "sent_to_production", also mark the overall order status as completed
+    if (designStatus === 'sent_to_production') {
       updateData.status = 'completed'
       updateData.researchedAt = new Date()
     }
 
-    // If moving back from "sent_to_customer", revert the overall order status to pending
-    if (existing.designStatus === 'sent_to_customer' && designStatus !== 'sent_to_customer') {
+    // If moving back from "sent_to_production", revert the overall order status to pending
+    if (existing.designStatus === 'sent_to_production' && designStatus !== 'sent_to_production') {
       updateData.status = 'pending'
       updateData.researchedAt = null
     }

@@ -91,8 +91,20 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Support listing races: ?list=races
+    const { type, list } = req.query
+
+    if (list === 'races') {
+      const races = await prisma.race.findMany({
+        orderBy: [{ year: 'desc' }, { raceName: 'asc' }],
+        include: {
+          _count: { select: { runnerResearch: true } }
+        }
+      })
+      return res.status(200).json({ races })
+    }
+
     // Support filtering by order type: ?type=standard or ?type=custom
-    const { type } = req.query
     const whereClause = {}
     if (type === 'standard' || type === 'custom') {
       whereClause.trackstarOrderType = type
@@ -150,6 +162,7 @@ export default async function handler(req, res) {
         weatherTemp: formatTemp(race?.weatherTemp),
         weatherCondition: race?.weatherCondition ?
           race.weatherCondition.charAt(0).toUpperCase() + race.weatherCondition.slice(1) : null,
+        raceId: race?.id || null,
         // Scraper availability - use effective race name
         hasScraperAvailable: hasScraperForRace(effectiveRaceName),
         // Trackstar order type and custom order fields

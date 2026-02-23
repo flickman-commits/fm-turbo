@@ -4,6 +4,20 @@ import dotenv from 'dotenv';
 import fetch from 'node-fetch';
 import { PrismaClient } from '@prisma/client';
 
+// Import serverless function handlers for local dev
+import ordersHandler from '../api/orders/index.js';
+import updateHandler from '../api/orders/update.js';
+import designStatusHandler from '../api/orders/design-status.js';
+import refreshWeatherHandler from '../api/orders/refresh-weather.js';
+import researchRunnerHandler from '../api/orders/research-runner.js';
+import acceptMatchHandler from '../api/orders/accept-match.js';
+import completeHandler from '../api/orders/complete.js';
+import testScrapersHandler from '../api/orders/test-scrapers.js';
+import clearResearchHandler from '../api/orders/clear-research.js';
+import clearRaceCacheHandler from '../api/orders/clear-race-cache.js';
+import importHandler from '../api/orders/import.js';
+import refreshShopifyHandler from '../api/orders/refresh-shopify-data.js';
+
 dotenv.config();
 
 const app = express();
@@ -356,47 +370,19 @@ app.post('/api/orders/cleanup', async (req, res) => {
   }
 });
 
-// Get all orders for dashboard
-app.get('/api/orders', async (req, res) => {
-  try {
-    const orders = await prisma.order.findMany({
-      orderBy: [
-        { status: 'asc' },
-        { createdAt: 'desc' }
-      ]
-    });
-    res.json({ orders });
-  } catch (error) {
-    console.error('Error fetching orders:', error);
-    res.status(500).json({ error: error.message || 'Failed to fetch orders' });
-  }
-});
-
-// Update order status
-app.patch('/api/orders/:orderNumber/status', async (req, res) => {
-  try {
-    const { orderNumber } = req.params;
-    const { status } = req.body;
-
-    const validStatuses = ['pending', 'ready', 'flagged', 'completed'];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({ error: 'Invalid status' });
-    }
-
-    const order = await prisma.order.update({
-      where: { orderNumber },
-      data: {
-        status,
-        ...(status === 'completed' ? { researchedAt: new Date() } : {})
-      }
-    });
-
-    res.json({ success: true, order });
-  } catch (error) {
-    console.error('Error updating order:', error);
-    res.status(500).json({ error: error.message || 'Failed to update order' });
-  }
-});
+// Delegate to serverless function handlers for local dev
+// This ensures local dev matches production (Vercel serverless) behavior
+app.get('/api/orders', (req, res) => ordersHandler(req, res));
+app.post('/api/orders/update', (req, res) => updateHandler(req, res));
+app.post('/api/orders/design-status', (req, res) => designStatusHandler(req, res));
+app.post('/api/orders/refresh-weather', (req, res) => refreshWeatherHandler(req, res));
+app.post('/api/orders/research-runner', (req, res) => researchRunnerHandler(req, res));
+app.post('/api/orders/accept-match', (req, res) => acceptMatchHandler(req, res));
+app.post('/api/orders/complete', (req, res) => completeHandler(req, res));
+app.all('/api/orders/test-scrapers', (req, res) => testScrapersHandler(req, res));
+app.post('/api/orders/clear-research', (req, res) => clearResearchHandler(req, res));
+app.post('/api/orders/clear-race-cache', (req, res) => clearRaceCacheHandler(req, res));
+app.post('/api/orders/refresh-shopify-data', (req, res) => refreshShopifyHandler(req, res));
 
 // Legacy endpoints (keeping for backwards compatibility)
 app.post('/api/feature-request', async (req, res) => {

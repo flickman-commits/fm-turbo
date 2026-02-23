@@ -1,9 +1,9 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import { Search, Upload, Copy, Loader2, FlaskConical, Pencil, Check, X, Settings, Mail } from 'lucide-react'
+import { Search, Upload, Copy, Loader2, FlaskConical, Pencil, Check, X, Settings, Mail, ChevronRight } from 'lucide-react'
 
 // API calls now go to /api/* serverless functions (same origin)
 
-type DesignStatus = 'not_started' | 'concepts_done' | 'in_revision' | 'production_files_made' | 'sent_to_customer'
+type DesignStatus = 'not_started' | 'concepts_done' | 'in_revision' | 'approved_by_customer' | 'sent_to_production'
 
 interface Order {
   id: string
@@ -35,6 +35,7 @@ interface Order {
   // Weather data
   weatherTemp?: string
   weatherCondition?: string
+  raceId?: number | null
   // Scraper availability
   hasScraperAvailable?: boolean
   // Override fields
@@ -63,8 +64,8 @@ const DESIGN_STATUS_CONFIG: Record<DesignStatus, { icon: string; label: string; 
   not_started: { icon: '⚪', label: 'Not Started', color: 'text-off-black/50', bgColor: 'bg-off-black/5' },
   concepts_done: { icon: '🟡', label: 'Concepts Done', color: 'text-amber-700', bgColor: 'bg-amber-50' },
   in_revision: { icon: '🔵', label: 'In Revision', color: 'text-blue-700', bgColor: 'bg-blue-50' },
-  production_files_made: { icon: '🟢', label: 'Production Files Made', color: 'text-green-700', bgColor: 'bg-green-50' },
-  sent_to_customer: { icon: '✅', label: 'Sent to Customer', color: 'text-green-700', bgColor: 'bg-green-50' },
+  approved_by_customer: { icon: '👍', label: 'Approved by Customer', color: 'text-green-700', bgColor: 'bg-green-50' },
+  sent_to_production: { icon: '🟢', label: 'Sent to Production', color: 'text-emerald-700', bgColor: 'bg-emerald-50' },
 }
 
 // Toast notification component
@@ -184,12 +185,22 @@ export default function Dashboard() {
   const [isResearching, setIsResearching] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [settingsAction, setSettingsAction] = useState<string | null>(null)
-  const [scraperResults, setScraperResults] = useState<{ raceName: string; status: 'untested' | 'pass' | 'fail'; durationMs?: number; error?: string }[]>([])
+  const [scraperResults, setScraperResults] = useState<{ raceName: string; status: 'untested' | 'pass' | 'fail'; raceInfoStatus?: string; runnerSearchStatus?: string; durationMs?: number; error?: string; runnerSearchError?: string; testRunnerName?: string }[]>([])
   const [isTestingScrapers, setIsTestingScrapers] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
   // Store possible matches per order for ambiguous results (not persisted to DB)
   const [possibleMatchesMap, setPossibleMatchesMap] = useState<Record<string, Array<{ name: string; bib: string; time: string; pace?: string; city?: string; state?: string; eventType?: string; resultsUrl?: string }>>>({})
+  // Race database state
+  const [races, setRaces] = useState<{ id: number; raceName: string; year: number; raceDate: string; location: string | null; weatherCondition: string | null; weatherTemp: string | null; weatherFetchedAt: string | null; _count?: { runnerResearch: number } }[]>([])
+  const [isLoadingRaces, setIsLoadingRaces] = useState(false)
+  const [editingRaceId, setEditingRaceId] = useState<number | null>(null)
+  const [raceEditValues, setRaceEditValues] = useState({ raceDate: '', location: '', weatherCondition: '', weatherTemp: '' })
+  const [isSavingRace, setIsSavingRace] = useState(false)
+  const [showAddRace, setShowAddRace] = useState(false)
+  const [newRaceValues, setNewRaceValues] = useState({ raceName: '', year: new Date().getFullYear().toString(), raceDate: '', location: '' })
+  const [showRaceDatabase, setShowRaceDatabase] = useState(false)
+  const [showScraperStatus, setShowScraperStatus] = useState(false)
   // Tab switcher: standard vs custom order view
   const [activeView, setActiveView] = useState<'standard' | 'custom'>('standard')
 
@@ -234,6 +245,7 @@ export default function Dashboard() {
           // Weather
           weatherTemp: order.weatherTemp as string | undefined,
           weatherCondition: order.weatherCondition as string | undefined,
+          raceId: order.raceId as number | null | undefined,
           // Scraper
           hasScraperAvailable: order.hasScraperAvailable as boolean | undefined,
           // Override fields
@@ -331,6 +343,126 @@ export default function Dashboard() {
   }
 
   // Fetch supported races when settings modal opens
+  const fetchRaces = async () => {
+    setIsLoadingRaces(true)
+    try {
+      const response = await fetch('/api/orders?list=races')
+      if (!response.ok) throw new Error('Failed to fetch races')
+      const data = await response.json()
+      setRaces(data.races || [])
+    } catch (error) {
+      console.error('Error fetching races:', error)
+    } finally {
+      setIsLoadingRaces(false)
+    }
+  }
+
+  const startEditingRace = (race: typeof races[0]) => {
+    const dateStr = race.raceDate ? new Date(race.raceDate).toISOString().split('T')[0] : ''
+    setRaceEditValues({
+      raceDate: dateStr,
+      location: race.location || '',
+      weatherCondition: race.weatherCondition ? race.weatherCondition.charAt(0).toUpperCase() + race.weatherCondition.slice(1) : '',
+      weatherTemp: race.weatherTemp || ''
+    })
+    setEditingRaceId(race.id)
+  }
+
+  const saveRaceEdit = async (raceId: number) => {
+    setIsSavingRace(true)
+    try {
+      const response = await fetch('/api/orders/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          raceAction: 'update',
+          raceId,
+          raceData: {
+            raceDate: raceEditValues.raceDate || undefined,
+            location: raceEditValues.location || undefined,
+            weatherCondition: raceEditValues.weatherCondition || undefined,
+            weatherTemp: raceEditValues.weatherTemp || undefined,
+          }
+        })
+      })
+      if (!response.ok) throw new Error('Failed to update race')
+      const result = await response.json()
+
+      // Auto-fetch weather if date + location set but no manual weather
+      const hasDate = raceEditValues.raceDate
+      const hasLocation = raceEditValues.location
+      const weatherManuallySet = raceEditValues.weatherCondition || raceEditValues.weatherTemp
+      if (hasDate && hasLocation && !weatherManuallySet && result.race?.id) {
+        try {
+          await fetch('/api/orders/refresh-weather', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ raceId: result.race.id })
+          })
+        } catch { /* best effort */ }
+      }
+
+      setToast({ message: 'Race updated!', type: 'success' })
+      setEditingRaceId(null)
+      await fetchRaces()
+    } catch (error) {
+      console.error('Error saving race:', error)
+      setToast({ message: 'Failed to update race', type: 'error' })
+    } finally {
+      setIsSavingRace(false)
+    }
+  }
+
+  const createRace = async () => {
+    if (!newRaceValues.raceName || !newRaceValues.year || !newRaceValues.raceDate) {
+      setToast({ message: 'Race name, year, and date are required', type: 'error' })
+      return
+    }
+    setIsSavingRace(true)
+    try {
+      const response = await fetch('/api/orders/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          raceAction: 'create',
+          raceData: {
+            raceName: newRaceValues.raceName,
+            year: newRaceValues.year,
+            raceDate: newRaceValues.raceDate,
+            location: newRaceValues.location || null,
+            eventTypes: [],
+          }
+        })
+      })
+      if (!response.ok) {
+        const err = await response.json()
+        throw new Error(err.error || 'Failed to create race')
+      }
+
+      // Auto-fetch weather if date + location provided
+      const result = await response.json().catch(() => null)
+      if (newRaceValues.location && result?.race?.id) {
+        try {
+          await fetch('/api/orders/refresh-weather', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ raceId: result.race.id })
+          })
+        } catch { /* best effort */ }
+      }
+
+      setToast({ message: 'Race created!', type: 'success' })
+      setShowAddRace(false)
+      setNewRaceValues({ raceName: '', year: new Date().getFullYear().toString(), raceDate: '', location: '' })
+      await fetchRaces()
+    } catch (error) {
+      console.error('Error creating race:', error)
+      setToast({ message: error instanceof Error ? error.message : 'Failed to create race', type: 'error' })
+    } finally {
+      setIsSavingRace(false)
+    }
+  }
+
   useEffect(() => {
     if (!showSettings) return
     fetch('/api/orders/test-scrapers')
@@ -341,6 +473,7 @@ export default function Dashboard() {
         }
       })
       .catch(() => {})
+    fetchRaces()
   }, [showSettings])
 
   const testScrapers = async () => {
@@ -609,6 +742,14 @@ export default function Dashboard() {
   }>({ yearOverride: '', raceNameOverride: '', runnerNameOverride: '' })
   const [isSaving, setIsSaving] = useState(false)
 
+  // Weather edit mode state
+  const [isEditingWeather, setIsEditingWeather] = useState(false)
+  const [weatherEditValues, setWeatherEditValues] = useState<{
+    weatherCondition: string
+    weatherTemp: string
+  }>({ weatherCondition: '', weatherTemp: '' })
+  const [isSavingWeather, setIsSavingWeather] = useState(false)
+
   // Start editing mode
   const startEditing = (order: Order) => {
     setEditValues({
@@ -623,6 +764,63 @@ export default function Dashboard() {
   const cancelEditing = () => {
     setIsEditing(false)
     setEditValues({ yearOverride: '', raceNameOverride: '', runnerNameOverride: '' })
+  }
+
+  // Start editing weather
+  const startEditingWeather = (order: Order) => {
+    setWeatherEditValues({
+      weatherCondition: order.weatherCondition || '',
+      weatherTemp: order.weatherTemp || ''
+    })
+    setIsEditingWeather(true)
+  }
+
+  // Cancel editing weather
+  const cancelEditingWeather = () => {
+    setIsEditingWeather(false)
+    setWeatherEditValues({ weatherCondition: '', weatherTemp: '' })
+  }
+
+  // Save weather edits
+  const saveWeather = async (order: Order) => {
+    if (!order.raceId) {
+      setToast({ message: 'No race data to update', type: 'error' })
+      return
+    }
+    setIsSavingWeather(true)
+    try {
+      const response = await fetch(`/api/orders/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderNumber: order.orderNumber,
+          raceId: order.raceId,
+          weatherTemp: weatherEditValues.weatherTemp || null,
+          weatherCondition: weatherEditValues.weatherCondition || null
+        })
+      })
+      if (!response.ok) throw new Error('Failed to save weather')
+      setToast({ message: 'Weather updated!', type: 'success' })
+      setIsEditingWeather(false)
+      await fetchOrders()
+
+      // Update selected order with new data
+      const updatedOrders = await fetch(`/api/orders?type=${activeView}`).then(r => r.json())
+      const updated = updatedOrders.orders?.find((o: { orderNumber: string }) => o.orderNumber === order.orderNumber)
+      if (updated) {
+        const shopifyData = updated.shopifyOrderData as Record<string, unknown> | null
+        setSelectedOrder({
+          ...selectedOrder!,
+          ...updated,
+          displayOrderNumber: (shopifyData?.name as string) || updated.orderNumber
+        })
+      }
+    } catch (error) {
+      console.error('Error saving weather:', error)
+      setToast({ message: 'Failed to save weather', type: 'error' })
+    } finally {
+      setIsSavingWeather(false)
+    }
   }
 
   // Save overrides
@@ -709,7 +907,7 @@ export default function Dashboard() {
         throw new Error(errorData.error || 'Failed to update design status')
       }
 
-      setToast({ message: `Design status updated to ${DESIGN_STATUS_CONFIG[designStatus].label}`, type: 'success' })
+      setToast({ message: `Design status updated to ${(DESIGN_STATUS_CONFIG[designStatus] || DESIGN_STATUS_CONFIG.not_started).label}`, type: 'success' })
       await fetchOrders()
 
       // Update selected order if it's the one we just changed
@@ -759,11 +957,13 @@ export default function Dashboard() {
 
   // Designs to be personalized
   // Standard view: pending + flagged + ready + missing_year, sorted newest first
-  // Custom view: all items where designStatus !== 'sent_to_customer', sorted oldest first (by due date)
+  // Custom view: all items where designStatus !== 'sent_to_production', sorted oldest first (by due date)
   const ordersToFulfill = useMemo(() => {
+    // Guard: ensure orders match the active view type to prevent cross-contamination
+    const typeFiltered = orders.filter(o => (o.trackstarOrderType || 'standard') === activeView)
     if (activeView === 'custom') {
       // Custom view: show all non-done designs, sorted by due date ascending (oldest/most urgent first)
-      const customOrders = orders.filter(o => o.designStatus !== 'sent_to_customer')
+      const customOrders = typeFiltered.filter(o => o.designStatus !== 'sent_to_production')
       return customOrders.sort((a, b) => {
         const dateA = a.dueDate ? new Date(a.dueDate).getTime() : Infinity
         const dateB = b.dueDate ? new Date(b.dueDate).getTime() : Infinity
@@ -771,7 +971,7 @@ export default function Dashboard() {
       })
     }
     // Standard view: filter by status, newest first
-    const fulfillOrders = orders.filter(o =>
+    const fulfillOrders = typeFiltered.filter(o =>
       o.status === 'flagged' || o.status === 'ready' || o.status === 'pending' || o.status === 'missing_year'
     )
     return fulfillOrders.sort((a, b) => {
@@ -782,10 +982,12 @@ export default function Dashboard() {
   }, [orders, activeView])
 
   const completedOrders = useMemo(() => {
+    // Guard: ensure orders match the active view type
+    const typeFiltered = orders.filter(o => (o.trackstarOrderType || 'standard') === activeView)
     if (activeView === 'custom') {
-      return orders.filter(o => o.designStatus === 'sent_to_customer')
+      return typeFiltered.filter(o => o.designStatus === 'sent_to_production')
     }
-    return orders.filter(o => o.status === 'completed')
+    return typeFiltered.filter(o => o.status === 'completed')
   }, [orders, activeView])
 
   const filteredOrders = useMemo(() => {
@@ -1290,56 +1492,252 @@ Thank you!`
             className="fixed inset-0 bg-off-black/60 flex items-center justify-center p-4 z-50"
             onClick={(e) => { if (e.target === e.currentTarget) setShowSettings(false) }}
           >
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-y-auto">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-y-auto">
               <div className="flex items-center justify-between px-6 py-4 border-b border-border-gray">
-                <h2 className="text-base font-semibold text-off-black">Cache & Data Settings</h2>
+                <h2 className="text-base font-semibold text-off-black">Settings</h2>
                 <button onClick={() => setShowSettings(false)} className="text-off-black/40 hover:text-off-black/70 text-xl leading-none">×</button>
               </div>
+
+              {/* Navigation cards */}
               <div className="p-6 space-y-3">
-                {[
-                  {
-                    action: 'refresh-weather' as const,
-                    label: 'Refresh Weather',
-                    description: 'Re-fetches 7am conditions from Open-Meteo for all races. Use if weather looks wrong.',
-                  },
-                  {
-                    action: 'clear-race-cache' as const,
-                    label: 'Re-fetch Race Info',
-                    description: 'Clears cached race dates, locations, and results URLs. They\'ll be re-fetched on next research run.',
-                  },
-                  {
-                    action: 'clear-research' as const,
-                    label: 'Clear Runner Research',
-                    description: 'Deletes all cached bib, time, and pace data. All orders go back to "Ready to research". Use after fixing a scraper bug.',
-                    danger: true,
-                  },
-                ].map(({ action, label, description, danger }) => (
-                  <div key={action} className={`rounded-lg border p-4 ${danger ? 'border-red-200 bg-red-50' : 'border-border-gray bg-subtle-gray'}`}>
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-medium ${danger ? 'text-red-700' : 'text-off-black'}`}>{label}</p>
-                        <p className={`text-xs mt-0.5 ${danger ? 'text-red-500' : 'text-off-black/50'}`}>{description}</p>
-                      </div>
-                      <button
-                        onClick={() => runSettingsAction(action)}
-                        disabled={settingsAction !== null}
-                        className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                          danger
-                            ? 'bg-red-600 text-white hover:bg-red-700'
-                            : 'bg-off-black text-white hover:opacity-80'
-                        }`}
-                      >
-                        {settingsAction === action && <Loader2 className="w-3 h-3 animate-spin" />}
-                        {settingsAction === action ? 'Running…' : 'Run'}
-                      </button>
+                <button
+                  onClick={() => setShowRaceDatabase(true)}
+                  className="w-full rounded-lg border border-border-gray bg-subtle-gray p-4 hover:bg-off-black/[0.06] transition-colors text-left group"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-off-black">Race Database</p>
+                      <p className="text-xs mt-0.5 text-off-black/50">Manage race dates, locations, and weather</p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="text-xs text-off-black/30">{races.length} {races.length === 1 ? 'race' : 'races'}</span>
+                      <ChevronRight className="w-4 h-4 text-off-black/30 group-hover:text-off-black/50 transition-colors" />
                     </div>
                   </div>
-                ))}
+                </button>
+
+                <button
+                  onClick={() => setShowScraperStatus(true)}
+                  className="w-full rounded-lg border border-border-gray bg-subtle-gray p-4 hover:bg-off-black/[0.06] transition-colors text-left group"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-off-black">Scraper Status</p>
+                      <p className="text-xs mt-0.5 text-off-black/50">Test and monitor race result scrapers</p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="text-xs text-off-black/30">{scraperResults.length} {scraperResults.length === 1 ? 'scraper' : 'scrapers'}</span>
+                      <ChevronRight className="w-4 h-4 text-off-black/30 group-hover:text-off-black/50 transition-colors" />
+                    </div>
+                  </div>
+                </button>
               </div>
-              {/* Scraper Status Section */}
-              <div className="border-t border-border-gray px-6 py-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-off-black">Scraper Status</h3>
+
+              {/* Danger zone */}
+              <div className="border-t border-border-gray p-6">
+                <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-red-700">Clear Runner Research</p>
+                      <p className="text-xs mt-0.5 text-red-500">Deletes all cached bib, time, and pace data. All orders go back to &quot;Ready to research&quot;. Use after fixing a scraper bug.</p>
+                    </div>
+                    <button
+                      onClick={() => runSettingsAction('clear-research')}
+                      disabled={settingsAction !== null}
+                      className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-red-600 text-white hover:bg-red-700"
+                    >
+                      {settingsAction === 'clear-research' && <Loader2 className="w-3 h-3 animate-spin" />}
+                      {settingsAction === 'clear-research' ? 'Running…' : 'Run'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Race Database Full-Screen Overlay */}
+        {showRaceDatabase && (
+          <div
+            className="fixed inset-0 bg-off-black/60 flex items-center justify-center p-4 z-50"
+            onClick={(e) => { if (e.target === e.currentTarget) setShowRaceDatabase(false) }}
+          >
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border-gray flex-shrink-0">
+                <h2 className="text-base font-semibold text-off-black">Race Database</h2>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setShowAddRace(!showAddRace)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-off-black text-white hover:opacity-80 transition-colors"
+                  >
+                    {showAddRace ? 'Cancel' : '+ Add Race'}
+                  </button>
+                  <button onClick={() => setShowRaceDatabase(false)} className="text-off-black/40 hover:text-off-black/70 text-xl leading-none">×</button>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6">
+                {/* Add Race Form */}
+                {showAddRace && (
+                  <div className="mb-4 p-4 bg-subtle-gray border border-border-gray rounded-lg space-y-3">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Race Name"
+                        value={newRaceValues.raceName}
+                        onChange={(e) => setNewRaceValues(prev => ({ ...prev, raceName: e.target.value }))}
+                        className="flex-1 px-3 py-2 text-sm border border-border-gray rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-off-black/20"
+                      />
+                      <input
+                        type="number"
+                        placeholder="Year"
+                        value={newRaceValues.year}
+                        onChange={(e) => setNewRaceValues(prev => ({ ...prev, year: e.target.value }))}
+                        className="w-24 px-3 py-2 text-sm border border-border-gray rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-off-black/20"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="date"
+                        value={newRaceValues.raceDate}
+                        onChange={(e) => setNewRaceValues(prev => ({ ...prev, raceDate: e.target.value }))}
+                        className="flex-1 px-3 py-2 text-sm border border-border-gray rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-off-black/20"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Location (e.g. Boston, MA)"
+                        value={newRaceValues.location}
+                        onChange={(e) => setNewRaceValues(prev => ({ ...prev, location: e.target.value }))}
+                        className="flex-1 px-3 py-2 text-sm border border-border-gray rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-off-black/20"
+                      />
+                    </div>
+                    <button
+                      onClick={createRace}
+                      disabled={isSavingRace}
+                      className="w-full px-3 py-2 rounded-md text-sm font-medium bg-off-black text-white hover:opacity-80 transition-colors disabled:opacity-50"
+                    >
+                      {isSavingRace ? 'Creating...' : 'Create Race'}
+                    </button>
+                  </div>
+                )}
+
+                {/* Race List */}
+                {isLoadingRaces ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="w-5 h-5 animate-spin text-off-black/40" />
+                  </div>
+                ) : races.length === 0 ? (
+                  <p className="text-sm text-off-black/40 text-center py-8">No races in database</p>
+                ) : (
+                  <div className="space-y-2">
+                    {races.map((race) => (
+                      <div key={race.id} className="py-3 px-4 rounded-lg bg-subtle-gray border border-border-gray">
+                        {editingRaceId === race.id ? (
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium text-off-black">{race.raceName} {race.year}</span>
+                              <div className="flex items-center gap-3">
+                                <button
+                                  onClick={() => saveRaceEdit(race.id)}
+                                  disabled={isSavingRace}
+                                  className="flex items-center gap-1 text-xs text-green-600 hover:text-green-700 transition-colors disabled:opacity-50"
+                                >
+                                  {isSavingRace ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                                  Save
+                                </button>
+                                <button
+                                  onClick={() => setEditingRaceId(null)}
+                                  className="flex items-center gap-1 text-xs text-off-black/50 hover:text-off-black/70 transition-colors"
+                                >
+                                  <X className="w-3 h-3" />
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="text-[11px] text-off-black/50 block mb-1">Date</label>
+                                <input
+                                  type="date"
+                                  value={raceEditValues.raceDate}
+                                  onChange={(e) => setRaceEditValues(prev => ({ ...prev, raceDate: e.target.value }))}
+                                  className="w-full px-3 py-1.5 text-sm border border-border-gray rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-off-black/20"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[11px] text-off-black/50 block mb-1">Location</label>
+                                <input
+                                  type="text"
+                                  value={raceEditValues.location}
+                                  onChange={(e) => setRaceEditValues(prev => ({ ...prev, location: e.target.value }))}
+                                  placeholder="e.g. Austin, TX"
+                                  className="w-full px-3 py-1.5 text-sm border border-border-gray rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-off-black/20"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[11px] text-off-black/50 block mb-1">Weather</label>
+                                <select
+                                  value={raceEditValues.weatherCondition}
+                                  onChange={(e) => setRaceEditValues(prev => ({ ...prev, weatherCondition: e.target.value }))}
+                                  className="w-full px-3 py-1.5 text-sm border border-border-gray rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-off-black/20"
+                                >
+                                  <option value="">--</option>
+                                  <option value="Sunny">Sunny</option>
+                                  <option value="Cloudy">Cloudy</option>
+                                  <option value="Rainy">Rainy</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="text-[11px] text-off-black/50 block mb-1">Temp</label>
+                                <input
+                                  type="text"
+                                  value={raceEditValues.weatherTemp}
+                                  onChange={(e) => setRaceEditValues(prev => ({ ...prev, weatherTemp: e.target.value }))}
+                                  placeholder="e.g. 65°F"
+                                  className="w-full px-3 py-1.5 text-sm border border-border-gray rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-off-black/20"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1 min-w-0">
+                              <span className="text-sm font-medium text-off-black">{race.raceName}</span>
+                              <span className="text-sm text-off-black/40 ml-2">{race.year}</span>
+                            </div>
+                            <div className="flex items-center gap-4 text-xs text-off-black/50">
+                              {race.raceDate && <span>{new Date(race.raceDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>}
+                              {race.location && <span>{race.location}</span>}
+                              {race.weatherCondition && <span>{race.weatherCondition.charAt(0).toUpperCase() + race.weatherCondition.slice(1)}</span>}
+                              {race.weatherTemp && <span>{race.weatherTemp}</span>}
+                              <button
+                                onClick={() => startEditingRace(race)}
+                                className="text-blue-600 hover:text-blue-700 transition-colors"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Scraper Status Full-Screen Overlay */}
+        {showScraperStatus && (
+          <div
+            className="fixed inset-0 bg-off-black/60 flex items-center justify-center p-4 z-50"
+            onClick={(e) => { if (e.target === e.currentTarget) setShowScraperStatus(false) }}
+          >
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border-gray flex-shrink-0">
+                <h2 className="text-base font-semibold text-off-black">Scraper Status</h2>
+                <div className="flex items-center gap-3">
                   <button
                     onClick={testScrapers}
                     disabled={isTestingScrapers || settingsAction !== null}
@@ -1348,22 +1746,65 @@ Thank you!`
                     {isTestingScrapers && <Loader2 className="w-3 h-3 animate-spin" />}
                     {isTestingScrapers ? 'Testing...' : 'Test All Scrapers'}
                   </button>
+                  <button onClick={() => setShowScraperStatus(false)} className="text-off-black/40 hover:text-off-black/70 text-xl leading-none">×</button>
                 </div>
-                <div className="space-y-1.5">
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6">
+                {/* Legend */}
+                <div className="flex items-center gap-4 mb-4 text-[11px] text-off-black/50">
+                  <span>Each scraper is tested in two stages:</span>
+                  <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-400 inline-block" /> Race Info</span>
+                  <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-purple-400 inline-block" /> Runner Lookup</span>
+                </div>
+                <div className="space-y-2">
                   {scraperResults.map((result) => (
-                    <div key={result.raceName} className="flex items-center justify-between py-1.5 px-3 rounded-md bg-subtle-gray">
-                      <span className="text-xs text-off-black">{result.raceName}</span>
-                      <span className={`inline-flex items-center gap-1 text-xs font-medium ${
-                        result.status === 'pass' ? 'text-green-600' :
-                        result.status === 'fail' ? 'text-red-600' :
-                        'text-off-black/40'
-                      }`}>
-                        {result.status === 'pass' && <Check className="w-3 h-3" />}
-                        {result.status === 'fail' && <X className="w-3 h-3" />}
-                        {result.status === 'pass' ? `OK (${((result.durationMs || 0) / 1000).toFixed(1)}s)` :
-                         result.status === 'fail' ? (result.error ? result.error.substring(0, 30) : 'Failed') :
-                         'Not tested'}
-                      </span>
+                    <div key={result.raceName} className="py-3 px-4 rounded-lg bg-subtle-gray border border-border-gray">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-off-black">{result.raceName}</span>
+                        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+                          result.status === 'pass' ? 'text-green-600' :
+                          result.status === 'fail' ? 'text-red-600' :
+                          'text-off-black/40'
+                        }`}>
+                          {result.status === 'pass' && <Check className="w-3.5 h-3.5" />}
+                          {result.status === 'fail' && <X className="w-3.5 h-3.5" />}
+                          {result.status === 'untested' ? 'Not tested' : `${((result.durationMs || 0) / 1000).toFixed(1)}s`}
+                        </span>
+                      </div>
+                      {/* Detail row — only shown after test runs */}
+                      {result.status !== 'untested' && (
+                        <div className="flex items-center gap-4 mt-2 text-[11px]">
+                          <span className={`inline-flex items-center gap-1 ${
+                            result.raceInfoStatus === 'pass' ? 'text-green-600' :
+                            result.raceInfoStatus === 'fail' ? 'text-red-600' : 'text-off-black/40'
+                          }`}>
+                            {result.raceInfoStatus === 'pass' ? <Check className="w-3 h-3" /> : result.raceInfoStatus === 'fail' ? <X className="w-3 h-3" /> : null}
+                            Race Info
+                            {result.raceInfoStatus === 'fail' && result.error && (
+                              <span className="text-red-400 ml-1">— {result.error.substring(0, 30)}</span>
+                            )}
+                          </span>
+                          <span className={`inline-flex items-center gap-1 ${
+                            result.runnerSearchStatus === 'pass' ? 'text-green-600' :
+                            result.runnerSearchStatus === 'fail' ? 'text-red-600' :
+                            result.runnerSearchStatus === 'skipped' ? 'text-amber-500' : 'text-off-black/40'
+                          }`}>
+                            {result.runnerSearchStatus === 'pass' ? <Check className="w-3 h-3" /> :
+                             result.runnerSearchStatus === 'fail' ? <X className="w-3 h-3" /> : null}
+                            Runner Lookup
+                            {result.runnerSearchStatus === 'skipped' && (
+                              <span className="text-amber-400 ml-1">— no test runner in DB</span>
+                            )}
+                            {result.runnerSearchStatus === 'fail' && result.runnerSearchError && (
+                              <span className="text-red-400 ml-1">— {result.runnerSearchError.substring(0, 40)}</span>
+                            )}
+                            {result.runnerSearchStatus === 'pass' && result.testRunnerName && (
+                              <span className="text-off-black/30 ml-1">({result.testRunnerName})</span>
+                            )}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1397,7 +1838,7 @@ Thank you!`
                   <div className="flex items-center gap-3">
                     <span className="text-xl">
                       {selectedOrder.trackstarOrderType === 'custom'
-                        ? DESIGN_STATUS_CONFIG[selectedOrder.designStatus || 'not_started'].icon
+                        ? (DESIGN_STATUS_CONFIG[selectedOrder.designStatus as DesignStatus] || DESIGN_STATUS_CONFIG.not_started).icon
                         : selectedOrder.status === 'flagged' ? '⚠️' :
                           selectedOrder.status === 'completed' ? '✅' :
                           selectedOrder.status === 'missing_year' ? '📅' :
@@ -1524,7 +1965,7 @@ Thank you!`
                       {/* Actions for Custom Designs */}
                       <div className="flex gap-3 pt-3">
                         {/* Email Customer button - show when production files are made */}
-                        {selectedOrder.designStatus === 'production_files_made' && selectedOrder.customerEmail && (
+                        {selectedOrder.designStatus === 'concepts_done' && selectedOrder.customerEmail && (
                           <a
                             href={generateEmailLink(selectedOrder)}
                             className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium"
@@ -1533,19 +1974,19 @@ Thank you!`
                             Email Customer
                           </a>
                         )}
-                        {selectedOrder.designStatus !== 'sent_to_customer' ? (
+                        {selectedOrder.designStatus !== 'sent_to_production' ? (
                           <button
-                            onClick={() => updateDesignStatus(selectedOrder.orderNumber, 'sent_to_customer')}
+                            onClick={() => updateDesignStatus(selectedOrder.orderNumber, 'sent_to_production')}
                             className="flex-1 px-5 py-3 bg-off-black text-white rounded-md hover:opacity-90 transition-opacity font-medium"
                           >
-                            Mark as Done
+                            Send to Production
                           </button>
                         ) : (
                           <button
                             onClick={() => updateDesignStatus(selectedOrder.orderNumber, 'not_started')}
                             className="flex-1 px-5 py-3 bg-white border border-border-gray text-off-black rounded-md hover:bg-subtle-gray transition-colors font-medium"
                           >
-                            Mark as Not Done
+                            Mark as Not Started
                           </button>
                         )}
                         <button
@@ -1685,9 +2126,39 @@ Thank you!`
                     </div>
                   </div>
 
-                  {/* Race Info (non-editable research data) */}
+                  {/* Race Info */}
                   <div>
-                    <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Race Data</h4>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight">Race Data</h4>
+                      {!isEditingWeather && selectedOrder.raceId && (
+                        <button
+                          onClick={() => startEditingWeather(selectedOrder)}
+                          className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 transition-colors"
+                        >
+                          <Pencil className="w-3 h-3" />
+                          Edit
+                        </button>
+                      )}
+                      {isEditingWeather && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => saveWeather(selectedOrder)}
+                            disabled={isSavingWeather}
+                            className="flex items-center gap-1 text-xs text-green-600 hover:text-green-700 transition-colors disabled:opacity-50"
+                          >
+                            {isSavingWeather ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                            Save
+                          </button>
+                          <button
+                            onClick={cancelEditingWeather}
+                            className="flex items-center gap-1 text-xs text-off-black/50 hover:text-off-black/70 transition-colors"
+                          >
+                            <X className="w-3 h-3" />
+                            Cancel
+                          </button>
+                        </div>
+                      )}
+                    </div>
                     <div className="bg-subtle-gray border border-border-gray rounded-md p-4 space-y-3">
                       {selectedOrder.eventType ? (
                         <StaticField label="Event" value={selectedOrder.eventType} />
@@ -1703,12 +2174,37 @@ Thank you!`
                       ) : (
                         <NotAvailableField label="Date" />
                       )}
-                      {selectedOrder.weatherCondition ? (
+                      {isEditingWeather ? (
+                        <div className="flex justify-between items-center">
+                          <span className="text-body-sm text-off-black/60">Weather</span>
+                          <select
+                            value={weatherEditValues.weatherCondition}
+                            onChange={(e) => setWeatherEditValues(prev => ({ ...prev, weatherCondition: e.target.value }))}
+                            className="w-40 px-2 py-1 text-sm text-right border border-border-gray rounded bg-white focus:outline-none focus:ring-1 focus:ring-off-black/20"
+                          >
+                            <option value="">--</option>
+                            <option value="Sunny">Sunny</option>
+                            <option value="Cloudy">Cloudy</option>
+                            <option value="Rainy">Rainy</option>
+                          </select>
+                        </div>
+                      ) : selectedOrder.weatherCondition ? (
                         <CopyableField label="Weather" value={selectedOrder.weatherCondition} />
                       ) : (
                         <PendingField label="Weather" />
                       )}
-                      {selectedOrder.weatherTemp ? (
+                      {isEditingWeather ? (
+                        <div className="flex justify-between items-center">
+                          <span className="text-body-sm text-off-black/60">Temp</span>
+                          <input
+                            type="text"
+                            value={weatherEditValues.weatherTemp}
+                            onChange={(e) => setWeatherEditValues(prev => ({ ...prev, weatherTemp: e.target.value }))}
+                            placeholder="e.g. 65°F"
+                            className="w-40 px-2 py-1 text-sm text-right border border-border-gray rounded focus:outline-none focus:ring-1 focus:ring-off-black/20"
+                          />
+                        </div>
+                      ) : selectedOrder.weatherTemp ? (
                         <CopyableField label="Temp" value={selectedOrder.weatherTemp} />
                       ) : (
                         <PendingField label="Temp" />

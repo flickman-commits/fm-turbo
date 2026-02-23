@@ -23,7 +23,52 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { orderNumber, yearOverride, raceNameOverride, runnerNameOverride } = req.body
+    const { orderNumber, yearOverride, raceNameOverride, runnerNameOverride, raceId, weatherTemp, weatherCondition, raceAction, raceData } = req.body
+
+    // Race-specific operations (no orderNumber required)
+    if (raceAction === 'update' && raceId) {
+      const updateFields = {}
+      if (raceData?.raceDate !== undefined) {
+        updateFields.raceDate = raceData.raceDate ? new Date(raceData.raceDate) : undefined
+      }
+      if (raceData?.location !== undefined) {
+        updateFields.location = raceData.location || null
+      }
+      if (raceData?.weatherCondition !== undefined) {
+        updateFields.weatherCondition = raceData.weatherCondition ? raceData.weatherCondition.toLowerCase() : null
+      }
+      if (raceData?.weatherTemp !== undefined) {
+        updateFields.weatherTemp = raceData.weatherTemp || null
+      }
+      if (Object.keys(updateFields).length > 0) {
+        updateFields.weatherFetchedAt = new Date()
+      }
+      const updated = await prisma.race.update({
+        where: { id: raceId },
+        data: updateFields
+      })
+      console.log(`[API /orders/update] Race ${raceId} updated directly:`, updateFields)
+      return res.status(200).json({ success: true, race: updated })
+    }
+
+    if (raceAction === 'create' && raceData) {
+      if (!raceData.raceName || !raceData.year || !raceData.raceDate) {
+        return res.status(400).json({ error: 'raceName, year, and raceDate are required for new races' })
+      }
+      const newRace = await prisma.race.create({
+        data: {
+          raceName: raceData.raceName,
+          year: parseInt(raceData.year, 10),
+          raceDate: new Date(raceData.raceDate),
+          eventTypes: raceData.eventTypes || [],
+          location: raceData.location || null,
+          weatherCondition: raceData.weatherCondition ? raceData.weatherCondition.toLowerCase() : null,
+          weatherTemp: raceData.weatherTemp || null,
+        }
+      })
+      console.log(`[API /orders/update] New race created: ${newRace.raceName} ${newRace.year}`)
+      return res.status(200).json({ success: true, race: newRace })
+    }
 
     if (!orderNumber) {
       return res.status(400).json({ error: 'orderNumber is required' })
@@ -59,6 +104,24 @@ export default async function handler(req, res) {
       updateData.status = 'pending'
     }
 
+    // Update weather on the Race record if provided
+    if (raceId && (weatherTemp !== undefined || weatherCondition !== undefined)) {
+      const weatherUpdate = {}
+      if (weatherTemp !== undefined) {
+        weatherUpdate.weatherTemp = weatherTemp || null
+      }
+      if (weatherCondition !== undefined) {
+        weatherUpdate.weatherCondition = weatherCondition ? weatherCondition.toLowerCase() : null
+      }
+      weatherUpdate.weatherFetchedAt = new Date()
+
+      await prisma.race.update({
+        where: { id: raceId },
+        data: weatherUpdate
+      })
+      console.log(`[API /orders/update] Race ${raceId} weather updated:`, weatherUpdate)
+    }
+
     // Update the order
     const order = await prisma.order.update({
       where: { id: existingOrder.id },
@@ -77,6 +140,10 @@ export default async function handler(req, res) {
 
     if (error.code === 'P2025') {
       return res.status(404).json({ error: 'Order not found' })
+    }
+
+    if (error.code === 'P2002') {
+      return res.status(409).json({ error: 'A race with this name and year already exists' })
     }
 
     return res.status(500).json({
