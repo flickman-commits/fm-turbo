@@ -1,64 +1,105 @@
 /**
  * Scraper Factory
- * Routes race name to the appropriate scraper class
+ * Auto-builds the scraper registry from config files.
+ * To add a new race, just add a config file in configs/ — no other changes needed.
  */
-import NYCMarathonScraper from './races/nycMarathon.js'
-import ChicagoMarathonScraper from './races/chicagoMarathon.js'
-import PhiladelphiaMarathonScraper from './races/philadelphiaMarathon.js'
-import MarineCorpsMarathonScraper from './races/marineCorpsMarathon.js'
-import CIMMarathonScraper from './races/cimMarathon.js'
-import KiawahIslandMarathonScraper from './races/kiawahIslandMarathon.js'
-import LouisianaMarathonScraper from './races/louisianaMarathon.js'
-import AustinMarathonScraper from './races/austinMarathon.js'
+
+// --- Platform scraper classes ---
+import { RunSignUpScraper } from './platforms/RunSignUpScraper.js'
+import { MyChipTimeScraper } from './platforms/MyChipTimeScraper.js'
+import { RTRTScraper } from './platforms/RTRTScraper.js'
+import { NYRRScraper } from './platforms/NYRRScraper.js'
+import { MyRaceAiScraper } from './platforms/MyRaceAiScraper.js'
+import { MikaTimingScraper } from './platforms/MikaTimingScraper.js'
+
+// --- Race configs ---
+import kiawahIslandConfig from './configs/kiawahIsland.js'
+import louisianaConfig from './configs/louisiana.js'
+import austinConfig from './configs/austin.js'
+import philadelphiaConfig from './configs/philadelphia.js'
+import marinecorpsConfig from './configs/marinecorps.js'
+import nycConfig from './configs/nyc.js'
+import cimConfig from './configs/cim.js'
+import chicagoConfig from './configs/chicago.js'
 
 /**
- * Map of race names to scraper classes
- * Add new races here as we implement them
+ * Map platform identifier -> platform scraper class
  */
-const SCRAPER_MAP = {
-  // NYC Marathon - various name formats
-  'NYC Marathon': NYCMarathonScraper,
-  'New York City Marathon': NYCMarathonScraper,
-  'New York Marathon': NYCMarathonScraper,
-  'TCS New York City Marathon': NYCMarathonScraper,
-  'NYRR NYC Marathon': NYCMarathonScraper,
+const PLATFORM_MAP = {
+  runsignup: RunSignUpScraper,
+  mychiptime: MyChipTimeScraper,
+  rtrt: RTRTScraper,
+  nyrr: NYRRScraper,
+  myrace: MyRaceAiScraper,
+  mika: MikaTimingScraper,
+}
 
-  // Chicago Marathon - various name formats
-  'Chicago Marathon': ChicagoMarathonScraper,
-  'Bank of America Chicago Marathon': ChicagoMarathonScraper,
-  'BOA Chicago Marathon': ChicagoMarathonScraper,
+/**
+ * All race configs. To add a new race, import the config and add it here.
+ */
+const ALL_CONFIGS = [
+  kiawahIslandConfig,
+  louisianaConfig,
+  austinConfig,
+  philadelphiaConfig,
+  marinecorpsConfig,
+  nycConfig,
+  cimConfig,
+  chicagoConfig,
+]
 
-  // Philadelphia Marathon - various name formats
-  'Philadelphia Marathon': PhiladelphiaMarathonScraper,
-  'Philadelphia Marathon (Full)': PhiladelphiaMarathonScraper,
-  'Philly Marathon': PhiladelphiaMarathonScraper,
+/**
+ * Build the alias -> config lookup map from all configs.
+ * This runs once at module load time.
+ */
+function buildAliasMap(configs) {
+  const map = {}
+  for (const config of configs) {
+    if (!config.aliases) continue
+    for (const alias of config.aliases) {
+      map[alias] = config
+    }
+  }
+  return map
+}
 
-  // Marine Corps Marathon - various name formats
-  'Marine Corps Marathon': MarineCorpsMarathonScraper,
-  'MCM Marathon': MarineCorpsMarathonScraper,
-  'MCM': MarineCorpsMarathonScraper,
+const ALIAS_MAP = buildAliasMap(ALL_CONFIGS)
 
-  // California International Marathon - various name formats
-  'California International Marathon': CIMMarathonScraper,
-  'CIM Marathon': CIMMarathonScraper,
-  'CIM': CIMMarathonScraper,
+/**
+ * Create a scraper instance from a config object
+ */
+function createScraper(config, year) {
+  const ScraperClass = PLATFORM_MAP[config.platform]
+  if (!ScraperClass) {
+    throw new Error(`Unknown platform: ${config.platform}`)
+  }
+  return new ScraperClass(year, config)
+}
 
-  // Kiawah Island Marathon - various name formats
-  'Kiawah Island Marathon': KiawahIslandMarathonScraper,
-  'Kiawah Marathon': KiawahIslandMarathonScraper,
-  'Kiawah': KiawahIslandMarathonScraper,
+/**
+ * Try to match a race name to a config using keyword-based fuzzy matching
+ */
+function findConfigByKeywords(normalizedName) {
+  for (const config of ALL_CONFIGS) {
+    if (!config.keywords) continue
 
-  // Louisiana Marathon - various name formats
-  'Louisiana Marathon': LouisianaMarathonScraper,
-  'The Louisiana Marathon': LouisianaMarathonScraper,
+    const hasKeyword = config.keywords.some(kw => normalizedName.includes(kw))
+    if (!hasKeyword) continue
 
-  // Austin Marathon - various name formats
-  'Austin Marathon': AustinMarathonScraper,
-  'Austin Marathon 2026': AustinMarathonScraper,
-  'Ascension Seton Austin Marathon': AustinMarathonScraper,
-
-  // Add more races here as we implement them:
-  // 'Boston Marathon': BostonMarathonScraper,
+    // Some races require "marathon" in the name to avoid false positives
+    // Others (like 'kiawah' or 'cim') are unique enough on their own
+    if (config.keywordRequiresMarathon) {
+      if (normalizedName.includes('marathon')) {
+        return config
+      }
+    } else {
+      // Check if the name includes 'marathon' OR is exactly the keyword
+      if (normalizedName.includes('marathon') || config.keywords.some(kw => normalizedName === kw)) {
+        return config
+      }
+    }
+  }
+  return null
 }
 
 /**
@@ -69,100 +110,30 @@ const SCRAPER_MAP = {
  * @throws {Error} If no scraper is available for the race
  */
 export function getScraperForRace(raceName, year) {
-  // Try exact match first
-  let ScraperClass = SCRAPER_MAP[raceName]
+  // 1. Try exact alias match
+  let config = ALIAS_MAP[raceName]
 
-  // If no exact match, try case-insensitive and partial matching
-  if (!ScraperClass) {
+  // 2. Try case-insensitive alias match
+  if (!config) {
     const normalizedName = raceName.toLowerCase().trim()
-
-    for (const [key, value] of Object.entries(SCRAPER_MAP)) {
-      if (key.toLowerCase() === normalizedName) {
-        ScraperClass = value
+    for (const [alias, cfg] of Object.entries(ALIAS_MAP)) {
+      if (alias.toLowerCase() === normalizedName) {
+        config = cfg
         break
       }
     }
 
-    // Check if the race name contains key words for NYC
-    if (!ScraperClass && (normalizedName.includes('new york') || normalizedName.includes('nyc'))) {
-      if (normalizedName.includes('marathon')) {
-        ScraperClass = NYCMarathonScraper
-      }
-    }
-
-    // Check if the race name contains key words for Chicago
-    if (!ScraperClass && normalizedName.includes('chicago')) {
-      if (normalizedName.includes('marathon')) {
-        ScraperClass = ChicagoMarathonScraper
-      }
-    }
-
-    // Check if the race name contains key words for Philadelphia
-    if (
-      !ScraperClass &&
-      (normalizedName.includes('philadelphia') || normalizedName.includes('philly'))
-    ) {
-      if (normalizedName.includes('marathon')) {
-        ScraperClass = PhiladelphiaMarathonScraper
-      }
-    }
-
-    // Check if the race name contains key words for Marine Corps Marathon
-    if (
-      !ScraperClass &&
-      (normalizedName.includes('marine corps') || normalizedName.includes('mcm'))
-    ) {
-      if (normalizedName.includes('marathon')) {
-        ScraperClass = MarineCorpsMarathonScraper
-      }
-    }
-
-    // Check if the race name contains key words for CIM
-    if (
-      !ScraperClass &&
-      (normalizedName.includes('california international') || normalizedName.includes('cim'))
-    ) {
-      if (normalizedName.includes('marathon') || normalizedName === 'cim') {
-        ScraperClass = CIMMarathonScraper
-      }
-    }
-
-    // Check if the race name contains key words for Kiawah Island
-    if (
-      !ScraperClass &&
-      normalizedName.includes('kiawah')
-    ) {
-      if (normalizedName.includes('marathon') || normalizedName === 'kiawah') {
-        ScraperClass = KiawahIslandMarathonScraper
-      }
-    }
-
-    // Check if the race name contains key words for Louisiana
-    if (
-      !ScraperClass &&
-      normalizedName.includes('louisiana')
-    ) {
-      if (normalizedName.includes('marathon')) {
-        ScraperClass = LouisianaMarathonScraper
-      }
-    }
-
-    // Check if the race name contains key words for Austin
-    if (
-      !ScraperClass &&
-      normalizedName.includes('austin')
-    ) {
-      if (normalizedName.includes('marathon')) {
-        ScraperClass = AustinMarathonScraper
-      }
+    // 3. Try keyword-based fuzzy matching
+    if (!config) {
+      config = findConfigByKeywords(normalizedName)
     }
   }
 
-  if (!ScraperClass) {
+  if (!config) {
     throw new Error(`No scraper available for race: ${raceName}`)
   }
 
-  return new ScraperClass(year)
+  return createScraper(config, year)
 }
 
 /**
@@ -181,21 +152,10 @@ export function hasScraperForRace(raceName) {
 
 /**
  * Get list of supported races
- * @returns {string[]} List of race names we can scrape
+ * @returns {string[]} List of primary race names we can scrape
  */
 export function getSupportedRaces() {
-  // Return unique race names (remove duplicates from aliases)
-  const uniqueRaces = new Set()
-  uniqueRaces.add('NYC Marathon')
-  uniqueRaces.add('Chicago Marathon')
-  uniqueRaces.add('Philadelphia Marathon')
-  uniqueRaces.add('Marine Corps Marathon')
-  uniqueRaces.add('California International Marathon')
-  uniqueRaces.add('Kiawah Island Marathon')
-  uniqueRaces.add('Louisiana Marathon')
-  uniqueRaces.add('Austin Marathon')
-  // Add more as we implement them
-  return Array.from(uniqueRaces)
+  return ALL_CONFIGS.map(config => config.raceName)
 }
 
 export default {

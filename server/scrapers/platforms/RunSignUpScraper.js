@@ -1,0 +1,226 @@
+/**
+ * RunSignUp Platform Scraper
+ * Consolidates all races hosted on RunSignUp (Kiawah Island, Louisiana, etc.)
+ * Uses Puppeteer to search the RunSignUp results UI
+ */
+import { BaseScraper } from '../BaseScraper.js'
+import { launchBrowser } from '../browserLauncher.js'
+
+export class RunSignUpScraper extends BaseScraper {
+  /**
+   * @param {number} year
+   * @param {Object} config - Race-specific configuration
+   * @param {string} config.raceName - Display name of the race
+   * @param {number} config.raceId - RunSignUp race ID
+   * @param {string} config.location - City, State
+   * @param {string[]} config.eventTypes - e.g. ['Marathon', 'Half Marathon']
+   * @param {Object} config.resultSets - year -> { marathon: id, half: id }
+   * @param {Function} config.calculateDate - (year) => Date
+   */
+  constructor(year, config) {
+    super(config.raceName, year)
+    this.config = config
+    this.baseUrl = 'https://runsignup.com'
+    this.raceId = config.raceId
+    this.tag = config.tag || config.raceName
+  }
+
+  async getRaceInfo() {
+    console.log(`[${this.tag} ${this.year}] Fetching race info...`)
+
+    const raceDate = this.config.calculateDate(this.year)
+    console.log(`[${this.tag} ${this.year}] Calculated race date: ${raceDate.toDateString()}`)
+
+    return {
+      raceDate,
+      location: this.config.location,
+      eventTypes: this.config.eventTypes || ['Marathon', 'Half Marathon'],
+      resultsUrl: `https://runsignup.com/Race/Results/${this.raceId}`,
+      resultsSiteType: 'runsignup',
+    }
+  }
+
+  async searchRunner(runnerName) {
+    console.log(`\n${'='.repeat(50)}`)
+    console.log(`[${this.tag} ${this.year}] Searching for: "${runnerName}"`)
+    console.log(`${'='.repeat(50)}`)
+
+    const yearSets = this.config.resultSets?.[this.year]
+    if (!yearSets) {
+      console.log(`[${this.tag} ${this.year}] No result sets configured for this year`)
+      return {
+        ...this.notFoundResult(),
+        researchNotes: `Results not available for ${this.year}`
+      }
+    }
+
+    // Try each event type in order (marathon first, then half, etc.)
+    const eventOrder = this.config.eventSearchOrder || ['marathon', 'half']
+
+    for (const eventKey of eventOrder) {
+      const resultSetId = yearSets[eventKey]
+      if (!resultSetId) continue
+
+      const eventLabel = this.config.eventLabels?.[eventKey] || eventKey
+      console.log(`[${this.tag} ${this.year}] Searching ${eventLabel} results...`)
+
+      const result = await this.searchEventType(runnerName, eventLabel, resultSetId)
+      if (result.found) return result
+    }
+
+    console.log(`[${this.tag} ${this.year}] Runner not found in any event type`)
+    return this.notFoundResult()
+  }
+
+  /**
+   * Search for a runner in a specific event type via Puppeteer
+   */
+  async searchEventType(runnerName, eventType, resultSetId) {
+    let browser = null
+
+    try {
+      console.log(`[${this.tag} ${this.year}] Launching browser...`)
+      browser = await launchBrowser()
+      const page = await browser.newPage()
+
+      const resultsUrl = `${this.baseUrl}/Race/Results/${this.raceId}/${resultSetId}#resultSetId-${resultSetId}`
+      console.log(`[${this.tag} ${this.year}] Loading results: ${resultsUrl}`)
+
+      await page.goto(resultsUrl, {
+        waitUntil: 'domcontentloaded',
+        timeout: 60000
+      })
+
+      // Wait for the page to render
+      await new Promise(resolve => setTimeout(resolve, 3000))
+
+      // Wait for search input
+      await page.waitForSelector('input#resultsSearch', { timeout: 15000 })
+      console.log(`[${this.tag} ${this.year}] Search box loaded`)
+
+      // Type the runner name
+      await page.type('input#resultsSearch', runnerName)
+      console.log(`[${this.tag} ${this.year}] Typed search query: ${runnerName}`)
+
+      // Wait for client-side filtering
+      await new Promise(resolve => setTimeout(resolve, 1500))
+
+      // Extract visible results from the table
+      const results = await page.evaluate(() => {
+        const rows = Array.from(document.querySelectorAll('table tbody tr'))
+
+        return rows
+          .filter(row => {
+            const style = window.getComputedStyle(row)
+            return style.display !== 'none'
+          })
+          .map(row => {
+            const cells = Array.from(row.querySelectorAll('td'))
+            if (cells.length < 9) return null
+
+            // RunSignUp table structure:
+            // 0: Place, 1: Pace, 2: Bib, 3: Name, 4: Gender,
+            // 5: City, 6: State, 7: Country, 8: Clock Time, 9: Age
+            return {
+              placeOverall: cells[0]?.innerText?.trim(),
+              pace: cells[1]?.innerText?.trim(),
+              bib: cells[2]?.innerText?.trim(),
+              name: cells[3]?.innerText?.trim().replace(/\n/g, ' '),
+              gender: cells[4]?.innerText?.trim(),
+              city: cells[5]?.innerText?.trim(),
+              state: cells[6]?.innerText?.trim(),
+              chipTime: cells[8]?.innerText?.trim(),
+              age: cells[9]?.innerText?.trim()
+            }
+          })
+          .filter(r => r !== null)
+      })
+
+      console.log(`[${this.tag} ${this.year}] Found ${results.length} visible results after filtering`)
+
+      if (results.length === 0) {
+        await browser.close()
+        return this.notFoundResult()
+      }
+
+      // Filter for exact name matches
+      const matches = results.filter(r => this.namesMatch(runnerName, r.name))
+      console.log(`[${this.tag} ${this.year}] Exact matches after name filtering: ${matches.length}`)
+
+      if (matches.length === 0) {
+        console.log(`[${this.tag} ${this.year}] No exact match for: ${runnerName}`)
+        console.log(`[${this.tag} ${this.year}] Closest results were:`)
+        results.slice(0, 3).forEach(r => {
+          console.log(`  - ${r.name} (${r.chipTime})`)
+        })
+        await browser.close()
+        return this.notFoundResult()
+      }
+
+      if (matches.length > 1) {
+        console.log(`[${this.tag} ${this.year}] Multiple exact matches found:`)
+        matches.forEach(m => {
+          console.log(`  - ${m.name}, Bib: ${m.bib}, Time: ${m.chipTime}`)
+        })
+        await browser.close()
+        return this.ambiguousResult(matches.map(m => ({
+          name: m.name,
+          bib: m.bib,
+          time: m.chipTime
+        })))
+      }
+
+      // Single match found
+      const match = matches[0]
+
+      console.log(`\n[${this.tag} ${this.year}] FOUND RUNNER:`)
+      console.log(`  Name: ${match.name}`)
+      console.log(`  Bib: ${match.bib}`)
+      console.log(`  Chip Time: ${match.chipTime}`)
+      console.log(`  Pace: ${match.pace}`)
+      console.log(`  Place: ${match.placeOverall}`)
+
+      await browser.close()
+      return { ...this.extractRunnerData(match, eventType), resultsUrl }
+
+    } catch (error) {
+      console.error(`[${this.tag} ${this.year}] Error searching for ${runnerName}:`, error.message)
+      if (browser) await browser.close()
+      return {
+        ...this.notFoundResult(),
+        researchNotes: `Error: ${error.message}`
+      }
+    }
+  }
+
+  /**
+   * Extract standardized data from RunSignUp result object
+   */
+  extractRunnerData(result, eventType = 'Marathon') {
+    const time = this.formatTime(result.chipTime)
+    const bib = result.bib || null
+    const pace = this.formatPace(result.pace)
+
+    return {
+      found: true,
+      bibNumber: bib ? String(bib) : null,
+      officialTime: time,
+      officialPace: pace,
+      eventType: eventType,
+      yearFound: this.year,
+      researchNotes: null,
+      rawData: {
+        name: result.name,
+        gender: result.gender,
+        age: result.age,
+        city: result.city,
+        state: result.state,
+        placeOverall: result.placeOverall,
+        chipTime: result.chipTime,
+        pace: result.pace
+      }
+    }
+  }
+}
+
+export default RunSignUpScraper
