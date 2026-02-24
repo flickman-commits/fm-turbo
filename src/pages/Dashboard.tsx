@@ -321,10 +321,14 @@ export default function Dashboard() {
   const runSettingsAction = async (action: 'refresh-weather' | 'clear-research' | 'clear-race-cache') => {
     setSettingsAction(action)
     try {
-      const response = await fetch(`/api/orders/${action}`, {
+      // refresh-weather stays as its own endpoint; the others go through /actions
+      const isActionsEndpoint = action === 'clear-research' || action === 'clear-race-cache'
+      const url = isActionsEndpoint ? '/api/orders/actions' : `/api/orders/${action}`
+      const body = isActionsEndpoint ? { action } : {}
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({})
+        body: JSON.stringify(body)
       })
       if (!response.ok) throw new Error(`Action failed (${response.status})`)
       const data = await response.json()
@@ -623,10 +627,10 @@ export default function Dashboard() {
     try {
       setToast({ message: 'Accepting match...', type: 'info' })
 
-      const response = await fetch(`/api/orders/accept-match`, {
+      const response = await fetch(`/api/orders/actions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderNumber, match })
+        body: JSON.stringify({ action: 'accept-match', orderNumber, match })
       })
 
       if (!response.ok) {
@@ -717,10 +721,10 @@ export default function Dashboard() {
   // Mark order as completed
   const markAsCompleted = async (orderNumber: string) => {
     try {
-      const response = await fetch(`/api/orders/complete`, {
+      const response = await fetch(`/api/orders/actions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderNumber })
+        body: JSON.stringify({ action: 'complete', orderNumber })
       })
 
       if (!response.ok) throw new Error('Failed to mark as completed')
@@ -897,10 +901,10 @@ export default function Dashboard() {
   // Update design status for custom orders
   const updateDesignStatus = async (orderNumber: string, designStatus: DesignStatus) => {
     try {
-      const response = await fetch('/api/orders/design-status', {
+      const response = await fetch('/api/orders/actions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderNumber, designStatus })
+        body: JSON.stringify({ action: 'design-status', orderNumber, designStatus })
       })
 
       if (!response.ok) {

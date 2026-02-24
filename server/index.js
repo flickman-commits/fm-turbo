@@ -7,14 +7,10 @@ import { PrismaClient } from '@prisma/client';
 // Import serverless function handlers for local dev
 import ordersHandler from '../api/orders/index.js';
 import updateHandler from '../api/orders/update.js';
-import designStatusHandler from '../api/orders/design-status.js';
+import actionsHandler from '../api/orders/actions.js';
 import refreshWeatherHandler from '../api/orders/refresh-weather.js';
 import researchRunnerHandler from '../api/orders/research-runner.js';
-import acceptMatchHandler from '../api/orders/accept-match.js';
-import completeHandler from '../api/orders/complete.js';
 import testScrapersHandler from '../api/orders/test-scrapers.js';
-import clearResearchHandler from '../api/orders/clear-research.js';
-import clearRaceCacheHandler from '../api/orders/clear-race-cache.js';
 import importHandler from '../api/orders/import.js';
 import refreshShopifyHandler from '../api/orders/refresh-shopify-data.js';
 import refreshEtsyHandler from '../api/orders/refresh-etsy-data.js';
@@ -376,14 +372,10 @@ app.post('/api/orders/cleanup', async (req, res) => {
 // This ensures local dev matches production (Vercel serverless) behavior
 app.get('/api/orders', (req, res) => ordersHandler(req, res));
 app.post('/api/orders/update', (req, res) => updateHandler(req, res));
-app.post('/api/orders/design-status', (req, res) => designStatusHandler(req, res));
+app.post('/api/orders/actions', (req, res) => actionsHandler(req, res));
 app.post('/api/orders/refresh-weather', (req, res) => refreshWeatherHandler(req, res));
 app.post('/api/orders/research-runner', (req, res) => researchRunnerHandler(req, res));
-app.post('/api/orders/accept-match', (req, res) => acceptMatchHandler(req, res));
-app.post('/api/orders/complete', (req, res) => completeHandler(req, res));
 app.all('/api/orders/test-scrapers', (req, res) => testScrapersHandler(req, res));
-app.post('/api/orders/clear-research', (req, res) => clearResearchHandler(req, res));
-app.post('/api/orders/clear-race-cache', (req, res) => clearRaceCacheHandler(req, res));
 app.post('/api/orders/refresh-shopify-data', (req, res) => refreshShopifyHandler(req, res));
 app.post('/api/orders/refresh-etsy-data', (req, res) => refreshEtsyHandler(req, res));
 app.get('/api/etsy/auth', (req, res) => etsyAuthHandler(req, res));
