@@ -19,6 +19,7 @@ model Order {
   source             String    // "shopify" or "etsy"
   arteloOrderData    Json      // Full order object from Artelo
   shopifyOrderData   Json?     // Personalization data if Shopify
+  etsyOrderData      Json?     // Receipt/personalization data if Etsy
   raceName           String
   raceYear           Int
   runnerName         String
@@ -103,4 +104,10 @@ model RunnerResearch {
   @@index([orderId])
   @@index([raceId])
   @@index([researchStatus])
+}
+
+model SystemConfig {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
 }

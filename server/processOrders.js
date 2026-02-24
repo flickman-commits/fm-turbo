@@ -15,6 +15,8 @@
 
 import { PrismaClient } from '@prisma/client'
 import { shopifyFetch } from './services/shopifyAuth.js'
+import { etsyFetch } from './services/etsyAuth.js'
+import { parseEtsyRaceName, parseEtsyPersonalization } from './services/etsyPersonalization.js'
 import { researchService } from './services/ResearchService.js'
 import { hasScraperForRace } from './scrapers/index.js'
 
@@ -267,6 +269,70 @@ async function fetchShopifyComments(shopifyOrderId) {
 }
 
 /**
+ * Fetch Etsy receipt data for an order
+ * The Artelo orderId for Etsy orders is the Etsy receipt_id
+ * @param {string} receiptId - Etsy receipt ID
+ * @returns {Object|null} - Receipt data with transactions
+ */
+async function fetchEtsyReceiptData(receiptId) {
+  try {
+    const shopId = process.env.ETSY_SHOP_ID
+    if (!shopId) {
+      console.error('[processOrders] ETSY_SHOP_ID not configured')
+      return null
+    }
+
+    const receipt = await etsyFetch(`/shops/${shopId}/receipts/${receiptId}`)
+    return receipt
+  } catch (error) {
+    console.error(`[processOrders] Failed to fetch Etsy receipt ${receiptId}:`, error.message)
+    return null
+  }
+}
+
+/**
+ * Extract personalization from an Etsy transaction (line item)
+ * @param {Object} transaction - Etsy transaction object
+ * @returns {Object} - Extracted personalization data
+ */
+function extractEtsyPersonalization(transaction) {
+  const result = {
+    raceName: null,
+    runnerName: null,
+    raceYear: null,
+    needsAttention: false,
+    rawPersonalization: null
+  }
+
+  if (!transaction) {
+    result.needsAttention = true
+    return result
+  }
+
+  // Parse race name from listing title
+  result.raceName = parseEtsyRaceName(transaction.title) || parseRaceName(transaction.title)
+
+  // Find personalization in variations
+  const variations = transaction.variations || []
+  const personalization = variations.find(
+    v => v.formatted_name === 'Personalization' ||
+         v.formatted_name?.toLowerCase() === 'personalization'
+  )
+
+  if (personalization?.formatted_value) {
+    result.rawPersonalization = personalization.formatted_value
+    const parsed = parseEtsyPersonalization(personalization.formatted_value)
+    result.runnerName = parsed.runnerName
+    result.raceYear = parsed.raceYear
+    result.needsAttention = parsed.needsAttention
+  } else {
+    result.needsAttention = true
+  }
+
+  return result
+}
+
+/**
  * Main order processing function
  *
  * @param {Object} options - Processing options
@@ -398,10 +464,18 @@ export async function processOrders(options = {}) {
         // Determine number of line items
         const numItems = order.orderItems?.length || 1
 
+        const isEtsy = orderSource === 'etsy'
+
         // Fetch Shopify data once for the entire order (if Shopify)
         let shopifyData = null
         if (isShopify) {
           shopifyData = await fetchShopifyOrderData(order.orderId)
+        }
+
+        // Fetch Etsy receipt data once for the entire order (if Etsy)
+        let etsyReceipt = null
+        if (isEtsy) {
+          etsyReceipt = await fetchEtsyReceiptData(order.orderId)
         }
 
         // Process each line item separately
@@ -494,6 +568,38 @@ export async function processOrders(options = {}) {
                 }
               }
 
+              // If missing Etsy data, fetch and update
+              if (isEtsy && !existing.etsyOrderData && etsyReceipt) {
+                log(`[processOrders] Updating order ${existing.orderNumber} with Etsy data...`)
+
+                // Extract customer email from receipt
+                updateData.customerEmail = etsyReceipt.buyer_email || existing.customerEmail
+
+                // Extract personalization for this specific line item
+                const transaction = etsyReceipt.transactions?.[lineItemIndex]
+                if (transaction) {
+                  const extracted = extractEtsyPersonalization(transaction)
+
+                  updateData.raceName = extracted.raceName || existing.raceName
+                  updateData.runnerName = extracted.runnerName || existing.runnerName
+                  updateData.raceYear = extracted.raceYear || existing.raceYear
+                  updateData.etsyOrderData = etsyReceipt
+
+                  // Classify custom orders (e.g. "Any Race - Custom Trackstar Print")
+                  if (isCustomOrder(extracted.raceName)) {
+                    updateData.trackstarOrderType = 'custom'
+                  }
+
+                  if (extracted.needsAttention && existing.status === 'pending' && !isCustomOrder(extracted.raceName)) {
+                    updateData.status = 'missing_year'
+                    results.needsAttention++
+                  }
+
+                  needsUpdate = true
+                  results.enriched++
+                }
+              }
+
               if (needsUpdate) {
                 await prisma.order.update({
                   where: { id: existing.id },
@@ -517,6 +623,7 @@ export async function processOrders(options = {}) {
               let runnerName = order.customerAddress?.name || 'Unknown Runner'
               let status = 'pending'
               let lineItemShopifyData = null
+              let lineItemEtsyData = null
               let notes = null
               let hadNoTime = false
               // Custom order fields
@@ -576,6 +683,37 @@ export async function processOrders(options = {}) {
                 }
               }
 
+              // Etsy enrichment
+              if (isEtsy && etsyReceipt) {
+                log(`[processOrders] Processing Etsy line item ${lineItemIndex} for order ${order.orderId}...`)
+
+                // Extract customer email from receipt
+                customerEmail = etsyReceipt.buyer_email || null
+
+                // Extract personalization for this specific line item
+                const transaction = etsyReceipt.transactions?.[lineItemIndex]
+                if (transaction) {
+                  const extracted = extractEtsyPersonalization(transaction)
+
+                  raceName = extracted.raceName || raceName
+                  runnerName = extracted.runnerName || runnerName
+                  raceYear = extracted.raceYear || raceYear
+                  lineItemEtsyData = etsyReceipt
+
+                  // Classify custom orders (e.g. "Any Race - Custom Trackstar Print")
+                  if (isCustomOrder(extracted.raceName)) {
+                    trackstarOrderType = 'custom'
+                    log(`[processOrders] 🎨 Custom Etsy order detected: ${order.orderId}-${lineItemIndex}`)
+                  }
+
+                  if (extracted.needsAttention && trackstarOrderType !== 'custom') {
+                    status = 'missing_year'
+                    results.needsAttention++
+                  }
+                  results.enriched++
+                }
+              }
+
               await prisma.order.create({
                 data: {
                   orderNumber: `${order.orderId}-${lineItemIndex}`,
@@ -584,6 +722,7 @@ export async function processOrders(options = {}) {
                   source: orderSource,
                   arteloOrderData: order,
                   shopifyOrderData: lineItemShopifyData,
+                  etsyOrderData: lineItemEtsyData,
                   raceName,
                   raceYear,
                   runnerName,

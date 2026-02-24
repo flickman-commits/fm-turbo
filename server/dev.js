@@ -29,6 +29,8 @@ const routes = [
   { method: 'post', path: '/api/orders/refresh-shopify-data', handler: '../api/orders/refresh-shopify-data.js' },
   { method: 'get',  path: '/api/orders/test-scrapers',      handler: '../api/orders/test-scrapers.js' },
   { method: 'post', path: '/api/orders/test-scrapers',      handler: '../api/orders/test-scrapers.js' },
+  { method: 'post', path: '/api/orders/refresh-etsy-data',  handler: '../api/orders/refresh-etsy-data.js' },
+  { method: 'get',  path: '/api/etsy/auth',                 handler: '../api/etsy/auth.js' },
 ]
 
 // Load all handlers and register routes

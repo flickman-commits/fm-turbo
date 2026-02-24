@@ -1,0 +1,171 @@
+/**
+ * GET /api/etsy/auth
+ *
+ * One-time OAuth 2.0 + PKCE setup endpoint for Etsy API.
+ *
+ * Flow:
+ *   1. GET /api/etsy/auth → generates PKCE code_verifier/challenge,
+ *      stores verifier in a cookie, redirects to Etsy consent page
+ *   2. Etsy redirects back with ?code=XXX
+ *   3. GET /api/etsy/auth?code=XXX → exchanges code for tokens,
+ *      stores refresh token in SystemConfig DB
+ *
+ * Scope: transactions_r
+ */
+
+import { PrismaClient } from '@prisma/client'
+import crypto from 'crypto'
+
+const prisma = new PrismaClient()
+
+function base64urlEncode(buffer) {
+  return buffer.toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '')
+}
+
+export default async function handler(req, res) {
+  // CORS
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end()
+  }
+
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  const apiKey = process.env.ETSY_API_KEY
+  if (!apiKey) {
+    return res.status(500).json({ error: 'ETSY_API_KEY not configured' })
+  }
+
+  try {
+    // Check if this is a callback with an authorization code
+    const { code, state } = req.query
+
+    if (code) {
+      // --- Step 2: Exchange code for tokens ---
+      console.log('[etsy/auth] Exchanging authorization code for tokens...')
+
+      // Get the code_verifier from the cookie
+      const cookies = parseCookies(req.headers.cookie || '')
+      const codeVerifier = cookies.etsy_code_verifier
+
+      if (!codeVerifier) {
+        return res.status(400).json({
+          error: 'Missing code_verifier cookie. Please restart the OAuth flow.'
+        })
+      }
+
+      // Determine the redirect URI (must match what was used in step 1)
+      const protocol = req.headers['x-forwarded-proto'] || 'https'
+      const host = req.headers['x-forwarded-host'] || req.headers.host
+      const redirectUri = `${protocol}://${host}/api/etsy/auth`
+
+      const tokenResponse = await fetch('https://api.etsy.com/v3/public/oauth/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          client_id: apiKey,
+          redirect_uri: redirectUri,
+          code,
+          code_verifier: codeVerifier
+        })
+      })
+
+      if (!tokenResponse.ok) {
+        const errorText = await tokenResponse.text()
+        console.error('[etsy/auth] Token exchange failed:', errorText)
+        return res.status(400).json({
+          error: 'Token exchange failed',
+          details: errorText
+        })
+      }
+
+      const tokenData = await tokenResponse.json()
+
+      // Store the refresh token in the DB
+      if (tokenData.refresh_token) {
+        await prisma.systemConfig.upsert({
+          where: { key: 'etsy_refresh_token' },
+          update: { value: tokenData.refresh_token },
+          create: { key: 'etsy_refresh_token', value: tokenData.refresh_token }
+        })
+        console.log('[etsy/auth] Refresh token stored in DB')
+      }
+
+      // Clear the cookie
+      res.setHeader('Set-Cookie', 'etsy_code_verifier=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax')
+
+      return res.status(200).json({
+        success: true,
+        message: 'Etsy OAuth setup complete! Refresh token stored in DB.',
+        access_token_expires_in: tokenData.expires_in,
+        token_type: tokenData.token_type
+      })
+
+    } else {
+      // --- Step 1: Redirect to Etsy consent page ---
+      console.log('[etsy/auth] Starting OAuth PKCE flow...')
+
+      // Generate PKCE code_verifier (43-128 chars)
+      const codeVerifier = base64urlEncode(crypto.randomBytes(64))
+
+      // SHA-256 + base64url → code_challenge
+      const hash = crypto.createHash('sha256').update(codeVerifier).digest()
+      const codeChallenge = base64urlEncode(hash)
+
+      // Generate state for CSRF protection
+      const oauthState = base64urlEncode(crypto.randomBytes(16))
+
+      // Build the redirect URI
+      const protocol = req.headers['x-forwarded-proto'] || 'https'
+      const host = req.headers['x-forwarded-host'] || req.headers.host
+      const redirectUri = `${protocol}://${host}/api/etsy/auth`
+
+      // Store code_verifier in a cookie (survives the redirect)
+      res.setHeader('Set-Cookie',
+        `etsy_code_verifier=${codeVerifier}; Path=/; Max-Age=600; HttpOnly; SameSite=Lax`
+      )
+
+      const authUrl = new URL('https://www.etsy.com/oauth/connect')
+      authUrl.searchParams.set('response_type', 'code')
+      authUrl.searchParams.set('client_id', apiKey)
+      authUrl.searchParams.set('redirect_uri', redirectUri)
+      authUrl.searchParams.set('scope', 'transactions_r')
+      authUrl.searchParams.set('state', oauthState)
+      authUrl.searchParams.set('code_challenge', codeChallenge)
+      authUrl.searchParams.set('code_challenge_method', 'S256')
+
+      console.log('[etsy/auth] Redirecting to Etsy consent page...')
+      return res.redirect(302, authUrl.toString())
+    }
+
+  } catch (error) {
+    console.error('[etsy/auth] Error:', error)
+    return res.status(500).json({
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    })
+  } finally {
+    await prisma.$disconnect()
+  }
+}
+
+function parseCookies(cookieHeader) {
+  const cookies = {}
+  if (!cookieHeader) return cookies
+  for (const pair of cookieHeader.split(';')) {
+    const [key, ...vals] = pair.split('=')
+    if (key) {
+      cookies[key.trim()] = vals.join('=').trim()
+    }
+  }
+  return cookies
+}

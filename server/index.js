@@ -17,6 +17,8 @@ import clearResearchHandler from '../api/orders/clear-research.js';
 import clearRaceCacheHandler from '../api/orders/clear-race-cache.js';
 import importHandler from '../api/orders/import.js';
 import refreshShopifyHandler from '../api/orders/refresh-shopify-data.js';
+import refreshEtsyHandler from '../api/orders/refresh-etsy-data.js';
+import etsyAuthHandler from '../api/etsy/auth.js';
 
 dotenv.config();
 
@@ -383,6 +385,8 @@ app.all('/api/orders/test-scrapers', (req, res) => testScrapersHandler(req, res)
 app.post('/api/orders/clear-research', (req, res) => clearResearchHandler(req, res));
 app.post('/api/orders/clear-race-cache', (req, res) => clearRaceCacheHandler(req, res));
 app.post('/api/orders/refresh-shopify-data', (req, res) => refreshShopifyHandler(req, res));
+app.post('/api/orders/refresh-etsy-data', (req, res) => refreshEtsyHandler(req, res));
+app.get('/api/etsy/auth', (req, res) => etsyAuthHandler(req, res));
 
 // Legacy endpoints (keeping for backwards compatibility)
 app.post('/api/feature-request', async (req, res) => {

@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import { Search, Upload, Copy, Loader2, FlaskConical, Pencil, Check, X, Settings, Mail, ChevronRight, ExternalLink } from 'lucide-react'
+import { Search, Upload, Copy, Loader2, FlaskConical, Pencil, Check, X, Settings, Mail, ChevronRight } from 'lucide-react'
 
 // API calls now go to /api/* serverless functions (same origin)
 
@@ -1280,34 +1280,26 @@ Thank you!`
                             </td>
                             <td className="px-3 py-5">
                               <div className="flex items-center gap-1.5">
-                                {order.source === 'etsy' ? (
-                                  <span className="text-sm text-off-black/40 italic">Not Available — View on Etsy</span>
-                                ) : (
-                                  <>
-                                    <span className="text-sm text-off-black">{order.effectiveRunnerName || order.runnerName || 'Unknown Runner'}</span>
-                                    {order.hasOverrides && (
-                                      <span className="px-1 py-0.5 bg-blue-100 text-blue-600 text-[9px] rounded">edited</span>
-                                    )}
-                                  </>
+                                <span className="text-sm text-off-black">{order.effectiveRunnerName || order.runnerName || 'Unknown Runner'}</span>
+                                {order.hasOverrides && (
+                                  <span className="px-1 py-0.5 bg-blue-100 text-blue-600 text-[9px] rounded">edited</span>
                                 )}
                               </div>
-                              {order.source !== 'etsy' && <>
-                                {order.status === 'flagged' && order.flagReason && (
-                                  <p className="text-xs text-warning-amber mt-1 leading-tight">{order.flagReason}</p>
-                                )}
-                                {order.status === 'missing_year' && !order.yearOverride && (
-                                  <p className="text-xs text-warning-amber mt-1 leading-tight">Year Missing</p>
-                                )}
-                                {order.status === 'ready' && order.bibNumber && (
-                                  <p className="text-xs text-green-600 mt-1 leading-tight">Bib: {order.bibNumber} • {order.officialTime}</p>
-                                )}
-                                {order.status === 'pending' && order.hasScraperAvailable && (order.effectiveRaceYear || order.raceYear) && (
-                                  <p className="text-xs text-blue-600 mt-1 leading-tight">Ready to research</p>
-                                )}
-                                {order.status === 'pending' && !order.hasScraperAvailable && (
-                                  <p className="text-xs text-off-black/40 mt-1 leading-tight">Manual research needed</p>
-                                )}
-                              </>}
+                              {order.status === 'flagged' && order.flagReason && (
+                                <p className="text-xs text-warning-amber mt-1 leading-tight">{order.flagReason}</p>
+                              )}
+                              {order.status === 'missing_year' && !order.yearOverride && (
+                                <p className="text-xs text-warning-amber mt-1 leading-tight">Year Missing</p>
+                              )}
+                              {order.status === 'ready' && order.bibNumber && (
+                                <p className="text-xs text-green-600 mt-1 leading-tight">Bib: {order.bibNumber} • {order.officialTime}</p>
+                              )}
+                              {order.status === 'pending' && order.hasScraperAvailable && (order.effectiveRaceYear || order.raceYear) && (
+                                <p className="text-xs text-blue-600 mt-1 leading-tight">Ready to research</p>
+                              )}
+                              {order.status === 'pending' && !order.hasScraperAvailable && (
+                                <p className="text-xs text-off-black/40 mt-1 leading-tight">Manual research needed</p>
+                              )}
                             </td>
                             <td className="px-3 pr-6 py-5 text-sm text-off-black/60 hidden md:table-cell">
                               {order.effectiveRaceName || order.raceName} {order.effectiveRaceYear || order.raceYear}
@@ -2018,8 +2010,8 @@ Thank you!`
                     </div>
                   </div>
 
-                  {/* Editable Order Info — hidden for Etsy orders */}
-                  {selectedOrder.source !== 'etsy' && <div>
+                  {/* Editable Order Info */}
+                  <div>
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight">Order Details</h4>
                       {!isEditing && selectedOrder.status !== 'completed' && (
@@ -2133,10 +2125,10 @@ Thank you!`
                         </div>
                       )}
                     </div>
-                  </div>}
+                  </div>
 
-                  {/* Race Info, Research, Notes — hidden for Etsy orders */}
-                  {selectedOrder.source !== 'etsy' && <>
+                  {/* Race Info, Research, Notes */}
+                  <>
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight">Race Data</h4>
@@ -2352,22 +2344,10 @@ Thank you!`
                       </div>
                     </div>
                   )}
-                  </>}
-
-                  {/* Etsy - Coming Soon Notice */}
-                  {selectedOrder.source === 'etsy' && selectedOrder.status !== 'completed' && (
-                    <div>
-                      <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Fulfillment Tool</h4>
-                      <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
-                        <p className="text-body-sm text-gray-600">
-                          Fulfillment Tool Not Available for Etsy — Coming Soon
-                        </p>
-                      </div>
-                    </div>
-                  )}
+                  </>
 
                   {/* Scraper Not Available Warning */}
-                  {!selectedOrder.hasScraperAvailable && selectedOrder.source !== 'etsy' && selectedOrder.status !== 'completed' && (
+                  {!selectedOrder.hasScraperAvailable && selectedOrder.status !== 'completed' && (
                     <div>
                       <h4 className="text-xs font-semibold text-off-black/50 uppercase tracking-tight mb-2">Manual Research Required</h4>
                       <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
@@ -2381,18 +2361,6 @@ Thank you!`
 
                   {/* Actions */}
                   <div className="flex gap-3 pt-3">
-                    {/* View in Etsy button */}
-                    {selectedOrder.source === 'etsy' && !isEditing && (
-                      <a
-                        href={`https://www.etsy.com/your/orders/sold?order_id=${selectedOrder.parentOrderNumber}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors font-medium"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        View Order in Etsy
-                      </a>
-                    )}
                     {/* Research button - show if scraper available and not already researched */}
                     {selectedOrder.hasScraperAvailable &&
                      (selectedOrder.effectiveRaceYear || selectedOrder.raceYear) &&
